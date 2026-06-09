@@ -1,0 +1,46 @@
+# Dependencias
+node_modules/
+
+# Build
+dist/
+build/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Variables de entorno
+.env
+.env.*
+!.env.example
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# JetBrains
+.idea/
+
+# Archivos temporales
+*.tmp
+*.temp
+
+# Cobertura de pruebas
+coverage/
+
+# Vite
+vite.svg
+
+# TypeScript
+*.tsbuildinfo
