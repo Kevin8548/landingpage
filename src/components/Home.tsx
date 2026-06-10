@@ -1,9 +1,9 @@
-import Header from "./Header";
+// import Header from "./Header";
 
 export function Home(){
     return (
         <>
-        <Header />
+        {/* <Header /> */}
         </>
 
     )
