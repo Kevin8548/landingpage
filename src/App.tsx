@@ -1,4 +1,5 @@
 import { Home } from "./components/Home";
+import { Hero } from "./components/sections/Hero";
 
 export default function App() {
   return (
@@ -7,6 +8,7 @@ export default function App() {
       Hello world 🚀🚀
     </h1>
     <hr />
+    <Hero />
     <Home />
     </>
   )
