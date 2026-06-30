@@ -11,7 +11,6 @@ import {
   FaClock,
 } from "react-icons/fa";
 
-
 const Footer = () => {
   const socialLinks = [
     { icon: <FaFacebookF />, href: "https://www.facebook.com/UniversidadTecnologicadeTlaxcala/?ref=embed_page#", label: "Facebook" },
