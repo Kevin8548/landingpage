@@ -1,5 +1,6 @@
 import { Home } from "./components/Home";
 import { Hero } from "./components/sections/Hero";
+import Footer from "./components/layout/footer";
 
 export default function App() {
   return (
@@ -9,6 +10,7 @@ export default function App() {
     </h1>
     <hr />
     <Hero />
+    <Footer />
     <Home />
     </>
   )
