@@ -1,5 +1,10 @@
+// import Header from "./Header";
+
 export function Home(){
     return (
-        <h1>Welcome Home Page XD</h1>
+        <>
+        {/* <Header /> */}
+        </>
+
     )
 }
