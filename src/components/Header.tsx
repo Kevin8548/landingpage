@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Briefcase, Trophy, Award, Menu, X, ArrowUpRight } from 'lucide-react';
+import uttLogo from "../assets/uttLogo.png";
 
 // Interfaz para personalizar los módulos fácilmente
 interface NavItem {
@@ -42,26 +43,21 @@ export const Navbar: React.FC = () => {
     <>
       {/* HEADER PRINCIPAL (Se esconde al hacer scroll hacia abajo) */}
       <header
-        className={`fixed top-4 left-1/2 -translate-x-1/2 w-[92%] max-w-7xl z-50 transition-all duration-300 ease-in-out ${
+        className={`fixed top-2 left-1/2 -translate-x-1/2 w-[92%] max-w-7xl z-50 transition-all duration-300 ease-in-out ${
           isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-24 pointer-events-none'
         }`}
       >
-        <div className="bg-white/20 backdrop-blur-md border border-white/20 rounded-full px-6 py-3 flex items-center justify-between shadow-sm">
+        <div className="bg-white/50 backdrop-blur-md border border-white/20 rounded-full px-6 py-3 flex items-center justify-between shadow-sm">
           
         {/* Logo / Marca */}
 {/* Logo / Marca */}
 <div className="flex items-center gap-3 font-bold text-xl">
   {/* El contenedor con el fondo institucional que ahora envuelve a tu logo en imagen */}
   <span className=" p-1.5 rounded-md flex items-center justify-center">
-    <img 
-      src="/src/assets/uttLogo.png" 
-      alt="Logo UTT" 
-      className="h-5 w-auto object-contain" 
-    />
   </span>
   
   {/* El texto "UTT" con el degradado de naranja a verde */}
-  <span className="bg-gradient-to-r from-[#ed7e52] via-[#A87C3C] to-[#3B6636] bg-clip-text text-transparent font-extrabold tracking-tight">
+  <span className="text-3xl  bg-gradient-to-r from-[#ed7e52] via-[#A87C3C] to-[#3B6636] bg-clip-text text-transparent font-extrabold tracking-tight">
     UTT
   </span>
 </div>
@@ -123,11 +119,11 @@ export const Navbar: React.FC = () => {
           <div className="flex items-center justify-between pb-6 border-b border-gray-100">
             <div className="flex items-center gap-3 font-bold text-xl">
               <span className="p-1.5 rounded-md flex items-center justify-center">
-                <img 
-                  src="/src/assets/uttLogo.png" 
-                  alt="Logo UTT" 
-                  className="h-5 w-auto object-contain" 
-                />
+                <img
+  src={uttLogo}
+  alt="Logo UTT"
+  className="h-5 w-auto object-contain"
+/>
               </span>
               <span className="bg-gradient-to-r from-[#ed7e52] via-[#A87C3C] to-[#3B6636] bg-clip-text text-transparent font-extrabold tracking-tight">
                 UTT
