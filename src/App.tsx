@@ -1,18 +1,16 @@
-import { Home } from "./components/Home";
+import { Home } from "./pages/Home";
 import { Hero } from "./components/sections/Hero";
-import Footer from "./components/layout/footer";
-import { Navbar } from "./components/Header";
+import Footer from "./components/layout/Footer";
+import { Navbar } from "./components/layout/Navbar";
 
 export default function App() {
   return (
     <>
-    
       <Navbar />
-    
-    <hr />
-    <Hero />
-    <Footer />
-    <Home />
+      <hr />
+      <Hero />
+      <Home />
+      <Footer />
     </>
   )
 }

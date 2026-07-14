@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Briefcase, Trophy, Award, Menu, X, ArrowUpRight } from 'lucide-react';
-import uttLogo from "../assets/uttLogo.png";
+import uttLogo from "../../assets/uttLogo.png";
 
 // Interfaz para personalizar los módulos fácilmente
 interface NavItem {
