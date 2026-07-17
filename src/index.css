@@ -1,20 +1,27 @@
 @import "tailwindcss";
 
 @theme {
-
   /* COLORES EN MODO CLARO */
   --color-light-orange-primary: #ed5e00;
   --color-light-green-primary: #378a53;
-  --color-light-bg:#ffffff;
-  
+  --color-light-bg: #ffffff;
+
   /* COLORES EN MODO OSCURO */
   --color-dark-green-primary: #1dd75b;
   --color-dark-green-secondary: #25bb57;
   --color-dark-orange-primary: #e96c00;
   --color-dark-orange-secondary: #d36200;
-  --color-dark-bg:#000000;
+  --color-dark-bg: #000000;
 
-  
-  
+  @keyframes node-pulse {
+    0%, 100% { opacity: 0.12; transform: scale(1); }
+    50% { opacity: 0.02; transform: scale(1.5); }
+  }
+}
 
+/* Fuera del @theme, como CSS normal */
+.node-halo {
+  animation: node-pulse 2.4s ease-in-out infinite;
+  transform-origin: center;
+  transform-box: fill-box;
 }
