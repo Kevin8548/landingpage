@@ -1,0 +1,182 @@
+.tid-nav {
+  position: fixed;
+  left: 0px;
+  right: 0px;
+  z-index: 50;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 26px;
+  background: #0000;
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  opacity: 0;
+  animation: tidFadeIn 0.9s ease 0.05s forwards;
+}
+
+@keyframes tidFadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.tid-logo-mark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tid-logo-glyph {
+  width: 40px;
+  height: 40px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-h img {
+  position: relative;
+  width: 200px;
+  height: 300px;
+  object-fit: contain;
+}
+
+@keyframes tidSpinSlow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes tidPulseGlow {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+.tid-logo-text {
+  font-family: "Unbounded", sans-serif;
+  font-weight: 600;
+  font-size: 14.5px;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+.tid-logo-text span {
+  display: block;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 400;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.tid-nav-center {
+  position: relative;
+  padding-bottom: 8px;
+}
+
+.tid-nav-center::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.tid-nav-links {
+  display: flex;
+  gap: 66px;
+  list-style: none;
+  font-size: 13.5px;
+  font-weight: 500;
+  position: relative;
+  margin: 0;
+  padding: 0;
+}
+
+.tid-nav-links li {
+  position: relative;
+  z-index: 2;
+}
+
+.tid-nav-links li a {
+  display: block;
+  padding: 8px 17px;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.tid-nav-links li a:hover,
+.tid-nav-links li a.active {
+  color: var(--ink);
+}
+
+/* ===========================
+   INDICADOR EN FORMA DE LÍNEA
+   =========================== */
+
+.tid-nav-indicator {
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 0;
+  height: 2px;
+  z-index: 2;
+
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(61, 220, 132, 1),
+    rgba(61, 220, 132, 0.9)
+  );
+
+  transition:
+    left 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tid-nav-cta {
+  position: relative;
+  overflow: hidden;
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  font-size: 12.5px;
+  color: #1c0e04;
+  background: linear-gradient(100deg, var(--orange), #d36200);
+  padding: 10px 20px;
+  border-radius: 22px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 8px 22px -8px rgba(255, 122, 69, 0.55);
+  transition: transform 0.25s ease;
+  margin-left: 4px;
+}
+
+.tid-nav-cta:hover {
+  transform: translateY(-2px);
+}
+
+@media (max-width: 760px) {
+  .tid-nav {
+    padding: 12px 16px;
+    left: 12px;
+    right: 12px;
+  }
+
+  .tid-nav-center {
+    display: none;
+  }
+}

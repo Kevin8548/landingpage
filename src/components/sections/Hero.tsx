@@ -1,200 +1,311 @@
-import UTT from "../../assets/UTT.png";
+import { useEffect, useMemo, useRef, useState } from "react";
+import "./Hero.css";
 
-export const Hero = () => {
+const PRELOADER_TEXT = "UTT · TIID";
+
+type Ember = {
+  id: number;
+  left: number;
+  top: number;
+  size: number;
+  color: string;
+  duration: number;
+  delay: number;
+};
+
+export default function Hero() {
+  const [typed, setTyped] = useState("");
+  const [subShow, setSubShow] = useState(false);
+  const [ringGo, setRingGo] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const [preloaderDone, setPreloaderDone] = useState(false);
+  const [ready, setReady] = useState(false);
+
+  const vantaRef = useRef<HTMLDivElement>(null);
+  const vantaEffect = useRef<any>(null);
+
+  const reduced = useMemo(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    []
+  );
+
+  const embers: Ember[] = useMemo(() => {
+    const colors = ["#3ddc84", "#ff7a45", "#38e6c9"];
+    return Array.from({ length: 26 }).map((_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      top: 60 + Math.random() * 40,
+      size: Math.random() * 3 + 1.5,
+      color: colors[i % colors.length],
+      duration: 5 + Math.random() * 5,
+      delay: Math.random() * 6,
+    }));
+  }, []);
+
+  // Preloader: bloquea scroll + animación de tipeo
+  useEffect(() => {
+    document.documentElement.classList.add("tid-locked");
+
+    let i = 0;
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const typeChar = () => {
+      if (i < PRELOADER_TEXT.length) {
+        const ch = PRELOADER_TEXT[i];
+        setTyped((prev) => prev + ch);
+        i++;
+        timeoutId = setTimeout(
+          typeChar,
+          reduced ? 1 : ch === "·" ? 260 : 110 + Math.random() * 70
+        );
+      } else {
+        setSubShow(true);
+        timeoutId = setTimeout(finishAndExit, reduced ? 30 : 750);
+      }
+    };
+
+    const finishAndExit = () => {
+      setRingGo(true);
+      timeoutId = setTimeout(() => {
+        setLeaving(true);
+        setReady(true);
+        document.documentElement.classList.remove("tid-locked");
+        timeoutId = setTimeout(() => setPreloaderDone(true), 1150);
+      }, reduced ? 10 : 260);
+    };
+
+    timeoutId = setTimeout(typeChar, reduced ? 0 : 450);
+
+    return () => clearTimeout(timeoutId);
+  }, [reduced]);
+
+  // Vanta.js — fondo interactivo de puntos 3D
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      const THREE = await import("three");
+      // vanta.dots.min es un módulo UMD: espera THREE en window
+      (window as any).THREE = THREE;
+
+      // @ts-ignore - vanta no trae tipos oficiales
+      const vantaModule = await import("vanta/dist/vanta.dots.min");
+      const DOTS =
+        (vantaModule as any).default?.default ??
+        (vantaModule as any).default ??
+        (vantaModule as any);
+
+      if (cancelled || !vantaRef.current || vantaEffect.current) return;
+
+      if (typeof DOTS !== "function") {
+        console.error("No se pudo cargar VANTA.DOTS correctamente", vantaModule);
+        return;
+      }
+
+      vantaEffect.current = DOTS({
+        el: vantaRef.current,
+        THREE,
+        mouseControls: true,
+        touchControls: true,
+        gyroControls: false,
+        minHeight: 200.0,
+        minWidth: 200.0,
+        scale: 1.0,
+        scaleMobile: 1.0,
+        color: 0x3ddc84,
+        color2: 0xff7a45,
+        backgroundColor: 0x050b08,
+        size: 3.8,
+        spacing: 30.0,
+        showLines: false,
+      });
+
+      vantaRef.current.classList.add("on");
+    })();
+
+    return () => {
+      cancelled = true;
+      if (vantaEffect.current) {
+        vantaEffect.current.destroy();
+        vantaEffect.current = null;
+      }
+    };
+  }, []);
+
   return (
-    <section
-      id="hero"
-      className="relative min-h-screen flex items-center justify-center overflow-hidden"
-    >
-      {/* Fondo */}
-      <img
-        src={UTT}
-        alt="Edificio Universidad Tecnológica de Tlaxcala"
-        className="absolute inset-0 w-full h-full object-cover"
-      />
-
-      {/* Overlay */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(circle at top, rgba(255,255,255,.15), transparent 40%), linear-gradient(135deg, rgba(234,88,12,.82) 0%, rgba(20,83,45,.88) 100%)",
-        }}
-      />
-
-      {/* Partículas */}
-      <div className="absolute inset-0 pointer-events-none">
-        <span className="absolute top-[15%] left-[10%] w-2 h-2 bg-white/40 rounded-full animate-pulse"></span>
-        <span className="absolute top-[25%] right-[18%] w-3 h-3 bg-orange-300/50 rounded-full animate-pulse"></span>
-        <span className="absolute top-[55%] left-[20%] w-2 h-2 bg-white/30 rounded-full animate-pulse"></span>
-        <span className="absolute top-[70%] right-[25%] w-4 h-4 bg-white/20 rounded-full animate-pulse"></span>
-        <span className="absolute bottom-[30%] left-[45%] w-2 h-2 bg-orange-200/40 rounded-full animate-pulse"></span>
-        <span className="absolute bottom-[20%] right-[40%] w-3 h-3 bg-white/20 rounded-full animate-pulse"></span>
-      </div>
-
-      {/* Contenido */}
-      <div className="relative z-10 text-center text-white px-6 max-w-5xl mx-auto">
-        {/* Badge */}
-        <span
-          className="inline-block text-xs font-semibold tracking-widest uppercase px-4 py-1 rounded-full mb-6 mt-20 border border-white/40"
-          style={{
-            background: "rgba(255,255,255,0.15)",
-            backdropFilter: "blur(6px)",
-          }}
-        >
-          Tecnologías de la Información e Innovación Digital
-        </span>
-
-        {/* Título */}
-        <h1 className="text-4xl md:text-6xl font-extrabold leading-tight mb-4 drop-shadow-lg">
-          Universidad Tecnológica
-          <br />
-          <span style={{ color: "#fdba74" }}>de Tlaxcala</span>
-        </h1>
-
-        {/* Subtítulo */}
-        <p className="text-lg md:text-xl text-white/80 mb-10 max-w-2xl mx-auto">
-          Prepárate para el mundo digital con una de nuestras tres carreras de
-          vanguardia.
-        </p>
-
-        {/* Tarjetas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
-          {[
-            {
-              siglas: "DSM",
-              nombre: "Desarrollo de Software Multiplataforma",
-            },
-            {
-              siglas: "IRD",
-              nombre: "Infraestructura de Redes Digitales",
-            },
-            {
-              siglas: "EVND",
-              nombre: "Entornos Virtuales y Negocios Digitales",
-            },
-          ].map((carrera) => (
-            <div
-              key={carrera.siglas}
-              className="rounded-xl px-5 py-5 text-left border border-white/20 hover:border-white/60 transition-all duration-300 hover:scale-105 hover:-translate-y-2"
-              style={{
-                background: "rgba(255,255,255,0.10)",
-                backdropFilter: "blur(10px)",
-                boxShadow: "0 12px 30px rgba(0,0,0,.18)",
-              }}
-            >
-              <span
-                className="text-xs font-bold tracking-widest uppercase"
-                style={{ color: "#fdba74" }}
-              >
-                {carrera.siglas}
-              </span>
-
-              <p className="text-sm text-white/90 mt-2 font-medium leading-snug">
-                {carrera.nombre}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        {/* Botones */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <a
-            href="#careers"
-            className="px-8 py-3 rounded-lg font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl"
-            style={{
-              background: "linear-gradient(90deg,#ea580c,#c2410c)",
-            }}
-          >
-            Conoce las carreras
-          </a>
-
-          <a
-            href="#contact"
-            className="px-8 py-3 rounded-lg font-semibold border-2 border-white/70 text-white hover:bg-white hover:text-green-900 transition-all duration-300 hover:scale-105"
-          >
-            Solicitar informes
-          </a>
-        </div>
-
-        {/* Barra informativa */}
-        <div
-          className="mt-14 rounded-2xl border border-white/20 p-6"
-          style={{
-            background: "rgba(255,255,255,.08)",
-            backdropFilter: "blur(10px)",
-          }}
-        >
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-
-            <div>
-              <h3 className="font-semibold">3 Carreras</h3>
-              <p className="text-sm text-white/70">
-                Especializadas en TI
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-semibold">TSU + Ingeniería</h3>
-              <p className="text-sm text-white/70">
-                Formación profesional
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-semibold">Estadías</h3>
-              <p className="text-sm text-white/70">
-                Experiencia en empresas
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-semibold">Innovación</h3>
-              <p className="text-sm text-white/70">
-                Tecnología de vanguardia
-              </p>
-            </div>
-
+    <>
+      {!preloaderDone && (
+        <div className={`tid-preloader ${leaving ? "leaving" : ""}`}>
+          <div className="tid-pl-aurora">
+            <div className="tid-pl-blob" />
+            <div className="tid-pl-blob" />
+            <div className="tid-pl-blob" />
           </div>
-
-          {/* Tecnologías */}
-          <div className="flex flex-wrap justify-center gap-3 mt-15">
-            {[
-              "React",
-              "Java",
-              "JavaScript",
-              "Python",
-              "Cisco",
-              "MySQL",
-              "Entornos Virtuales",
-              "Redes",
-              "Ciberseguridad",
-            ].map((tech) => (
-              <span
-                key={tech}
-                className="px-4 py-2 rounded-full bg-white/10 border border-white/20 text-sm hover:bg-white/20 transition"
-              >
-                {tech}
-              </span>
+          <div className="tid-pl-embers">
+            {embers.map((e) => (
+              <div
+                key={e.id}
+                className="tid-pl-ember"
+                style={{
+                  left: `${e.left}%`,
+                  top: `${e.top}%`,
+                  width: e.size,
+                  height: e.size,
+                  color: e.color,
+                  background: "currentColor",
+                  animationDuration: `${e.duration}s`,
+                  animationDelay: `${e.delay}s`,
+                }}
+              />
             ))}
           </div>
+          <div className={`tid-pl-ring ${ringGo ? "go" : ""}`} />
+          <div className="tid-pl-center">
+            <div className="tid-pl-type">
+              {typed.split("").map((ch, idx) => (
+                <span
+                  key={idx}
+                  className={`tid-letter ${ch === "·" ? "accent-dot" : ""}`}
+                >
+                  {ch === " " ? "\u00A0" : ch}
+                </span>
+              ))}
+              <span className="tid-caret" />
+            </div>
+            <div className={`tid-pl-sub ${subShow ? "show" : ""}`}>
+              Ingeniería en Tecnologías de la Información
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className={`tid-hero ${ready ? "ready" : ""}`}>
+        <div id="tid-vanta-bg" ref={vantaRef} />
+        <div className="tid-vignette" />
+        <div className="tid-grain" />
+
+        <div className="tid-tech-chip c1">
+          <span className="tid-sq" style={{ background: "var(--green)" }} />
+          &lt;/&gt; desarrollo
+        </div>
+        <div className="tid-tech-chip c2">
+          <span className="tid-sq" style={{ background: "var(--orange)" }} />
+          entornos virtuales
+        </div>
+        <div className="tid-tech-chip c3">
+          <span className="tid-sq" style={{ background: "var(--teal)" }} />
+          datos &amp; IA
+        </div>
+        <div className="tid-tech-chip c4">
+          <span className="tid-sq" style={{ background: "var(--green)" }} />
+          ciberseguridad
         </div>
 
-        {/* Flecha */}
-        <div className="mt-8 text-3xl text-white animate-bounce">
-          ↓
+        <div className="tid-content">
+          <div className="tid-eyebrow tid-rise">
+            <span className="tid-dot" /> Universidad Tecnológica de Tlaxcala — Ingeniería en
+          </div>
+
+          <h1>
+            <span className="tid-line tid-rise">Tecnologías de la</span>
+            <span className="tid-line tid-rise">Información e</span>
+            <span className="tid-line tid-rise tid-accent">
+              Innovación Digital
+            </span>
+          </h1>
+
+          
+
+          {/* <p className="tid-sub tid-rise">
+            Formamos a quienes diseñan, programan y sostienen la
+            infraestructura digital de Tlaxcala —{" "}
+            <b>con criterio, con datos, con propósito</b>.
+          </p> */}
+
+          <div className="tid-cta-row">
+            <button className="tid-btn tid-btn-primary tid-pop">
+              Más información
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M3 8H13M13 8L9 4M13 8L9 12"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+            <button className="tid-btn tid-btn-secondary tid-pop">
+              Plan de estudios
+            </button>
+          </div>
+          <div className="tid-socials tid-rise">
+            <a href="#" aria-label="Facebook" title="Facebook">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M15 8h-2a2 2 0 0 0-2 2v10M8 13h5" />
+                <circle cx="12" cy="12" r="10" />
+              </svg>
+            </a>
+            <a href="#" aria-label="Instagram" title="Instagram">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="5" />
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="17.2" cy="6.8" r="1" />
+              </svg>
+            </a>
+            <a href="#" aria-label="WhatsApp" title="WhatsApp">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M4 20l1.4-4.1A8 8 0 1 1 8.6 19L4 20Z" />
+                <path d="M8.5 9.7c0 3 2.8 5.8 5.8 5.8.5 0 1-.7 1.2-1.2.1-.3 0-.6-.2-.8l-1.3-1a.6.6 0 0 0-.7 0l-.5.4a4 4 0 0 1-2.7-2.7l.4-.5a.6.6 0 0 0 0-.7l-1-1.3a.6.6 0 0 0-.8-.2c-.5.2-1.2.7-1.2 1.2Z" />
+              </svg>
+            </a>
+            <a href="#" aria-label="Teléfono" title="Teléfono">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" />
+              </svg>
+            </a>
+          </div>
+        </div>
+
+      
+
+        <div className="tid-scroll-cue">
+          <div className="tid-mouse">
+            <div className="tid-wheel" />
+          </div>
+          Desplázate
         </div>
       </div>
-
-      {/* Ola decorativa */}
-      <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none">
-        <svg viewBox="0 0 1440 60" xmlns="http://www.w3.org/2000/svg">
-          <path
-            fill="#ffffff"
-            d="M0,30 C360,60 1080,0 1440,30 L1440,60 L0,60 Z"
-          />
-        </svg>
-      </div>
-    </section>
+    </>
   );
-};
+}
