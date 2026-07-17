@@ -12,14 +12,14 @@
   --color-dark-orange-primary: #e96c00;
   --color-dark-orange-secondary: #d36200;
   --color-dark-bg: #000000;
-
-  @keyframes node-pulse {
-    0%, 100% { opacity: 0.12; transform: scale(1); }
-    50% { opacity: 0.02; transform: scale(1.5); }
-  }
 }
 
 /* Fuera del @theme, como CSS normal */
+@keyframes node-pulse {
+  0%, 100% { opacity: 0.12; transform: scale(1); }
+  50% { opacity: 0.02; transform: scale(1.5); }
+}
+
 .node-halo {
   animation: node-pulse 2.4s ease-in-out infinite;
   transform-origin: center;

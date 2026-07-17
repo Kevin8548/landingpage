@@ -4,26 +4,28 @@ import { generateNetworkPath } from "../../lib/generateNetworkPath";
 
 interface TimelinePathProps {
   sections: number;
+  sectionWidth: number; // ahora viene de fuera
   className?: string;
 }
 
-const SECTION_WIDTH = 1200;
 const COLORS = ["#D85A30", "#3B6D11"];
 
-export function TimelinePath({ sections, className = "" }: TimelinePathProps) {
-  const totalWidth = SECTION_WIDTH * sections;
+export function TimelinePath({ sections, sectionWidth, className = "" }: TimelinePathProps) {
+  const totalWidth = sectionWidth * sections;
 
   const { pathD, anchors, branches } = useMemo(
-    () => generateNetworkPath({ sections, sectionWidth: SECTION_WIDTH, maxDepth: 2, maxBranches: 60 * sections }),
-    [sections]
+    () => generateNetworkPath({ sections, sectionWidth, maxDepth: 2, maxBranches: 60 * sections }),
+    [sections, sectionWidth]
   );
 
   return (
-    <div className={`absolute ${className}`} style={{ width: totalWidth }}>
+    <div
+      className={`absolute ${className}`}
+      style={{ width: totalWidth, willChange: "transform", contentVisibility: "auto" }}
+    >
       <svg viewBox={`-40 -140 ${totalWidth + 80} 320`} width={totalWidth} height="320" fill="none">
         <path d={pathD} stroke="#D85A30" strokeWidth="3" strokeOpacity="0.35" strokeLinecap="round" />
 
-        {/* Un solo fade-in para TODO el grupo, no por nodo */}
         <motion.g
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -33,6 +35,7 @@ export function TimelinePath({ sections, className = "" }: TimelinePathProps) {
           {branches.map((br, i) => {
             const color = COLORS[br.colorIndex % COLORS.length];
             const depthFade = 1 / (br.depth * 0.6 + 1);
+            const showHalo = br.r > 8 && i % 3 === 0;
 
             return (
               <g key={i} opacity={depthFade}>
@@ -43,12 +46,12 @@ export function TimelinePath({ sections, className = "" }: TimelinePathProps) {
                   strokeOpacity="0.45"
                 />
 
-                {br.r > 8 && (
+                {showHalo && (
                   <circle
                     className="node-halo"
                     cx={br.x2} cy={br.y2} r={br.r + 5}
                     fill={color}
-                    style={{ animationDelay: `${(i % 6) * 0.35}s` }}
+                    style={{ animationDelay: `${(i * 0.13) % 2.4}s` }}
                   />
                 )}
 

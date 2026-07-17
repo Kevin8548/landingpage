@@ -6,22 +6,24 @@ import type { Career } from "../../data/careers";
 
 interface CareerItemProps {
   career: Career;
+  priority?: boolean;
 }
 
-export function CareerItem({ career }: CareerItemProps) {
+export function CareerItem({ career, priority = false }: CareerItemProps) {
   return (
-    <div className="grid md:grid-cols-2 gap-10 items-center">
+    // <div className="grid md:grid-cols-2 gap-10 lg:gap-16 items-center max-w-5xl mx-auto">
+    <div className="grid md:grid-cols-2 gap-10 lg:gap-20 items-center max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto">
       <div>
         <div className="flex items-start gap-2 mb-4">
           <span className="text-verde mt-1">{career.tag}</span>
-          <h3 className="text-xl font-semibold italic text-verde">
+          <h3 className="text-2xl lg:text-3xl font-semibold italic text-verde">
             {career.title}
           </h3>
         </div>
 
-        <div className="h-16" /> {/* espacio para que la línea de fondo respire */}
+        <div className="h-16" />
 
-        <p className="text-sm text-gray-600 mb-6 max-w-xs">
+        <p className="text-base lg:text-lg text-gray-600 mb-6 max-w-md">
           {career.description}
         </p>
 
@@ -37,6 +39,7 @@ export function CareerItem({ career }: CareerItemProps) {
         imageFront={career.imageFront}
         altBack={career.altBack}
         altFront={career.altFront}
+        priority={priority}
       />
     </div>
   );
