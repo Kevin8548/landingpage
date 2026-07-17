@@ -72,6 +72,13 @@ interface Institution {
   logo?: string;
 }
 
+// Variantes del carrusel: dependen de la dirección (1 = avanzar, -1 = retroceder)
+const slideVariants = {
+  enter: (dir: number) => ({ opacity: 0, x: dir * 40 }),
+  center: { opacity: 1, x: 0 },
+  exit: (dir: number) => ({ opacity: 0, x: -dir * 40 }),
+};
+
 const institutions: Institution[] = [
   {
     name: "CBTIs",
@@ -289,9 +296,10 @@ export const Aspirantes = () => {
                 <motion.div
                   key={activeDate}
                   custom={direction}
-                  initial={(dir: number) => ({ opacity: 0, x: dir * 40 })}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={(dir: number) => ({ opacity: 0, x: -dir * 40 })}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
                   transition={{ duration: 0.35, ease: "easeOut" }}
                 >
                   <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm min-h-[150px]">

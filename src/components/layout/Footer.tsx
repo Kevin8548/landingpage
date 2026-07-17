@@ -10,9 +10,12 @@ import {
   FaMapMarkerAlt,
   FaClock,
 } from "react-icons/fa";
+import { SocialLinks } from "../ui/SocialLinks";
+
+
 
 const Footer = () => {
-  const socialLinks = [
+  const footerSocials = [
     { icon: <FaFacebookF />, href: "https://www.facebook.com/UniversidadTecnologicadeTlaxcala/?ref=embed_page#", label: "Facebook" },
     { icon: <FaInstagram />, href: "https://www.instagram.com/ut_tlaxcala/?igsh=OXRubmtnenp4d2Rx", label: "Instagram" },
     { icon: <FaYoutube />, href: "https://www.youtube.com/@uttoficial", label: "YouTube" },
@@ -59,28 +62,7 @@ const Footer = () => {
             Formando ingenieros y profesionistas en tecnología con visión crítica,
             ética y competencias para el mundo digital.
           </p>
-          <div style={styles.socialRow}>
-            {socialLinks.map((s) => (
-              <a
-                key={s.label}
-                href={s.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={s.label}
-                style={styles.socialBtn}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLAnchorElement).style.background = "#7c3aed";
-                  (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-2px)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLAnchorElement).style.background = "rgba(255,255,255,0.08)";
-                  (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(0)";
-                }}
-              >
-                {s.icon}
-              </a>
-            ))}
-          </div>
+          <SocialLinks links={footerSocials} />
         </div>
 
         {/* ── Col 2: Carreras ── */}
