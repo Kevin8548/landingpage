@@ -1,18 +1,25 @@
 @import "tailwindcss";
 
 @theme {
-  /* COLORES EN MODO CLARO */
+  /* --- Light --- */
   --color-light-orange-primary: #ed5e00;
   --color-light-green-primary: #378a53;
   --color-light-bg: #ffffff;
+  --color-light-text: #18181b;       /* texto principal, alto contraste sobre blanco */
+  --color-light-text-muted: #52525b; /* texto secundario, sigue siendo legible sobre blanco */
+  --color-light-border: #e4e4e7;
 
-  /* COLORES EN MODO OSCURO */
+  /* --- Dark --- */
   --color-dark-green-primary: #1dd75b;
   --color-dark-green-secondary: #25bb57;
   --color-dark-orange-primary: #e96c00;
   --color-dark-orange-secondary: #d36200;
   --color-dark-bg: #000000;
+  --color-dark-text: #f4f4f5;        /* texto principal, alto contraste sobre negro */
+  --color-dark-text-muted: #a1a1aa;  /* texto secundario, gris real (no casi-blanco) */
+  --color-dark-border: #27272a;
 }
+
 
 /* Fuera del @theme, como CSS normal */
 @keyframes node-pulse {
