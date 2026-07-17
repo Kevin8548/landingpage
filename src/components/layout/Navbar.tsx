@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import "./Navbar.css";
 
+
 const LINKS = [
   { label: "¿Por qué TI?", href: "#por-que-ti" },
   { label: "Carreras", href: "#carreras" },
@@ -32,34 +33,18 @@ export default function Navbar() {
 
   return (
     <nav className="tid-nav">
-      <div className="tid-logo-mark">
-        <div className="tid-logo-glyph">
-          <svg viewBox="0 0 40 40" fill="none">
-            <path
-              d="M20 3 C24 10 30 12 36 12 C32 17 32 23 36 28 C30 28 24 30 20 37 C16 30 10 28 4 28 C8 23 8 17 4 12 C10 12 16 10 20 3Z"
-              fill="url(#navGrad)"
-            />
-            <defs>
-              <linearGradient
-                id="navGrad"
-                x1="4"
-                y1="3"
-                x2="36"
-                y2="37"
-                gradientUnits="userSpaceOnUse"
-              >
-                <stop stopColor="#3ddc84" />
-                <stop offset="1" stopColor="#ff7a45" />
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
+
+        <div className="tid-logo-mark">
+        {/* <div className="tid-logo-glyph">
+          <img 
+          className="logo-h" src="/logo_utt.png" alt="Logo UTT" />
+        </div> */}
+
         <div className="tid-logo-text">
           UTT
           <span>TLAXCALA · GOB.MX</span>
         </div>
       </div>
-
       <div className="tid-nav-center" ref={centerRef}>
         <ul className="tid-nav-links">
           {LINKS.map((link, i) => (

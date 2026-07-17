@@ -88,7 +88,6 @@ export default function Hero() {
     (async () => {
       const THREE = await import("three");
       // vanta.dots.min es un módulo UMD: espera THREE en window
-      // y, según el bundler, el "default" puede venir anidado.
       (window as any).THREE = THREE;
 
       // @ts-ignore - vanta no trae tipos oficiales
@@ -193,7 +192,7 @@ export default function Hero() {
         </div>
         <div className="tid-tech-chip c2">
           <span className="tid-sq" style={{ background: "var(--orange)" }} />
-          redes &amp; nube
+          entornos virtuales
         </div>
         <div className="tid-tech-chip c3">
           <span className="tid-sq" style={{ background: "var(--teal)" }} />

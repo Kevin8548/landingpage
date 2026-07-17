@@ -6,7 +6,6 @@ function App() {
     <>
       <Navbar />
       <Hero />
-      {/* aquí irán las demás secciones de tus compañeros */}
     </>
   );
 }
