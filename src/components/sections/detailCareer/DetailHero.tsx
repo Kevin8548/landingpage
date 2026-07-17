@@ -28,7 +28,7 @@ export default function DetailHero({
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
         <div className="mb-6">
-          <Badge color="orange" withDot>
+          <Badge color="orange">
             Convocatoria Abierta 2026
           </Badge>
         </div>
@@ -37,7 +37,7 @@ export default function DetailHero({
           {career.nombre}
         </h1>
 
-        <p className="italic text-neutral-300 border-l-2 border-dark-green-primary pl-4 mb-10 max-w-lg">
+        <p className="italic text-neutral-500 border-l-2 border-dark-green-primary pl-4 mb-10 max-w-lg">
           "{career.quote}"
         </p>
 
