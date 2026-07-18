@@ -23,12 +23,12 @@ export default function CuatrimestreAccordion({
             onClick={() => setSeleccionada(materia)}
             className={`cursor-pointer flex items-center gap-2 text-sm transition-colors ${
               seleccionada?.nombre === materia.nombre
-                ? "text-dark-green-primary font-semibold"
-                : "text-neutral-300 hover:text-white"
+                ? "text-light-green-primary font-semibold"
+                : "text-light-text-muted hover:text-light-green-primary"
             }`}
           >
             {materia.clave && (
-              <span className="w-1.5 h-1.5 rounded-full bg-dark-green-primary shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-light-green-primary shrink-0" />
             )}
             {materia.nombre}
           </li>
@@ -39,27 +39,31 @@ export default function CuatrimestreAccordion({
         <div
           className={`rounded-lg border p-4 ${
             seleccionada.clave
-              ? "border-dark-green-primary bg-dark-green-primary/10"
-              : "border-neutral-600 bg-neutral-800/40"
+              ? "border-light-green-primary bg-light-green-primary/10"
+              : "border-light-border bg-light-border/30"
           }`}
         >
           {seleccionada.clave ? (
             <>
-              <span className="text-xs uppercase tracking-wide text-dark-green-primary font-semibold">
+              <span className="text-xs uppercase tracking-wide text-light-green-primary font-semibold">
                 Materia Importante
               </span>
-              <p className="font-bold mt-1">{seleccionada.nombre}</p>
-              <p className="text-sm text-neutral-300 mt-1">
+              <p className="font-bold mt-1 text-light-text">
+                {seleccionada.nombre}
+              </p>
+              <p className="text-sm text-light-text-muted mt-1">
                 {seleccionada.descripcion}
               </p>
             </>
           ) : (
             <>
-              <span className="text-xs uppercase tracking-wide text-neutral-400">
-                No es una materia clave
+              <span className="text-xs uppercase tracking-wide text-light-text-muted">
+                Materia de Formación General
               </span>
-              <p className="font-bold mt-1">{seleccionada.nombre}</p>
-              <p className="text-sm text-neutral-400 mt-1">
+              <p className="font-bold mt-1 text-light-text">
+                {seleccionada.nombre}
+              </p>
+              <p className="text-sm text-light-text-muted mt-1">
                 Es parte de la formación general, sin impacto directo en el
                 perfil técnico de esta carrera.
               </p>
