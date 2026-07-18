@@ -1,4 +1,23 @@
+@import url("https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
 @import "tailwindcss";
+
+:root {
+  --bg: #050b08;
+  --ink: #f7f5ee;
+  --green: #3ddc84;
+  --orange: #ff7a45;
+  --teal: #38e6c9;
+  --muted: #93a49b;
+  --line: rgba(247, 245, 238, 0.1);
+  --glass: rgba(9, 16, 12, 0.55);
+}
+
+body {
+  background: var(--bg);
+  font-family: "Inter", sans-serif;
+  color: var(--ink);
+  overflow-x: hidden;
+}
 
 @theme {
   /* --- Light --- */
