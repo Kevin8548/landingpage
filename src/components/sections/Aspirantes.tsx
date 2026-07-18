@@ -14,8 +14,6 @@ import paseDirectoImg from "../../assets/A-2.jpeg";
 import cbtisLogo from "../../assets/cbtis.png";
 import cobatLogo from "../../assets/cobat.png";
 
-/* ---------- Datos ---------- */
-
 interface Career {
   icon: IconType;
   title: string;
@@ -72,7 +70,6 @@ interface Institution {
   logo?: string;
 }
 
-// Variantes del carrusel: dependen de la dirección (1 = avanzar, -1 = retroceder)
 const slideVariants = {
   enter: (dir: number) => ({ opacity: 0, x: dir * 40 }),
   center: { opacity: 1, x: 0 },
@@ -99,8 +96,6 @@ const institutions: Institution[] = [
   },
 ];
 
-/* ---------- Componente único ---------- */
-
 export const Aspirantes = () => {
   const [activeDate, setActiveDate] = useState(0);
   const [direction, setDirection] = useState(1);
@@ -118,7 +113,6 @@ export const Aspirantes = () => {
     setActiveDate(i);
   };
 
-  // Autoplay: avanza cada 5s, se reinicia cada vez que el usuario cambia de fecha manualmente
   useEffect(() => {
     const interval = setInterval(() => {
       setDirection(1);
@@ -130,10 +124,7 @@ export const Aspirantes = () => {
   return (
     <>
       {/* ---------- Hero ---------- */}
-      <section
-        id="hero"
-        className="relative min-h-screen flex items-center px-6 md:px-16 py-16"
-      >
+      <section id="hero" className="relative min-h-screen flex items-center px-6 md:px-16 py-16">
         <div className="max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
@@ -141,7 +132,7 @@ export const Aspirantes = () => {
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
             <motion.h1
-              className="text-4xl md:text-5xl font-bold text-slate-900 leading-tight mb-6"
+              className="text-4xl md:text-5xl font-bold text-white leading-tight mb-6"
               initial="hidden"
               animate="visible"
               variants={{
@@ -169,9 +160,8 @@ export const Aspirantes = () => {
                 ))}
             </motion.h1>
 
-            <p className="text-slate-500 text-base md:text-lg mb-8 max-w-md">
-              Tres ingenierías con un gran impacto que el día de hoy manejan
-              la industria.
+            <p className="text-slate-300 text-base md:text-lg mb-8 max-w-md">
+              Tres ingenierías con un gran impacto que el día de hoy manejan la industria.
             </p>
 
             <div className="flex flex-wrap gap-4">
@@ -180,7 +170,7 @@ export const Aspirantes = () => {
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                className="px-6 py-3 rounded-full bg-emerald-400 hover:bg-emerald-500 text-white text-sm font-medium transition-colors"
+                className="px-6 py-3 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium transition-colors shadow-lg shadow-emerald-500/20"
               >
                 Ver oferta educativa
               </motion.button>
@@ -190,7 +180,7 @@ export const Aspirantes = () => {
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                className="px-6 py-3 rounded-full border border-emerald-400 text-emerald-600 hover:bg-emerald-50 text-sm font-medium transition-colors"
+                className="px-6 py-3 rounded-full border border-emerald-500 text-emerald-400 hover:bg-emerald-500/10 text-sm font-medium transition-colors"
               >
                 Descargar información
               </motion.button>
@@ -200,31 +190,22 @@ export const Aspirantes = () => {
           <motion.img
             src={heroImg}
             alt="Universidad Tecnológica de Tlaxcala"
-            className="w-full aspect-[4/3] object-cover rounded-2xl cursor-pointer"
+            className="w-full aspect-[4/3] object-cover rounded-2xl cursor-pointer shadow-2xl shadow-black/50"
             initial={{ opacity: 0, scale: 0.95 }}
-            animate={{
-              opacity: 1,
-              scale: 1,
-              y: [0, -10, 0],
-            }}
+            animate={{ opacity: 1, scale: 1, y: [0, -10, 0] }}
             whileHover={{ scale: 1.03, rotate: 1 }}
             transition={{
               opacity: { duration: 0.6, ease: "easeOut", delay: 0.15 },
               scale: { duration: 0.6, ease: "easeOut", delay: 0.15 },
-              y: {
-                duration: 4,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 0.8,
-              },
+              y: { duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.8 },
             }}
           />
         </div>
       </section>
 
       {/* ---------- Carreras disponibles ---------- */}
-      <section id="carreras" className="py-14 px-6 bg-white">
-        <h2 className="text-3xl md:text-4xl font-bold text-center text-slate-900 mb-10">
+      <section id="carreras" className="py-14 px-6">
+        <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-10">
           Carreras disponibles
         </h2>
 
@@ -237,21 +218,21 @@ export const Aspirantes = () => {
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.5, delay: i * 0.12 }}
               whileHover={{ y: -10 }}
-              className="group flex flex-col items-center text-center p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-shadow"
+              className="group flex flex-col items-center text-center p-8 rounded-2xl border border-slate-800 bg-slate-900/40 backdrop-blur-md shadow-xl hover:border-emerald-500/50 transition-all"
             >
               <motion.div
                 whileHover={{ rotate: 10, scale: 1.1 }}
                 transition={{ type: "spring", stiffness: 300, damping: 12 }}
-                className="w-16 h-16 flex items-center justify-center rounded-full bg-emerald-50 mb-5 group-hover:bg-emerald-100"
+                className="w-16 h-16 flex items-center justify-center rounded-full bg-emerald-500/10 mb-5 group-hover:bg-emerald-500/20"
               >
-                <Icon className="w-8 h-8 text-emerald-500" />
+                <Icon className="w-8 h-8 text-emerald-400" />
               </motion.div>
 
-              <h3 className="text-lg font-semibold text-slate-900 mb-3">
+              <h3 className="text-lg font-semibold text-white mb-3">
                 {title}
               </h3>
 
-              <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+              <p className="text-sm text-slate-400 mb-6 leading-relaxed">
                 {description}
               </p>
 
@@ -260,7 +241,7 @@ export const Aspirantes = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                className="mt-auto px-5 py-2.5 rounded-full bg-emerald-400 hover:bg-emerald-500 text-white text-sm font-medium transition-colors"
+                className="mt-auto px-5 py-2.5 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium transition-colors shadow-md shadow-emerald-950/50"
               >
                 Consultar más información
               </motion.button>
@@ -270,14 +251,13 @@ export const Aspirantes = () => {
       </section>
 
       {/* ---------- Fechas clave (carrusel) ---------- */}
-      <section id="fechas" className="py-14 px-6 bg-white">
-        <h2 className="text-3xl md:text-4xl font-bold text-center text-slate-900 mb-10">
+      <section id="fechas" className="py-14 px-6">
+        <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-10">
           Fechas clave
         </h2>
 
-        <div className="max-w-5xl mx-auto rounded-3xl bg-orange-200/70 p-6 md:p-10">
+        <div className="max-w-5xl mx-auto rounded-3xl bg-amber-950/20 border border-amber-500/20 backdrop-blur-sm p-6 md:p-10">
           <div className="flex items-center gap-3 md:gap-5">
-            {/* Flecha izquierda: fuera de la tarjeta blanca, dentro del recuadro naranja */}
             <motion.button
               type="button"
               aria-label="Fecha anterior"
@@ -285,12 +265,11 @@ export const Aspirantes = () => {
               whileHover={{ scale: 1.15, x: -2 }}
               whileTap={{ scale: 0.9 }}
               transition={{ type: "spring", stiffness: 400, damping: 15 }}
-              className="shrink-0 w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-500 hover:text-emerald-500 transition-colors"
+              className="shrink-0 w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 shadow-lg flex items-center justify-center text-slate-300 hover:text-emerald-400 transition-colors"
             >
               <FiChevronLeft className="w-5 h-5" />
             </motion.button>
 
-            {/* Pista animada */}
             <div className="overflow-hidden flex-1 relative min-h-[150px]">
               <AnimatePresence initial={false} mode="wait" custom={direction}>
                 <motion.div
@@ -302,11 +281,11 @@ export const Aspirantes = () => {
                   exit="exit"
                   transition={{ duration: 0.35, ease: "easeOut" }}
                 >
-                  <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm min-h-[150px]">
-                    <h3 className="font-semibold text-slate-900 mb-2">
+                  <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 md:p-8 shadow-inner min-h-[150px]">
+                    <h3 className="font-semibold text-white text-lg mb-2">
                       {dates[activeDate].title}
                     </h3>
-                    <p className="text-sm text-slate-500 leading-relaxed">
+                    <p className="text-sm text-slate-300 leading-relaxed">
                       {dates[activeDate].description}
                     </p>
                   </div>
@@ -314,7 +293,6 @@ export const Aspirantes = () => {
               </AnimatePresence>
             </div>
 
-            {/* Flecha derecha */}
             <motion.button
               type="button"
               aria-label="Fecha siguiente"
@@ -322,13 +300,12 @@ export const Aspirantes = () => {
               whileHover={{ scale: 1.15, x: 2 }}
               whileTap={{ scale: 0.9 }}
               transition={{ type: "spring", stiffness: 400, damping: 15 }}
-              className="shrink-0 w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-500 hover:text-emerald-500 transition-colors"
+              className="shrink-0 w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 shadow-lg flex items-center justify-center text-slate-300 hover:text-emerald-400 transition-colors"
             >
               <FiChevronRight className="w-5 h-5" />
             </motion.button>
           </div>
 
-          {/* Puntos */}
           <div className="flex justify-center gap-2 mt-5">
             {dates.map((_, i) => (
               <motion.button
@@ -339,9 +316,7 @@ export const Aspirantes = () => {
                 whileHover={{ scale: 1.3 }}
                 whileTap={{ scale: 0.9 }}
                 className={`h-2.5 rounded-full transition-all duration-300 ${
-                  i === activeDate
-                    ? "w-6 bg-orange-500"
-                    : "w-2.5 bg-orange-300/60"
+                  i === activeDate ? "w-6 bg-amber-400" : "w-2.5 bg-amber-700/40"
                 }`}
               />
             ))}
@@ -350,8 +325,8 @@ export const Aspirantes = () => {
       </section>
 
       {/* ---------- Pase directo ---------- */}
-      <section id="pase-directo" className="py-14 px-6 bg-white">
-        <h2 className="text-3xl md:text-4xl font-bold text-center text-slate-900 mb-10">
+      <section id="pase-directo" className="py-14 px-6">
+        <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-10">
           Pase directo
         </h2>
 
@@ -359,7 +334,7 @@ export const Aspirantes = () => {
           <motion.img
             src={paseDirectoImg}
             alt="Plantel"
-            className="w-full aspect-[4/3] object-cover rounded-2xl"
+            className="w-full aspect-[4/3] object-cover rounded-2xl shadow-2xl shadow-black/50"
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, amount: 0.3 }}
@@ -383,20 +358,19 @@ export const Aspirantes = () => {
                     alt={name}
                     whileHover={{ scale: 1.15, rotate: -6 }}
                     transition={{ type: "spring", stiffness: 300, damping: 12 }}
-                    className="w-12 h-12 shrink-0 rounded-full object-contain border border-slate-200 p-1.5"
+                    className="w-12 h-12 shrink-0 rounded-full object-contain border border-slate-700 p-1.5 bg-slate-800"
                   />
                 ) : (
-                  // Placeholder de logo: reemplazar cuando tengas la imagen
-                  <div className="w-12 h-12 shrink-0 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center">
-                    <FiArrowRight className="w-5 h-5 text-emerald-500" />
+                  <div className="w-12 h-12 shrink-0 rounded-full border-2 border-dashed border-slate-700 flex items-center justify-center bg-slate-800/50">
+                    <FiArrowRight className="w-5 h-5 text-emerald-400" />
                   </div>
                 )}
 
                 <div>
-                  <h3 className="font-semibold text-slate-900 mb-1">
+                  <h3 className="font-semibold text-white mb-1">
                     {name}
                   </h3>
-                  <p className="text-sm text-slate-500 leading-relaxed">
+                  <p className="text-sm text-slate-400 leading-relaxed">
                     {description}
                   </p>
                 </div>
