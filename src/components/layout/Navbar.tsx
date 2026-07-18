@@ -51,7 +51,7 @@ export default function Navbar() {
             <li key={link.label}>
               <a
                 href={link.href}
-                ref={(el) => (linkRefs.current[i] = el)}
+                ref={(el) => { linkRefs.current[i] = el; }}
                 className={activeIndex === i ? "active" : ""}
                 onMouseEnter={() => moveIndicator(linkRefs.current[i])}
                 onClick={(e) => {
