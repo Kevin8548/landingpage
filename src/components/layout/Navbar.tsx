@@ -67,7 +67,7 @@ export default function Navbar() {
         <div className="tid-nav-indicator" ref={indicatorRef} />
       </div>
 
-      <button className="tid-nav-cta">Inscríbete</button>
+      <button className="tid-nav-cta">Iniciar Sesión</button>
     </nav>
   );
 }

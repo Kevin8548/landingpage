@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CheckCircle2, Plus, Minus } from 'lucide-react';
-import visilyImage from "/src/assets/visily-image.png"; // <-- CORREGIDO: Importamos la imagen como módulo
+import visilyImage from "/src/assets/visily-image.png"; 
 
 interface ReasonItem {
   id: number;
@@ -9,8 +9,7 @@ interface ReasonItem {
 }
 
 export const WhyChooseTI: React.FC = () => {
-  // Guardamos los IDs de las filas abiertas en un arreglo para que funcionen de forma independiente
-  const [openIds, setOpenIds] = useState<number[]>([1]); // Por defecto la primera inicia abierta
+  const [openIds, setOpenIds] = useState<number[]>([1]);
 
   const reasons: ReasonItem[] = [
     {
@@ -42,50 +41,49 @@ export const WhyChooseTI: React.FC = () => {
 
   const toggleExpand = (id: number) => {
     if (openIds.includes(id)) {
-      // Si ya está abierto, lo removemos (se cierra hacia arriba)
       setOpenIds(openIds.filter(openId => openId !== id));
     } else {
-      // Si está cerrado, lo agregamos (se despliega hacia abajo)
       setOpenIds([...openIds, id]);
     }
   };
 
   return (
-    <section className="w-full max-w-7xl mx-auto px-6 py-16 bg-white">
+    <section className="w-full max-w-7xl mx-auto px-6 py-16">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
         
         {/* ── COLUMNA IZQUIERDA: ACORDEÓN ── */}
         <div className="flex flex-col">
-          <h2 className="text-3xl md:text-4xl text-gray-950 font-extrabold tracking-tight mb-8">
+          <h2 className="text-3xl md:text-4xl text-white font-extrabold tracking-tight mb-8">
             ¿Por qué elegir<br />
-            <span className="text-gray-900">Tecnologías de la Información(TI)?</span>
+            <span className="text-slate-200">Tecnologías de la Información(TI)?</span>
           </h2>
 
-          <div className="flex flex-col border-t border-blue-800">
+          <div className="flex flex-col border-t border-slate-700">
             {reasons.map((item) => {
               const isExpanded = openIds.includes(item.id);
               
               return (
                 <div 
                   key={item.id} 
-                  className="border-b border-blue-800 py-5 transition-all duration-300"
+                  className="border-b border-slate-700 py-5 transition-all duration-300"
                 >
                   <div className="w-full flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       {/* Check verde lateral */}
-                      <CheckCircle2 className="w-6 h-6 text-emerald-500 flex-shrink-0" />
-                      <span className="text-lg font-bold text-gray-900">
+                      <CheckCircle2 className="w-6 h-6 text-emerald-400 flex-shrink-0" />
+                      <span className="text-lg font-bold text-slate-100">
                         {item.title}
                       </span>
                     </div>
                     
                     {/* BOTÓN INTERACTIVO (+ VERDE / - NARANJA) */}
                     <button
+                      type="button"
                       onClick={() => toggleExpand(item.id)}
                       className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-300 transform hover:scale-105 ${
                         isExpanded 
-                          ? 'border-orange-400 text-orange-400 bg-transparent' // Abierto: Menos Naranja
-                          : 'border-emerald-500 text-emerald-500 bg-transparent' // Cerrado: Más Verde
+                          ? 'border-orange-400 text-orange-400 bg-transparent' 
+                          : 'border-emerald-400 text-emerald-400 bg-transparent' 
                       }`}
                     >
                       {isExpanded ? (
@@ -105,7 +103,7 @@ export const WhyChooseTI: React.FC = () => {
                     }`}
                   >
                     <div className="overflow-hidden pl-10">
-                      <p className="text-sm text-gray-500 leading-relaxed max-w-xl">
+                      <p className="text-sm text-slate-400 leading-relaxed max-w-xl">
                         {item.description}
                       </p>
                     </div>
@@ -118,9 +116,9 @@ export const WhyChooseTI: React.FC = () => {
         </div>
 
         {/* ── COLUMNA DERECHA: FOTO DE ALUMNOS ── */}
-        <div className="relative w-full h-[450px] md:h-[550px] rounded-2xl overflow-hidden">
+        <div className="relative w-full h-[450px] md:h-[550px] rounded-2xl overflow-hidden shadow-2xl shadow-black/40">
           <img 
-            src={visilyImage} // <-- CORREGIDO: Usamos la variable importada arriba
+            src={visilyImage} 
             alt="Estudiantes de TI" 
             className="w-full h-full object-cover"
           />
