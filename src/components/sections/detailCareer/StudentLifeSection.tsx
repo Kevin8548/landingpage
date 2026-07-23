@@ -4,7 +4,7 @@ import { Pause, Play } from "lucide-react";
 import type { StudentLifeImage } from "../../../data/careerDetails";
 
 interface StudentLifeSectionProps {
-  images: StudentLifeImage[];
+  images?: StudentLifeImage[];
 }
 
 interface Column {
@@ -38,9 +38,9 @@ function buildColumns(images: StudentLifeImage[]): Column[] {
 export default function StudentLifeSection({ images }: StudentLifeSectionProps) {
   const [paused, setPaused] = useState(false);
 
-  const columns = useMemo(() => buildColumns(images), [images]);
+  const columns = useMemo(() => buildColumns(images ?? []), [images]);
 
-  if (images.length === 0) return null;
+  if (!images || images.length === 0) return null;
 
   return (
     <section className="py-24 px-6 md:px-16">

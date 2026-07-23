@@ -1,3 +1,5 @@
+// src/components/cards/CareerItem
+
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../ui/Button";

@@ -1,9 +1,9 @@
-import devBack from "../assets/careers/softwareII.jpg";
-import devFront from "../assets/careers/software.jpg";
-import redesBack from "../assets/careers/redesII.jpg";
-import redesFront from "../assets/careers/redes.jpg";
-import entornosBack from "../assets/careers/entornosII.jpg";
-import entornosFront from "../assets/careers/entornos.jpg";
+import devBack from "../assets/careers/software/softwareII.jpg";
+import devFront from "../assets/careers/software/software.jpg";
+import redesBack from "../assets/careers/redes/redesII.jpg";
+import redesFront from "../assets/careers/redes/redes.jpg";
+import entornosBack from "../assets/careers/entornos/entornosII.jpg";
+import entornosFront from "../assets/careers/entornos/entornos.jpg";
 
 
 export interface Career {
