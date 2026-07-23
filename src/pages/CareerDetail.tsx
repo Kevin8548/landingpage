@@ -35,11 +35,10 @@ export default function CareerDetail() {
 
       <StudyPlanSection
         cuatrimestres={cuatrimestresCompletos}
-        metodologia={career.metodologia}
-        continuacionDesde={esTSU ? career.cuatrimestres.length : undefined}
       />
 
       <ProfileAndFieldSection
+        perfilIngreso={career.perfilIngreso}
         perfilEgreso={career.perfilEgreso}
         campoLaboral={career.campoLaboral}
       />

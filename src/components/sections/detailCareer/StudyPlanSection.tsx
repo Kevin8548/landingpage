@@ -1,166 +1,194 @@
-// src/components/sections/detail/StudyPlanSection.tsx
-import { useState } from "react";
-import { ChevronDown } from "lucide-react";
-import type { Cuatrimestre } from "../../../data/careerDetails";
-import CuatrimestreAccordion from "../../cards/CuatrimestreAccordion";
-import MilestoneCard from "./MilestoneCard";
+// components/sections/StudyPlanSection.tsx
+import { useRef } from "react";
+import { motion, useTransform, type MotionValue } from "motion/react";
+import { useScroll } from "motion/react";
+import type { Cuatrimestre, Materia } from "../../../data/careerDetails";
 
 interface StudyPlanSectionProps {
   cuatrimestres: Cuatrimestre[];
-  metodologia: { titulo: string; texto: string };
-  continuacionDesde?: number;
 }
 
-function TrackList({
-  items,
-  abierto,
-  toggle,
-}: {
-  items: Cuatrimestre[];
-  abierto: number | null;
-  toggle: (n: number) => void;
-}) {
+function chunkInPairs<T>(items: T[]): T[][] {
+  const pairs: T[][] = [];
+  for (let i = 0; i < items.length; i += 2) {
+    pairs.push(items.slice(i, i + 2));
+  }
+  return pairs;
+}
+
+function MateriaItem({ materia }: { materia: Materia }) {
   return (
-    <div className="flex flex-col">
-      {items.map((cuatrimestre, index) => {
-        const isOpen = abierto === cuatrimestre.numero;
-        const isLast = index === items.length - 1;
+    <li className="border-b border-dark-border pb-2 last:border-0">
+      <div className="flex items-start gap-2">
+        <span
+          className={
+            materia.clave
+              ? "text-sm font-semibold text-dark-orange-primary"
+              : "text-sm text-dark-text-muted"
+          }
+        >
+          {materia.nombre}
+        </span>
+        {materia.clave && (
+          <span className="shrink-0 rounded-full bg-dark-orange-primary/15 px-2 py-0.5 text-[10px] font-medium text-dark-green-secondary">
+            Clave
+          </span>
+        )}
+      </div>
+      {materia.clave && materia.descripcion && (
+        <p className="mt-1 text-xs text-dark-text-muted leading-snug">
+          {materia.descripcion}
+        </p>
+      )}
+    </li>
+  );
+}
 
-        return (
-          <div key={cuatrimestre.numero} className="flex gap-4">
-            <div className="flex flex-col items-center w-9 shrink-0">
-              <button
-                onClick={() => toggle(cuatrimestre.numero)}
-                aria-expanded={isOpen}
-                className={`flex items-center justify-center w-9 h-9 rounded-full border font-serif italic text-sm shrink-0 transition-colors duration-200 ${
-                  isOpen
-                    ? "bg-light-green-primary border-light-green-primary text-white"
-                    : "border-light-border text-light-green-primary"
-                }`}
-              >
-                {String(cuatrimestre.numero).padStart(2, "0")}
-              </button>
-              {!isLast && (
-                <div
-                  className={`w-px flex-1 min-h-[0.75rem] transition-colors duration-200 ${
-                    isOpen ? "bg-light-green-primary/50" : "bg-light-border"
-                  }`}
-                />
-              )}
-            </div>
-
-            <div
-              className={`flex-1 mb-3 rounded-lg transition-colors duration-200 ${
-                isOpen
-                  ? "bg-light-green-primary/5 border border-light-green-primary/30"
-                  : "border-b border-light-border"
-              }`}
-            >
-              <button
-                onClick={() => toggle(cuatrimestre.numero)}
-                className="w-full flex items-center justify-between px-4 py-3 text-left"
-              >
-                <div>
-                  <p className="font-bold text-sm uppercase tracking-wide text-light-text">
-                    Cuatrimestre {cuatrimestre.numero}
-                  </p>
-                  <p className="text-[11px] uppercase tracking-wide text-light-text-muted">
-                    {cuatrimestre.nivel}
-                  </p>
-                </div>
-                <ChevronDown
-                  className={`transition-transform duration-200 shrink-0 ${
-                    isOpen ? "rotate-180 text-light-green-primary" : "text-light-text-muted"
-                  }`}
-                  size={16}
-                />
-              </button>
-
-              {isOpen && (
-                <div className="px-4 pb-4">
-                  <CuatrimestreAccordion cuatrimestre={cuatrimestre} />
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      })}
+function CuatrimestreCard({ cuatri }: { cuatri: Cuatrimestre }) {
+  return (
+    <div
+      className="w-full md:w-[380px] h-full rounded-2xl bg-dark-bg/60
+                 border border-dark-orange-primary/25 p-6 flex flex-col overflow-hidden
+                 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.03)]"
+    >
+      <span className="text-xs uppercase tracking-wider text-dark-orange-primary font-semibold">
+        {cuatri.numero}° Cuatrimestre
+      </span>
+      <span className="text-sm text-dark-text-muted mb-4">{cuatri.nivel}</span>
+      <ul className="space-y-2 overflow-y-auto pr-1">
+        {cuatri.materias.map((materia) => (
+          <MateriaItem key={materia.nombre} materia={materia} />
+        ))}
+      </ul>
     </div>
   );
 }
 
-export default function StudyPlanSection({
-  cuatrimestres,
-  metodologia,
-  continuacionDesde,
-}: StudyPlanSectionProps) {
-  const [abierto, setAbierto] = useState<number | null>(
-    cuatrimestres[0]?.numero ?? null
+interface StackedCardProps {
+  pair: Cuatrimestre[];
+  index: number;
+  total: number;
+  scrollYProgress: MotionValue<number>;
+}
+
+function StackedCard({ pair, index, total, scrollYProgress }: StackedCardProps) {
+  const start = index / total;
+  const end = (index + 1) / total;
+  const isLast = index === total - 1;
+
+  const nextStart = isLast ? 0 : end;
+  const nextEnd = isLast ? 1 : Math.min((index + 2) / total, 1);
+
+  const x = useTransform(
+    scrollYProgress,
+    index === 0 ? [0, 0.0001] : [start, end],
+    index === 0 ? ["0%", "0%"] : ["100%", "0%"]
   );
 
-  const toggle = (numero: number) => {
-    setAbierto((actual) => (actual === numero ? null : numero));
-  };
-
-  const primerTramo =
-    continuacionDesde !== undefined
-      ? cuatrimestres.slice(0, continuacionDesde)
-      : cuatrimestres;
-  const segundoTramo =
-    continuacionDesde !== undefined
-      ? cuatrimestres.slice(continuacionDesde)
-      : [];
+  const scale = useTransform(
+    scrollYProgress,
+    [nextStart, nextEnd],
+    isLast ? [1, 1] : [1, 0.93]
+  );
+  const dim = useTransform(
+    scrollYProgress,
+    [nextStart, nextEnd],
+    isLast ? [0, 0] : [0, 0.55]
+  );
 
   return (
-    <section className="py-16 px-6 md:px-16 bg-light-bg">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-10">
-        {/* Columna izquierda: TSU */}
-        <div>
-          <p className="text-xs uppercase tracking-widest text-light-text-muted mb-4">
-            TSU — 1 a {primerTramo.length}
+    // Wrapper con gradiente naranja -> verde como "marco" (efecto glow-border)
+    <motion.div
+      style={{ x, scale, zIndex: index + 1 }}
+      className="absolute inset-6 md:inset-16 rounded-[2rem] md:rounded-[2.5rem] p-[1.5px]
+                 bg-dark-orange-primary
+                 shadow-[0_20px_80px_-20px_rgba(0,0,0,0.8)]"
+    >
+      <div className="relative w-full h-full rounded-[2rem] md:rounded-[2.5rem] bg-dark-bg
+                       flex flex-col p-8 md:p-12 overflow-hidden">
+        {/* overlay de profundidad: oscuro, no un color plano */}
+        <motion.div
+          style={{ opacity: dim }}
+          className="absolute inset-0 bg-black pointer-events-none"
+        />
+
+        {/* glow interno sutil en verde, esquina opuesta al acento naranja */}
+        <div className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-dark-green-primary/10 blur-[100px] pointer-events-none" />
+
+        <div className="mb-8 relative">
+          <span
+            className="text-6xl md:text-7xl font-black leading-none bg-clip-text text-transparent
+                       bg-dark-green-secondary"
+          >
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <p className="text-xs md:text-sm uppercase tracking-[0.2em] text-dark-orange-primary font-semibold mt-3">
+            Plan de Estudios
           </p>
-          <TrackList items={primerTramo} abierto={abierto} toggle={toggle} />
+          <h3 className="text-2xl md:text-4xl font-black text-dark-text uppercase leading-tight mt-1">
+            {pair.length === 2
+              ? `Cuatrimestres ${pair[0].numero} y ${pair[1].numero}`
+              : `Cuatrimestre ${pair[0].numero}`}
+          </h3>
         </div>
 
-        {/* Columna derecha: header + metodología + hito + TI */}
-        <div>
-          <span className="block text-xs uppercase tracking-[0.2em] text-light-green-primary mb-2">
-            Ruta académica
-          </span>
-          <h2 className="font-serif text-4xl mb-2 text-light-text">
-            Plan de Estudios
-          </h2>
-          <p className="text-light-text-muted mb-6 max-w-md">
-            Una ruta académica diseñada para llevarte desde la lógica básica
-            hasta la ingeniería...
-          </p>
+        <div className="flex-1 flex flex-col md:flex-row gap-6 min-h-0 justify-center items-stretch relative">
+          {pair.map((cuatri) => (
+            <CuatrimestreCard key={cuatri.numero} cuatri={cuatri} />
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
 
-          <div className="flex items-start gap-4 border-l-2 border-light-orange-primary pl-4 mb-10">
-            <div>
-              <h3 className="font-serif text-base text-light-orange-primary mb-1">
-                {metodologia.titulo}
-              </h3>
-              <p className="text-xs text-light-text-muted leading-relaxed">
-                {metodologia.texto}
-              </p>
-            </div>
-          </div>
+export default function StudyPlanSection({ cuatrimestres }: StudyPlanSectionProps) {
+  const targetRef = useRef<HTMLDivElement>(null);
+  const pairs = chunkInPairs(cuatrimestres);
 
-          {segundoTramo.length > 0 && (
-            <div className="flex flex-col">
-              <MilestoneCard
-                titulo="Ingeniería en TIID"
-                descripcion="sistemas inteligentes e infraestructura"
-                desde={segundoTramo[0].numero}
-                hasta={segundoTramo[segundoTramo.length - 1].numero}
-              />
-              <TrackList
-                items={segundoTramo}
-                abierto={abierto}
-                toggle={toggle}
-              />
-            </div>
-          )}
+  const { scrollYProgress } = useScroll({
+    target: targetRef,
+    offset: ["start start", "end end"],
+  });
+
+  const progressWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+
+  return (
+    <section
+      ref={targetRef}
+      style={{ height: `${pairs.length * 100}vh` }}
+      className="relative bg-dark-bg"
+    >
+      <div className="sticky top-0 h-screen overflow-hidden">
+        <div
+          className="absolute inset-0 opacity-[0.15] pointer-events-none"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, rgba(244,244,245,0.4) 1px, transparent 1px), linear-gradient(to bottom, rgba(244,244,245,0.4) 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
+        />
+
+        {/* glows de fondo en verde */}
+        <div className="absolute -top-40 -left-40 w-[36rem] h-[36rem] rounded-full bg-dark-orange-primary/20 blur-[120px] pointer-events-none" />
+        <div className="absolute -bottom-40 -right-40 w-[36rem] h-[36rem] rounded-full bg-dark-green-primary/25 blur-[120px] pointer-events-none" />
+
+        {pairs.map((pair, i) => (
+          <StackedCard
+            key={i}
+            pair={pair}
+            index={i}
+            total={pairs.length}
+            scrollYProgress={scrollYProgress}
+          />
+        ))}
+
+        {/* barra de progreso: gradiente combinado */}
+        <div className="absolute bottom-4 left-10 right-10 h-1.5 rounded-full bg-dark-border overflow-hidden z-50">
+          <motion.div
+            style={{ width: progressWidth }}
+            className="h-full rounded-full bg-gradient-to-r from-dark-orange-primary via-dark-orange-secondary to-dark-green-primary"
+          />
         </div>
       </div>
     </section>

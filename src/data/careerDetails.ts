@@ -32,6 +32,7 @@ export interface CareerDetail {
   stats: { icon: string; label: string; value: string; desc: string }[];
   metodologia: { titulo: string; texto: string };
   cuatrimestres: Cuatrimestre[];
+  perfilIngreso?: string[];
   perfilEgreso: string[];
   campoLaboral: { icon: string; titulo: string; desc: string }[];
   studentLife: StudentLifeImage[];
@@ -127,6 +128,12 @@ export const careerDetails: Record<string, CareerDetail> = {
           { nombre: "Estadía en el Sector Productivo", clave: true, descripcion: "Insértate en una empresa real para resolver un problema de desarrollo tecnológico y consolidar tu titulación." }
         ]
       }
+    ],
+    perfilIngreso: [
+      "Gusto por la lógica, las matemáticas y la resolución de problemas",
+      "Curiosidad por entender cómo funcionan los sistemas y aplicaciones digitales",
+      "Habilidad de análisis y atención al detalle",
+      "Disposición para el trabajo colaborativo y el aprendizaje autodidacta"
     ],
     perfilEgreso: [
       "Desarrollo de software multiplataforma (Web, Móvil, Escritorio)",
@@ -236,6 +243,12 @@ export const careerDetails: Record<string, CareerDetail> = {
         ]
       }
     ],
+    perfilIngreso: [
+      "Interés por la infraestructura tecnológica y la conectividad digital",
+      "Pensamiento lógico-matemático y capacidad de análisis",
+      "Disposición para el trabajo metódico y la resolución de problemas técnicos",
+      "Interés por la seguridad de la información y los entornos en la nube"
+    ],
     perfilEgreso: [
       "Configuración, administración y mantenimiento de redes LAN, WAN y arquitecturas híbridas",
       "Automatización de infraestructuras de red mediante scripts de programación",
@@ -343,6 +356,12 @@ export const careerDetails: Record<string, CareerDetail> = {
           { nombre: "Estadía en el Sector Productivo", clave: true, descripcion: "Despliega proyectos interactivos o estrategias multimedia en un entorno empresarial real." }
         ]
       }
+    ],
+    perfilIngreso: [
+      "Interés por el diseño digital, el modelado 3D y las tecnologías inmersivas",
+      "Creatividad y sensibilidad estética aplicada a la tecnología",
+      "Habilidad de comunicación visual y narrativa digital",
+      "Interés por los negocios digitales y las estrategias de mercadotecnia"
     ],
     perfilEgreso: [
       "Diseño y modelado de entornos virtuales en 3D interactivos",
