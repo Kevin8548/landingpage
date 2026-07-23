@@ -412,7 +412,7 @@ export const Aspirantes = () => {
         </div>
       </section>
 
-      {/* ---------- Cierre: CTA final ---------- */}
+      {/* ---------- Cierre: CTA final UwU ---------- */}
       <section className="relative py-20 px-6 overflow-hidden bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800">
         <div className="pointer-events-none absolute inset-0 bg-noise opacity-10" />
         <div className="relative max-w-5xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-8 text-center md:text-left">
