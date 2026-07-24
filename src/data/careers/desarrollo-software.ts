@@ -7,6 +7,22 @@ import studyPlan2 from "../../assets/careers/software/study-2.jpg";
 import studyPlan3 from "../../assets/careers/software/study-3.jpg";
 import perfil1 from "../../assets/careers/software/perfil-1.jpg";
 import perfil2 from "../../assets/careers/software/perfil-2.jpg";
+import life1 from "../../assets/careers/software/life-1.jpg";
+import life2 from "../../assets/careers/software/life-2.jpg";
+import life3 from "../../assets/careers/software/life-3.jpg";
+import life4 from "../../assets/careers/software/life-4.jpg";
+import life5 from "../../assets/careers/software/life-5.jpg";
+import life6 from "../../assets/careers/software/life-6.jpg";
+import life7 from "../../assets/careers/software/life-7.jpg";
+import life8 from "../../assets/careers/software/life-8.jpg";
+import life9 from "../../assets/careers/software/life-9.jpg";
+import life10 from "../../assets/careers/software/life-10.jpg";
+import life11 from "../../assets/careers/software/life-11.jpg";
+import life12 from "../../assets/careers/software/life-12.jpg";
+import life13 from "../../assets/careers/software/life-13.jpg";
+import life14 from "../../assets/careers/software/life-14.jpg";
+import life15 from "../../assets/careers/software/life-15.jpg";
+import life16 from "../../assets/careers/software/life-16.jpg";
 
 export const desarrolloSoftware: CareerDetail = {
   id: "desarrollo-software",
@@ -119,8 +135,21 @@ export const desarrolloSoftware: CareerDetail = {
     { icon: "database", titulo: "Administrador de Bases de Datos", desc: "Diseña, gestiona y asegura el almacenamiento de datos críticos de la empresa." }
   ],
   studentLife: [
-    { image: softwareBack, alt: "Estudiantes trabajando en la sala común" },
-    { image: softwareFront, alt: "Laboratorio de cómputo" },
-    { image: softwareBack, alt: "Estudiante programando" },
+    { image: life1, alt: "Vida estudiantil - Software 1" },
+    { image: life2, alt: "Vida estudiantil - Software 2" },
+    { image: life3, alt: "Vida estudiantil - Software 3" },
+    { image: life4, alt: "Vida estudiantil - Software 4" },
+    { image: life5, alt: "Vida estudiantil - Software 5" },
+    { image: life6, alt: "Vida estudiantil - Software 6" },
+    { image: life7, alt: "Vida estudiantil - Software 7" },
+    { image: life8, alt: "Vida estudiantil - Software 8" },
+    { image: life9, alt: "Vida estudiantil - Software 9" },
+    { image: life10, alt: "Vida estudiantil - Software 10" },
+    { image: life11, alt: "Vida estudiantil - Software 11" },
+    { image: life12, alt: "Vida estudiantil - Software 12" },
+    { image: life13, alt: "Vida estudiantil - Software 13" },
+    { image: life14, alt: "Vida estudiantil - Software 14" },
+    { image: life15, alt: "Vida estudiantil - Software 15" },
+    { image: life16, alt: "Vida estudiantil - Software 16" },
   ],
 };

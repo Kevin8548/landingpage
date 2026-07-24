@@ -1,111 +1,145 @@
-// src/components/sections/detail/StudentLifeSection.tsx
-import { useState, useMemo } from "react";
-import { Pause, Play } from "lucide-react";
+// src/components/sections/detailCareer/StudentLifeSection.tsx
+import { useRef } from "react";
+import { motion, useScroll, useTransform, useSpring, type MotionValue } from "framer-motion";
 import type { StudentLifeImage } from "../../../data/careerDetails";
 
-interface StudentLifeSectionProps {
+interface Props {
   images?: StudentLifeImage[];
 }
 
-interface Column {
-  items: StudentLifeImage[];
-  direction: "up" | "down";
-  speed: number;
+// Posiciones del mosaico — se repiten cíclicamente si hay más imágenes que slots
+const SLOTS = [
+  { top: "10%", left: "36%", width: "20%", height: "24%" },
+  { top: "6%", left: "66%", width: "24%", height: "20%" },
+  { top: "40%", left: "8%", width: "18%", height: "24%" },
+  { top: "46%", left: "58%", width: "16%", height: "16%" },
+  { top: "70%", left: "32%", width: "15%", height: "15%" },
+  { top: "64%", left: "70%", width: "18%", height: "18%" },
+];
+
+interface FlyImageProps {
+  img: StudentLifeImage;
+  index: number;
+  total: number;
+  scrollYProgress: MotionValue<number>;
 }
 
-// Patrones de aspect-ratio por columna — desincronizados para sentirse orgánico
-const SIZE_PATTERNS: Record<"up" | "down", string[]> = {
-  up: ["aspect-[3/4]", "aspect-[4/3]", "aspect-[1/1]", "aspect-[16/11]", "aspect-[4/5]"],
-  down: ["aspect-[4/3]", "aspect-[4/5]", "aspect-[16/11]", "aspect-[1/1]", "aspect-[3/4]"],
-};
+// Cuántas imágenes se traslapan a la vez. Súbelo para que se vean más
+// juntas, bájalo a 1 para que aparezcan estrictamente una por una.
+const OVERLAP_COUNT = 3;
 
-function getSizeClass(direction: "up" | "down", indexInOriginal: number) {
-  const pattern = SIZE_PATTERNS[direction];
-  return pattern[indexInOriginal % pattern.length];
+// Asegura que cada breakpoint quede dentro de [0,1]
+const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
+
+function makeRange(...values: number[]): number[] {
+  const clamped = values.map(clamp01);
+  for (let i = 1; i < clamped.length; i++) {
+    if (clamped[i] <= clamped[i - 1]) {
+      clamped[i] = Math.min(1, clamped[i - 1] + 0.0001);
+    }
+  }
+  return clamped;
 }
 
-function buildColumns(images: StudentLifeImage[]): Column[] {
-  // Reparte las imágenes en 2 columnas alternando, para variar el contenido de cada una
-  const colA = images.filter((_, i) => i % 2 === 0);
-  const colB = images.filter((_, i) => i % 2 !== 0);
+function FlyImage({ img, index, total, scrollYProgress }: FlyImageProps) {
+  const step = 1 / total;
+  const duration = step * OVERLAP_COUNT;
+  const rawStart = index * step;
 
-  return [
-    { items: colA.length ? colA : images, direction: "up", speed: 32 },
-    { items: colB.length ? colB : images, direction: "down", speed: 40 },
-  ];
+  // Todos los breakpoints se calculan como fracciones de la MISMA duración,
+  // en orden ascendente, y se pasan juntos a makeRange para garantizar
+  // que ninguno quede menor que el anterior.
+  const [start, fadeInEnd, growEnd, fadeOutStart, end] = makeRange(
+    rawStart,
+    rawStart + duration * 0.15, // fadeInEnd
+    rawStart + duration * 0.55, // growEnd
+    rawStart + duration * 0.8,  // fadeOutStart
+    rawStart + duration         // end
+  );
+
+  const scale = useTransform(scrollYProgress, [start, growEnd, end], [0.2, 1, 2.2]);
+
+  // Blur en las 3 fases: entra desenfocada -> se enfoca en el pico -> se
+  // desenfoca de nuevo (más leve) al salir, como si pasara muy cerca.
+  const blurPx = useTransform(scrollYProgress, [start, growEnd, end], [2, 0, 1.5]);
+  const filter = useTransform(blurPx, (v) => `blur(${v}px)`);
+
+  const opacity = useTransform(
+    scrollYProgress,
+    [start, fadeInEnd, fadeOutStart, end],
+    [0, 1, 1, 0]
+  );
+
+  const slot = SLOTS[index % SLOTS.length];
+
+  return (
+    <motion.div
+      style={{ ...slot, scale, opacity, position: "absolute", willChange: "transform, opacity, filter", filter }}
+      className="rounded-md overflow-hidden shadow-xl relative"
+    >
+      <img src={img.image} alt={img.alt ?? ""} className="w-full h-full object-cover" />
+      {/* <div className="absolute inset-0 bg-orange-500/60 mix-blend-multiply pointer-events-none" /> */}
+      <div className="absolute inset-0 bg-black/60 pointer-events-none" />
+    </motion.div>
+  );
 }
 
-export default function StudentLifeSection({ images }: StudentLifeSectionProps) {
-  const [paused, setPaused] = useState(false);
+function ProgressDot({
+  index,
+  total,
+  scrollYProgress,
+}: {
+  index: number;
+  total: number;
+  scrollYProgress: MotionValue<number>;
+}) {
+  const step = 1 / total;
+  const a = clamp01(index * step);
+  const b = clamp01(index * step + step / 2);
+  const c = clamp01((index + 1) * step);
+  const opacity = useTransform(scrollYProgress, [a, b, c], [0.3, 1, 0.3]);
+  return <motion.span style={{ opacity }} className="w-2 h-2 rounded-full bg-white shrink-0" />;
+}
 
-  const columns = useMemo(() => buildColumns(images ?? []), [images]);
+export default function StudentLifeSection({ images }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"],
+  });
+
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 200,
+    damping: 30,
+    mass: 0.5,
+  });
 
   if (!images || images.length === 0) return null;
 
   return (
-    <section className="py-24 px-6 md:px-16">
-      <div className="flex items-end justify-between mb-12 gap-4 flex-wrap">
-        <div>
-          <h2 className="font-serif text-4xl mb-4">Vida Estudiantil</h2>
-          <p className="text-neutral-400 max-w-xl">
+    <section
+      ref={containerRef}
+      style={{ height: `${images.length * 60}vh` }}
+      className="relative bg-[#0b3d2e]"
+    >
+      <div className="sticky top-0 h-screen overflow-hidden" style={{ perspective: "800px" }}>
+        <div className="pointer-events-none absolute inset-0 bg-[#0b3d2e]/30 z-10" />
+
+        <div className="absolute inset-0 flex items-center justify-center z-20 px-8 pointer-events-none">
+          <p className="max-w-2xl text-center text-white/70 text-xl leading-relaxed">
             Más que aulas, somos un ecosistema de innovación y comunidad.
           </p>
         </div>
 
-        <button
-          onClick={() => setPaused((p) => !p)}
-          aria-label={paused ? "Reanudar animación" : "Pausar animación"}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-300 text-neutral-600 transition-colors hover:bg-neutral-100 shrink-0"
-        >
-          {paused ? <Play size={16} /> : <Pause size={16} />}
-        </button>
-      </div>
-
-      <div
-        className="relative grid grid-cols-1 sm:grid-cols-2 gap-6 overflow-hidden rounded-xl"
-        style={{ height: "min(720px, 80vh)" }}
-      >
-        {columns.map((col, colIndex) => (
-          <div key={colIndex} className="relative h-full overflow-hidden">
-            <div
-              className={`flex flex-col gap-6 ${
-                col.direction === "up" ? "animate-marquee-up" : "animate-marquee-down"
-              }`}
-              style={{
-                animationDuration: `${col.speed}s`,
-                animationPlayState: paused ? "paused" : "running",
-              }}
-            >
-              {[...col.items, ...col.items].map((img, i) => {
-                const originalIndex = i % col.items.length;
-                // Marca la primera aparición de la última imagen del set original como "destacada"
-                const isDestacada =
-                  i === col.items.length - 1 && colIndex === columns.length - 1;
-                const sizeClass = getSizeClass(col.direction, originalIndex);
-
-                return (
-                  <div
-                    key={`${img.image}-${i}`}
-                    className={`rounded-xl overflow-hidden ${sizeClass} shrink-0 ${
-                      isDestacada ? "border border-dark-orange-primary" : ""
-                    }`}
-                  >
-                    <img
-                      src={img.image}
-                      alt={img.alt ?? ""}
-                      className="w-full h-full object-cover"
-                      loading={colIndex === 0 && i < 2 ? "eager" : "lazy"}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+        {images.map((img, i) => (
+          <FlyImage key={img.image} img={img} index={i} total={images.length} scrollYProgress={smoothProgress} />
         ))}
 
-        {/* Fades arriba/abajo para que el corte del scroll no se vea seco */}
-        <div className="pointer-events-none absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-white to-transparent z-10" />
-        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent z-10" />
+        <div className="absolute right-6 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-20 max-h-[60vh] overflow-hidden">
+          {images.map((_, i) => (
+            <ProgressDot key={i} index={i} total={images.length} scrollYProgress={smoothProgress} />
+          ))}
+        </div>
       </div>
     </section>
   );

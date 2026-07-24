@@ -7,6 +7,22 @@ import studyPlan2 from "../../assets/careers/entornos/study-2.jpg";
 import studyPlan3 from "../../assets/careers/entornos/study-3.jpg";
 import perfil1 from "../../assets/careers/entornos/perfil-1.jpg";
 import perfil2 from "../../assets/careers/entornos/perfil-2.jpg";
+import life1 from "../../assets/careers/entornos/life-1.jpg";
+import life2 from "../../assets/careers/entornos/life-2.jpg";
+import life3 from "../../assets/careers/entornos/life-3.jpg";
+import life4 from "../../assets/careers/entornos/life-4.jpg";
+import life5 from "../../assets/careers/entornos/life-5.jpg";
+import life6 from "../../assets/careers/entornos/life-6.jpg";
+import life7 from "../../assets/careers/entornos/life-7.jpg";
+import life8 from "../../assets/careers/entornos/life-8.jpg";
+import life9 from "../../assets/careers/entornos/life-9.jpg";
+import life10 from "../../assets/careers/entornos/life-10.jpg";
+import life11 from "../../assets/careers/entornos/life-11.jpg";
+import life12 from "../../assets/careers/entornos/life-12.jpg";
+import life13 from "../../assets/careers/entornos/life-13.jpg";
+import life14 from "../../assets/careers/entornos/life-14.jpg";
+import life15 from "../../assets/careers/entornos/life-15.jpg";
+import life16 from "../../assets/careers/entornos/life-16.jpg";
 
 export const entornosVirtuales: CareerDetail = {
   id: "entornos-virtuales",
@@ -119,8 +135,21 @@ export const entornosVirtuales: CareerDetail = {
     { icon: "video", titulo: "Productor de Contenido Audiovisual", desc: "Edita y produce material multimedia de alta calidad para canales interactivos." }
   ],
   studentLife: [
-    { image: entornosBack, alt: "Estudiantes trabajando en la sala común" },
-    { image: entornosFront, alt: "Laboratorio de cómputo" },
-    { image: entornosBack, alt: "Estudiante programando" },
+    { image: life1, alt: "Vida estudiantil - Entornos 1" },
+    { image: life2, alt: "Vida estudiantil - Entornos 2" },
+    { image: life3, alt: "Vida estudiantil - Entornos 3" },
+    { image: life4, alt: "Vida estudiantil - Entornos 4" },
+    { image: life5, alt: "Vida estudiantil - Entornos 5" },
+    { image: life6, alt: "Vida estudiantil - Entornos 6" },
+    { image: life7, alt: "Vida estudiantil - Entornos 7" },
+    { image: life8, alt: "Vida estudiantil - Entornos 8" },
+    { image: life9, alt: "Vida estudiantil - Entornos 9" },
+    { image: life10, alt: "Vida estudiantil - Entornos 10" },
+    { image: life11, alt: "Vida estudiantil - Entornos 11" },
+    { image: life12, alt: "Vida estudiantil - Entornos 12" },
+    { image: life13, alt: "Vida estudiantil - Entornos 13" },
+    { image: life14, alt: "Vida estudiantil - Entornos 14" },
+    { image: life15, alt: "Vida estudiantil - Entornos 15" },
+    { image: life16, alt: "Vida estudiantil - Entornos 16" },
   ],
 };

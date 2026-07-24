@@ -6,6 +6,7 @@ import type { Cuatrimestre, Materia } from "../../../data/careerDetails";
 
 interface StudyPlanSectionProps {
   cuatrimestres: Cuatrimestre[];
+  studyPlanImages: string[];
 }
 
 function chunkInPairs<T>(items: T[]): T[][] {
@@ -64,14 +65,33 @@ function CuatrimestreCard({ cuatri }: { cuatri: Cuatrimestre }) {
   );
 }
 
+function StudyImagePanel({ src }: { src?: string }) {
+  if (!src) return null;
+
+  return (
+    <div
+      className="w-full md:w-[280px] h-40 md:h-full shrink-0 rounded-2xl overflow-hidden
+                 border border-dark-orange-primary/25 relative"
+    >
+      <img
+        src={src}
+        alt="Estudiantes en actividades del plan de estudios"
+        className="w-full h-full object-cover"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-dark-bg/50 via-transparent to-transparent" />
+    </div>
+  );
+}
+
 interface StackedCardProps {
   pair: Cuatrimestre[];
   index: number;
   total: number;
   scrollYProgress: MotionValue<number>;
+  image?: string;
 }
 
-function StackedCard({ pair, index, total, scrollYProgress }: StackedCardProps) {
+function StackedCard({ pair, index, total, scrollYProgress, image }: StackedCardProps) {
   const start = index / total;
   const end = (index + 1) / total;
   const isLast = index === total - 1;
@@ -133,16 +153,28 @@ function StackedCard({ pair, index, total, scrollYProgress }: StackedCardProps) 
         </div>
 
         <div className="flex-1 flex flex-col md:flex-row gap-6 min-h-0 justify-center items-stretch relative">
-          {pair.map((cuatri) => (
-            <CuatrimestreCard key={cuatri.numero} cuatri={cuatri} />
-          ))}
+          {pair.length === 2 ? (
+            <>
+              <CuatrimestreCard cuatri={pair[0]} />
+              <StudyImagePanel src={image} />
+              <CuatrimestreCard cuatri={pair[1]} />
+            </>
+          ) : (
+            <>
+              <CuatrimestreCard cuatri={pair[0]} />
+              <StudyImagePanel src={image} />
+            </>
+          )}
         </div>
       </div>
     </motion.div>
   );
 }
 
-export default function StudyPlanSection({ cuatrimestres }: StudyPlanSectionProps) {
+export default function StudyPlanSection({
+  cuatrimestres,
+  studyPlanImages,
+}: StudyPlanSectionProps) {
   const targetRef = useRef<HTMLDivElement>(null);
   const pairs = chunkInPairs(cuatrimestres);
 
@@ -180,6 +212,7 @@ export default function StudyPlanSection({ cuatrimestres }: StudyPlanSectionProp
             index={i}
             total={pairs.length}
             scrollYProgress={scrollYProgress}
+            image={studyPlanImages[i]}
           />
         ))}
 

@@ -12,7 +12,6 @@ import FinalCTA from "../components/sections/detailCareer/FinalCTA";
 export default function CareerDetail() {
   const { careerId } = useParams<{ careerId: string }>();
   const career = careerId ? careerDetails[careerId] : undefined;
-  
 
   if (!career) return <Navigate to="/" replace />;
 
@@ -23,6 +22,10 @@ export default function CareerDetail() {
   const cuatrimestresCompletos = esTSU
     ? [...career.cuatrimestres, ...ingenieriaTI.cuatrimestres]
     : career.cuatrimestres;
+
+  const studyPlanImagesCompletas = esTSU
+    ? [...career.studyPlanImages, ...ingenieriaTI.studyPlanImages]
+    : career.studyPlanImages;
 
   return (
     <>
@@ -35,6 +38,7 @@ export default function CareerDetail() {
 
       <StudyPlanSection
         cuatrimestres={cuatrimestresCompletos}
+        studyPlanImages={studyPlanImagesCompletas}
       />
 
       <ProfileAndFieldSection
