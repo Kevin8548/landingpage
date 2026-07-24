@@ -12,6 +12,7 @@ import FinalCTA from "../components/sections/detailCareer/FinalCTA";
 export default function CareerDetail() {
   const { careerId } = useParams<{ careerId: string }>();
   const career = careerId ? careerDetails[careerId] : undefined;
+  
 
   if (!career) return <Navigate to="/" replace />;
 
@@ -26,9 +27,8 @@ export default function CareerDetail() {
   return (
     <>
       <DetailHero
-        career={career}
-        imageBack={career.imageBack}
-        imageFront={career.imageFront}
+        career={{ nombre: career.nombre, quote: career.quote }}
+        videoSrc={career.videoSrc ?? "/videos/redes.mp4"}
       />
 
       <WhyChooseSection stats={career.stats} />

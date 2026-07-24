@@ -12,6 +12,7 @@ export const entornosVirtuales: CareerDetail = {
   id: "entornos-virtuales",
   nombre: "T.S.U. en Tecnologías de la Información Área Entornos Virtuales y Negocios Digitales",
   quote: "Fusiona el arte digital con la tecnología para crear experiencias interactivas y negocios de alto impacto.",
+  videoSrc: "videos/entornos.mp4",
   imageBack: entornosBack,
   imageFront: entornosFront,
   studyPlanImages: [studyPlan1, studyPlan2, studyPlan3],

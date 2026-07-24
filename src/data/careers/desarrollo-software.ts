@@ -12,6 +12,7 @@ export const desarrolloSoftware: CareerDetail = {
   id: "desarrollo-software",
   nombre: "T.S.U. en Tecnologías de la Información Área Desarrollo de Software Multiplataforma",
   quote: "No solo escribas código, construye soluciones interconectadas que transformen el mundo digital.",
+  videoSrc: "videos/software.mp4",
   imageBack: softwareBack,
   imageFront: softwareFront,
   studyPlanImages: [studyPlan1, studyPlan2, studyPlan3],

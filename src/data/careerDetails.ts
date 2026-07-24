@@ -24,17 +24,18 @@ export interface CareerDetail {
   id: string;
   nombre: string;
   quote: string;
-  imageBack: string;
-  imageFront: string;
+  videoSrc?: string;
+  imageBack?: string;
+  imageFront?: string;
   studyPlanImages: string[];
-  perfilIngresoImages: string[];
+  perfilIngresoImages?: string[];
   stats: { icon: string; label: string; value: string; desc: string }[];
   metodologia: { titulo: string; texto: string };
   cuatrimestres: Cuatrimestre[];
   perfilIngreso?: string[];
   perfilEgreso: string[];
   campoLaboral: { icon: string; titulo: string; desc: string }[];
-  studentLife: StudentLifeImage[];
+  studentLife?: StudentLifeImage[];
 }
 
 export const careerDetails: Record<string, CareerDetail> = {
