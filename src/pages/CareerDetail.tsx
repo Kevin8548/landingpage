@@ -23,23 +23,26 @@ export default function CareerDetail() {
     ? [...career.cuatrimestres, ...ingenieriaTI.cuatrimestres]
     : career.cuatrimestres;
 
+  const studyPlanImagesCompletas = esTSU
+    ? [...career.studyPlanImages, ...ingenieriaTI.studyPlanImages]
+    : career.studyPlanImages;
+
   return (
     <>
       <DetailHero
-        career={career}
-        imageBack={career.imageBack}
-        imageFront={career.imageFront}
+        career={{ nombre: career.nombre, quote: career.quote }}
+        videoSrc={career.videoSrc ?? "/videos/redes.mp4"}
       />
 
       <WhyChooseSection stats={career.stats} />
 
       <StudyPlanSection
         cuatrimestres={cuatrimestresCompletos}
-        metodologia={career.metodologia}
-        continuacionDesde={esTSU ? career.cuatrimestres.length : undefined}
+        studyPlanImages={studyPlanImagesCompletas}
       />
 
       <ProfileAndFieldSection
+        perfilIngreso={career.perfilIngreso}
         perfilEgreso={career.perfilEgreso}
         campoLaboral={career.campoLaboral}
       />
