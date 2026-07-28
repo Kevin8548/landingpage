@@ -44,6 +44,7 @@ export default function CareerDetail() {
       <ProfileAndFieldSection
         perfilIngreso={career.perfilIngreso}
         perfilEgreso={career.perfilEgreso}
+        perfilImages={career.perfilImages}
         campoLaboral={career.campoLaboral}
       />
 

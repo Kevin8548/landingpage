@@ -28,7 +28,7 @@ export interface CareerDetail {
   imageBack?: string;
   imageFront?: string;
   studyPlanImages: string[];
-  perfilIngresoImages?: string[];
+  perfilImages?: string[];
   stats: { icon: string; label: string; value: string; desc: string }[];
   metodologia: { titulo: string; texto: string };
   cuatrimestres: Cuatrimestre[];

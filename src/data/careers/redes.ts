@@ -32,7 +32,7 @@ export const redes: CareerDetail = {
   imageBack: redesBack,
   imageFront: redesFront,
   studyPlanImages: [studyPlan1, studyPlan2, studyPlan3],
-  perfilIngresoImages: [perfil1, perfil2],
+  perfilImages: [perfil1, perfil2],
   stats: [
     { icon: "shield", label: "Tasa de Empleo", value: "94%", desc: "De egresados trabajando en administración de redes, soporte y ciberseguridad." },
     { icon: "server", label: "Certificaciones", value: "CCNA", desc: "Currículo alineado con estándares internacionales de la industria como Cisco." },

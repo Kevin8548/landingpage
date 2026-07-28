@@ -32,7 +32,7 @@ export const entornosVirtuales: CareerDetail = {
   imageBack: entornosBack,
   imageFront: entornosFront,
   studyPlanImages: [studyPlan1, studyPlan2, studyPlan3],
-  perfilIngresoImages: [perfil1, perfil2],
+  perfilImages: [perfil1, perfil2],
   stats: [
     { icon: "palette", label: "Creatividad", value: "100%", desc: "Orientado al diseño interactivo, modelado 3D y estrategias de marketing digital." },
     { icon: "vr", label: "Inmersión", value: "AR/VR", desc: "Especialización en desarrollo para Realidad Virtual y Realidad Aumentada." },

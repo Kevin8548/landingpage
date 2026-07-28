@@ -32,7 +32,7 @@ export const desarrolloSoftware: CareerDetail = {
   imageBack: softwareBack,
   imageFront: softwareFront,
   studyPlanImages: [studyPlan1, studyPlan2, studyPlan3],
-  perfilIngresoImages: [perfil1, perfil2],
+  perfilImages: [perfil1, perfil2],
   stats: [
     { icon: "terminal", label: "Empleabilidad", value: "95%", desc: "Egresados laborando en desarrollo de software y TI a nivel nacional." },
     { icon: "code", label: "Enfoque Práctico", value: "70/30", desc: "Relación de horas de desarrollo práctico frente a teoría conceptual." },
