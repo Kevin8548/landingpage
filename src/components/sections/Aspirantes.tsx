@@ -1,85 +1,113 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiArrowRight, FiDownload, FiCheck, FiChevronRight } from "react-icons/fi";
+import {
+  FiArrowRight,
+  FiDownload,
+  FiCheck,
+  FiChevronRight,
+  FiEdit3,
+  FiTrash2,
+  FiPlus,
+  FiX,
+  FiUpload,
+} from "react-icons/fi";
 import heroImg from "../../assets/A-1.jpg";
 import paseDirectoImg from "../../assets/A-2.jpeg";
 import cbtisLogo from "../../assets/cbtis.png";
 import cobatLogo from "../../assets/cobat.png";
+import { useConfirm } from "../ui/ConfirmDialog";
 
 interface KeyDate {
+  id: string;
   title: string;
   description: string;
 }
 
-// Puedes agregar o quitar fechas libremente: el tracker y el panel de
-// detalle se ajustan solos a cualquier cantidad de elementos.
+interface Institution {
+  id: string;
+  name: string;
+  description: string;
+  logo?: string;
+}
+
+// Contenido semilla. Una vez que exista backend, esto puede pasar a ser
+// el "fallback" que se usa mientras carga la data real.
 const dates: KeyDate[] = [
   {
+    id: "convocatoria",
     title: "Publicación de convocatoria",
     description:
       "Se libera la convocatoria oficial con los requisitos y el calendario completo del proceso.",
   },
   {
+    id: "registro-apertura",
     title: "Apertura de registro",
     description:
       "Comienza el registro en línea. Consulta los requisitos y prepara tu documentación.",
   },
   {
+    id: "propedeutico",
     title: "Curso propedéutico",
     description:
       "Sesiones de preparación para el examen de admisión, dirigidas a los aspirantes registrados.",
   },
   {
+    id: "registro-cierre",
     title: "Cierre de registro",
     description:
       "Última fecha para entregar tu documentación y confirmar tu lugar en el proceso.",
   },
   {
+    id: "examen",
     title: "Examen de admisión",
     description:
       "Presenta tu examen en la fecha y sede asignadas durante tu proceso de registro.",
   },
   {
+    id: "resultados",
     title: "Publicación de resultados",
     description:
       "Consulta el resultado de tu proceso de admisión con tu número de folio.",
   },
   {
+    id: "inscripcion",
     title: "Inscripción",
     description:
       "Los aspirantes aceptados formalizan su inscripción y quedan listos para iniciar el semestre.",
   },
 ];
 
-interface Institution {
-  name: string;
-  description: string;
-  logo?: string;
-}
-
 const institutions: Institution[] = [
   {
+    id: "cbtis",
     name: "CBTIs",
     logo: cbtisLogo,
     description:
       "Egresados del Centro de Bachillerato Tecnológico Industrial y de Servicios acceden a pase directo cumpliendo los requisitos académicos.",
   },
   {
+    id: "cobat",
     name: "Cobat",
     logo: cobatLogo,
     description:
       "Estudiantes del Colegio de Bachilleres de Tlaxcala cuentan con convenio de ingreso directo a la institución.",
   },
   {
+    id: "el-valle",
     name: "El Valle",
     description:
       "Egresados de preparatoria El Valle tienen acceso preferente mediante el convenio institucional vigente.",
   },
 ];
 
-// Los tres acentos de marca, usados en el mismo orden en que aparecen
-// las estadísticas: verde / naranja / teal.
+// Los tres acentos de marca, en el mismo orden en que aparecen las
+// estadísticas: verde / naranja / teal.
 const ACCENTS = ["var(--green)", "var(--orange)", "var(--teal)"];
+
+const genId = () =>
+  typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `id-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 const slideVariants = {
   enter: (dir: number) => ({ opacity: 0, x: dir * 30 }),
@@ -94,26 +122,129 @@ const SectionDivider = () => (
 );
 
 export const Aspirantes = () => {
+  const confirm = useConfirm();
+
+  // ---------- Modo edición ----------
+  const [editMode, setEditMode] = useState(false);
+
+  // ---------- Copy del hero ----------
+  const [heroTitle, setHeroTitle] = useState(
+    "Inscríbete en tu mejor opción para tu futuro"
+  );
+  const [heroSubtitle, setHeroSubtitle] = useState(
+    "Tres ingenierías con un gran impacto que el día de hoy manejan la industria."
+  );
+
+  // ---------- Fechas clave ----------
+  const [dateItems, setDateItems] = useState<KeyDate[]>(dates);
   const [activeDate, setActiveDate] = useState(0);
   const [direction, setDirection] = useState(1);
+  const safeActiveDate = dateItems.length
+    ? Math.min(activeDate, dateItems.length - 1)
+    : 0;
 
   const goTo = (i: number) => {
     setDirection(i > activeDate ? 1 : -1);
     setActiveDate(i);
   };
 
+  const updateDateField = (
+    id: string,
+    field: "title" | "description",
+    value: string
+  ) => {
+    setDateItems((prev) =>
+      prev.map((d) => (d.id === id ? { ...d, [field]: value } : d))
+    );
+  };
+
+  const addDate = () => {
+    setDirection(1);
+    setActiveDate(dateItems.length);
+    setDateItems((prev) => [
+      ...prev,
+      {
+        id: genId(),
+        title: "Nueva etapa",
+        description: "Describe esta etapa del proceso.",
+      },
+    ]);
+  };
+
+  const deleteDate = async (id: string) => {
+    const ok = await confirm({
+      title: "¿Eliminar esta fecha?",
+      description: "Esta acción no se puede deshacer.",
+      confirmLabel: "Eliminar",
+      destructive: true,
+    });
+    if (!ok) return;
+    setDateItems((prev) => prev.filter((d) => d.id !== id));
+  };
+
+  // Mantiene el índice activo dentro de rango cuando se borran fechas.
   useEffect(() => {
+    if (dateItems.length > 0 && activeDate > dateItems.length - 1) {
+      setActiveDate(dateItems.length - 1);
+    }
+  }, [dateItems.length, activeDate]);
+
+  // Autoplay del carrusel: se pausa mientras se edita.
+  useEffect(() => {
+    if (editMode || dateItems.length <= 1) return;
     const interval = setInterval(() => {
       setDirection(1);
-      setActiveDate((i) => (i === dates.length - 1 ? 0 : i + 1));
+      setActiveDate((i) => (i === dateItems.length - 1 ? 0 : i + 1));
     }, 5000);
     return () => clearInterval(interval);
-  }, [activeDate]);
+  }, [activeDate, editMode, dateItems.length]);
+
+  // ---------- Pase directo ----------
+  const [institutionItems, setInstitutionItems] =
+    useState<Institution[]>(institutions);
+
+  const updateInstitutionField = (
+    id: string,
+    field: "name" | "description",
+    value: string
+  ) => {
+    setInstitutionItems((prev) =>
+      prev.map((it) => (it.id === id ? { ...it, [field]: value } : it))
+    );
+  };
+
+  const updateInstitutionLogo = (id: string, logo: string | undefined) => {
+    setInstitutionItems((prev) =>
+      prev.map((it) => (it.id === id ? { ...it, logo } : it))
+    );
+  };
+
+  const addInstitution = () => {
+    setInstitutionItems((prev) => [
+      ...prev,
+      {
+        id: genId(),
+        name: "Nueva institución",
+        description: "Describe el convenio con esta institución.",
+      },
+    ]);
+  };
+
+  const deleteInstitution = async (id: string) => {
+    const ok = await confirm({
+      title: "¿Eliminar esta institución?",
+      description: "Esta acción no se puede deshacer.",
+      confirmLabel: "Eliminar",
+      destructive: true,
+    });
+    if (!ok) return;
+    setInstitutionItems((prev) => prev.filter((it) => it.id !== id));
+  };
 
   const stats = [
     { value: "3", label: "Ingenierías" },
-    { value: pad(dates.length), label: "Etapas del proceso" },
-    { value: pad(institutions.length), label: "Convenios institucionales" },
+    { value: pad(dateItems.length), label: "Eventos" },
+    { value: pad(institutionItems.length), label: "Convenios institucionales" },
   ];
 
   return (
@@ -132,6 +263,12 @@ export const Aspirantes = () => {
           font-family: "JetBrains Mono", monospace;
         }
       `}</style>
+
+      {editMode && (
+        <div className="sticky top-0 z-40 bg-[var(--orange)] text-[var(--bg)] text-center text-[11px] font-data uppercase tracking-wider py-2 px-4">
+          Modo edición activo — los cambios solo viven en esta sesión, todavía no hay base de datos conectada
+        </div>
+      )}
 
       {/* ---------- Hero: full-bleed, texto sobre la imagen ---------- */}
       <section className="relative min-h-screen flex items-end lg:items-center overflow-hidden">
@@ -173,15 +310,22 @@ export const Aspirantes = () => {
             </span>
           </motion.div>
 
-          <motion.h1
-            className="font-display text-4xl md:text-6xl font-extrabold leading-[1.05] tracking-tight mb-7 text-[var(--ink)]"
-            initial="hidden"
-            animate="visible"
-            variants={{ visible: { transition: { staggerChildren: 0.06 } } }}
-          >
-            {"Inscríbete en tu mejor opción para tu futuro"
-              .split(" ")
-              .map((word, i) => (
+          {editMode ? (
+            <textarea
+              value={heroTitle}
+              onChange={(e) => setHeroTitle(e.target.value)}
+              rows={3}
+              placeholder="Título principal"
+              className="font-display text-4xl md:text-6xl font-extrabold leading-[1.05] tracking-tight mb-7 text-[var(--ink)] bg-transparent border border-dashed border-[var(--orange)]/50 rounded-xl px-3 py-2 w-full resize-y focus:outline-none focus:border-[var(--orange)]"
+            />
+          ) : (
+            <motion.h1
+              className="font-display text-4xl md:text-6xl font-extrabold leading-[1.05] tracking-tight mb-7 text-[var(--ink)]"
+              initial="hidden"
+              animate="visible"
+              variants={{ visible: { transition: { staggerChildren: 0.06 } } }}
+            >
+              {heroTitle.split(" ").map((word, i) => (
                 <motion.span
                   key={i}
                   className="inline-block mr-[0.3ch]"
@@ -198,11 +342,22 @@ export const Aspirantes = () => {
                   {word}
                 </motion.span>
               ))}
-          </motion.h1>
+            </motion.h1>
+          )}
 
-          <p className="text-[var(--ink)]/70 text-lg md:text-xl mb-10 max-w-lg leading-relaxed">
-            Tres ingenierías con un gran impacto que el día de hoy manejan la industria.
-          </p>
+          {editMode ? (
+            <textarea
+              value={heroSubtitle}
+              onChange={(e) => setHeroSubtitle(e.target.value)}
+              rows={2}
+              placeholder="Subtítulo"
+              className="text-[var(--ink)]/70 text-lg md:text-xl mb-10 max-w-lg leading-relaxed bg-transparent border border-dashed border-[var(--ink)]/30 rounded-xl px-3 py-2 w-full resize-y focus:outline-none focus:border-[var(--ink)]/60"
+            />
+          ) : (
+            <p className="text-[var(--ink)]/70 text-lg md:text-xl mb-10 max-w-lg leading-relaxed">
+              {heroSubtitle}
+            </p>
+          )}
 
           <div className="flex flex-wrap items-center gap-4">
             <motion.button
@@ -271,86 +426,172 @@ export const Aspirantes = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8">
-            {/* Navegador de pasos */}
-            <div className="flex lg:flex-col gap-2 overflow-x-auto no-scrollbar pb-2 lg:pb-0 lg:overflow-visible">
-              {dates.map((d, i) => (
+          {dateItems.length === 0 ? (
+            <div className="rounded-2xl border-2 border-dashed border-[var(--line)] p-12 text-center">
+              <p className="text-[var(--muted)] mb-4">
+                Todavía no hay fechas registradas.
+              </p>
+              {editMode && (
                 <button
-                  key={d.title}
                   type="button"
-                  onClick={() => goTo(i)}
-                  aria-current={i === activeDate}
-                  className={`group flex items-center gap-3 shrink-0 lg:w-full text-left px-4 py-3 rounded-xl border transition-colors ${
-                    i === activeDate
-                      ? "bg-[var(--ink)]/[0.06] border-[var(--orange)]/30"
-                      : "border-transparent hover:bg-[var(--ink)]/[0.03]"
-                  }`}
+                  onClick={addDate}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--orange)] text-[var(--bg)] text-sm font-semibold"
                 >
-                  <span
-                    className={`font-data flex items-center justify-center w-7 h-7 rounded-full text-[11px] font-medium shrink-0 transition-colors ${
-                      i < activeDate
-                        ? "bg-[var(--orange)]/20 text-[var(--orange)]"
-                        : i === activeDate
-                        ? "bg-[var(--orange)] text-[var(--bg)]"
-                        : "bg-[var(--ink)]/5 text-[var(--muted)]"
-                    }`}
-                  >
-                    {i < activeDate ? <FiCheck className="w-3.5 h-3.5" /> : i + 1}
-                  </span>
-                  <span
-                    className={`text-sm whitespace-nowrap lg:whitespace-normal ${
-                      i === activeDate ? "text-[var(--ink)] font-medium" : "text-[var(--muted)]"
-                    }`}
-                  >
-                    {d.title}
-                  </span>
-                  <FiChevronRight
-                    className={`hidden lg:block ml-auto w-4 h-4 transition-opacity ${
-                      i === activeDate ? "opacity-100 text-[var(--orange)]" : "opacity-0"
-                    }`}
-                  />
+                  <FiPlus className="w-4 h-4" /> Agregar la primera fecha
                 </button>
-              ))}
+              )}
             </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8">
+              {/* Navegador de pasos */}
+              <div className="flex lg:flex-col gap-2 overflow-x-auto no-scrollbar pb-2 lg:pb-0 lg:overflow-visible">
+                {dateItems.map((d, i) => (
+                  <div
+                    key={d.id}
+                    className={`group flex items-center shrink-0 lg:w-full rounded-xl border transition-colors ${
+                      i === safeActiveDate
+                        ? "bg-[var(--ink)]/[0.06] border-[var(--orange)]/30"
+                        : "border-transparent hover:bg-[var(--ink)]/[0.03]"
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => goTo(i)}
+                      aria-current={i === safeActiveDate}
+                      className="flex items-center gap-3 flex-1 min-w-0 text-left px-4 py-3"
+                    >
+                      <span
+                        className={`font-data flex items-center justify-center w-7 h-7 rounded-full text-[11px] font-medium shrink-0 transition-colors ${
+                          i < safeActiveDate
+                            ? "bg-[var(--orange)]/20 text-[var(--orange)]"
+                            : i === safeActiveDate
+                            ? "bg-[var(--orange)] text-[var(--bg)]"
+                            : "bg-[var(--ink)]/5 text-[var(--muted)]"
+                        }`}
+                      >
+                        {i < safeActiveDate ? (
+                          <FiCheck className="w-3.5 h-3.5" />
+                        ) : (
+                          i + 1
+                        )}
+                      </span>
+                      <span
+                        className={`text-sm truncate whitespace-nowrap lg:whitespace-normal ${
+                          i === safeActiveDate
+                            ? "text-[var(--ink)] font-medium"
+                            : "text-[var(--muted)]"
+                        }`}
+                      >
+                        {d.title}
+                      </span>
+                      <FiChevronRight
+                        className={`hidden lg:block ml-auto w-4 h-4 shrink-0 transition-opacity ${
+                          i === safeActiveDate
+                            ? "opacity-100 text-[var(--orange)]"
+                            : "opacity-0"
+                        }`}
+                      />
+                    </button>
 
-            {/* Panel de detalle */}
-            <div className="relative rounded-2xl border border-[var(--line)] bg-[var(--glass)] backdrop-blur-sm p-8 md:p-12 overflow-hidden min-h-[22rem] flex flex-col justify-center">
-              <span className="font-display pointer-events-none select-none absolute -right-4 -top-8 text-[8rem] md:text-[11rem] font-bold leading-none text-[var(--ink)]/[0.035]">
-                {pad(activeDate + 1)}
-              </span>
+                    {editMode && (
+                      <button
+                        type="button"
+                        onClick={() => deleteDate(d.id)}
+                        aria-label="Eliminar fecha"
+                        className="shrink-0 p-2 mr-2 rounded-md text-[var(--muted)] hover:text-red-400 hover:bg-[var(--ink)]/5 transition-colors"
+                      >
+                        <FiTrash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
 
-              <AnimatePresence initial={false} mode="wait" custom={direction}>
-                <motion.div
-                  key={activeDate}
-                  custom={direction}
-                  variants={slideVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{ duration: 0.35, ease: "easeOut" }}
-                  className="relative"
-                >
-                  <span className="font-data text-[var(--orange)] text-xs font-medium uppercase tracking-wider">
-                    Paso {activeDate + 1} de {dates.length}
-                  </span>
-                  <h3 className="font-display text-2xl md:text-4xl font-semibold text-[var(--ink)] mt-3 mb-4 max-w-lg">
-                    {dates[activeDate].title}
-                  </h3>
-                  <p className="text-[var(--muted)] leading-relaxed max-w-xl">
-                    {dates[activeDate].description}
-                  </p>
-                </motion.div>
-              </AnimatePresence>
+                {editMode && (
+                  <button
+                    type="button"
+                    onClick={addDate}
+                    className="flex items-center justify-center gap-2 shrink-0 lg:w-full px-4 py-3 rounded-xl border-2 border-dashed border-[var(--line)] text-[var(--muted)] hover:border-[var(--orange)]/40 hover:text-[var(--orange)] transition-colors text-sm font-medium"
+                  >
+                    <FiPlus className="w-4 h-4" /> Agregar fecha
+                  </button>
+                )}
+              </div>
 
-              <div className="relative mt-10 h-1 w-full max-w-md bg-[var(--ink)]/5 rounded-full overflow-hidden">
-                <motion.div
-                  className="h-full bg-[var(--orange)] rounded-full"
-                  animate={{ width: `${((activeDate + 1) / dates.length) * 100}%` }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                />
+              {/* Panel de detalle */}
+              <div className="relative rounded-2xl border border-[var(--line)] bg-[var(--glass)] backdrop-blur-sm p-8 md:p-12 overflow-hidden min-h-[22rem] flex flex-col justify-center">
+                <span className="font-display pointer-events-none select-none absolute -right-4 -top-8 text-[8rem] md:text-[11rem] font-bold leading-none text-[var(--ink)]/[0.035]">
+                  {pad(safeActiveDate + 1)}
+                </span>
+
+                <AnimatePresence initial={false} mode="wait" custom={direction}>
+                  <motion.div
+                    key={dateItems[safeActiveDate].id}
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ duration: 0.35, ease: "easeOut" }}
+                    className="relative"
+                  >
+                    <span className="font-data text-[var(--orange)] text-xs font-medium uppercase tracking-wider">
+                      Paso {safeActiveDate + 1} de {dateItems.length}
+                    </span>
+
+                    {editMode ? (
+                      <div className="mt-3 space-y-3">
+                        <input
+                          type="text"
+                          value={dateItems[safeActiveDate].title}
+                          onChange={(e) =>
+                            updateDateField(
+                              dateItems[safeActiveDate].id,
+                              "title",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Título de la etapa"
+                          className="font-display text-2xl md:text-4xl font-semibold text-[var(--ink)] bg-transparent border-b border-dashed border-[var(--orange)]/50 focus:outline-none focus:border-[var(--orange)] w-full max-w-lg pb-1"
+                        />
+                        <textarea
+                          value={dateItems[safeActiveDate].description}
+                          onChange={(e) =>
+                            updateDateField(
+                              dateItems[safeActiveDate].id,
+                              "description",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Descripción de la etapa"
+                          rows={3}
+                          className="text-[var(--muted)] leading-relaxed max-w-xl w-full bg-transparent border border-dashed border-[var(--line)] rounded-lg p-3 focus:outline-none focus:border-[var(--orange)]/50 resize-y"
+                        />
+                      </div>
+                    ) : (
+                      <>
+                        <h3 className="font-display text-2xl md:text-4xl font-semibold text-[var(--ink)] mt-3 mb-4 max-w-lg">
+                          {dateItems[safeActiveDate].title}
+                        </h3>
+                        <p className="text-[var(--muted)] leading-relaxed max-w-xl">
+                          {dateItems[safeActiveDate].description}
+                        </p>
+                      </>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+
+                <div className="relative mt-10 h-1 w-full max-w-md bg-[var(--ink)]/5 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-[var(--orange)] rounded-full"
+                    animate={{
+                      width: `${((safeActiveDate + 1) / dateItems.length) * 100}%`,
+                    }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
 
@@ -392,9 +633,9 @@ export const Aspirantes = () => {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {institutions.map(({ name, description, logo }, i) => (
+            {institutionItems.map(({ id, name, description, logo }, i) => (
               <motion.div
-                key={name}
+                key={id}
                 className="group relative flex flex-col items-start gap-4 p-6 rounded-2xl border border-[var(--line)] bg-[var(--ink)]/[0.02] hover:bg-[var(--ink)]/[0.04] hover:border-[var(--green)]/20 transition-colors"
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -405,7 +646,58 @@ export const Aspirantes = () => {
                   0{i + 1}
                 </span>
 
-                {logo ? (
+                {editMode && (
+                  <button
+                    type="button"
+                    onClick={() => deleteInstitution(id)}
+                    aria-label="Eliminar institución"
+                    className="absolute top-4 left-4 p-1.5 rounded-md text-[var(--muted)] hover:text-red-400 hover:bg-[var(--ink)]/5 transition-colors"
+                  >
+                    <FiTrash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+
+                {editMode ? (
+                  <div className="flex items-center gap-3 mt-6">
+                    {logo ? (
+                      <img
+                        src={logo}
+                        alt={name}
+                        className="w-14 h-14 rounded-full object-contain border border-[var(--line)] bg-[var(--ink)]/5 p-2"
+                      />
+                    ) : (
+                      <div className="w-14 h-14 rounded-full border-2 border-dashed border-[var(--muted)]/40 flex items-center justify-center shrink-0">
+                        <FiArrowRight className="w-5 h-5 text-[var(--green)]" />
+                      </div>
+                    )}
+                    <div className="flex flex-col gap-1">
+                      <label className="cursor-pointer inline-flex items-center gap-1 font-data text-[11px] text-[var(--green)] hover:underline">
+                        <FiUpload className="w-3 h-3" />
+                        {logo ? "Cambiar logo" : "Subir logo"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              updateInstitutionLogo(id, URL.createObjectURL(file));
+                            }
+                          }}
+                        />
+                      </label>
+                      {logo && (
+                        <button
+                          type="button"
+                          onClick={() => updateInstitutionLogo(id, undefined)}
+                          className="font-data text-[11px] text-[var(--muted)] hover:text-red-400 text-left"
+                        >
+                          Quitar logo
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : logo ? (
                   <motion.img
                     src={logo}
                     alt={name}
@@ -419,20 +711,64 @@ export const Aspirantes = () => {
                   </div>
                 )}
 
-                <div>
-                  <h3 className="font-display text-xl font-semibold text-[var(--ink)] mb-1.5 group-hover:text-[var(--green)] transition-colors">
-                    {name}
-                  </h3>
-                  <p className="text-sm text-[var(--muted)] leading-relaxed">{description}</p>
+                <div className="w-full">
+                  {editMode ? (
+                    <>
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) =>
+                          updateInstitutionField(id, "name", e.target.value)
+                        }
+                        placeholder="Nombre de la institución"
+                        className="font-display text-xl font-semibold text-[var(--ink)] bg-transparent border-b border-dashed border-[var(--green)]/50 focus:outline-none focus:border-[var(--green)] w-full mb-2 pb-1"
+                      />
+                      <textarea
+                        value={description}
+                        onChange={(e) =>
+                          updateInstitutionField(
+                            id,
+                            "description",
+                            e.target.value
+                          )
+                        }
+                        placeholder="Descripción del convenio"
+                        rows={3}
+                        className="text-sm text-[var(--muted)] leading-relaxed w-full bg-transparent border border-dashed border-[var(--line)] rounded-lg p-2 focus:outline-none focus:border-[var(--green)]/50 resize-y"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="font-display text-xl font-semibold text-[var(--ink)] mb-1.5 group-hover:text-[var(--green)] transition-colors">
+                        {name}
+                      </h3>
+                      <p className="text-sm text-[var(--muted)] leading-relaxed">
+                        {description}
+                      </p>
+                    </>
+                  )}
                 </div>
               </motion.div>
             ))}
+
+            {editMode && (
+              <button
+                type="button"
+                onClick={addInstitution}
+                className="flex flex-col items-center justify-center gap-2 p-6 rounded-2xl border-2 border-dashed border-[var(--line)] text-[var(--muted)] hover:border-[var(--green)]/40 hover:text-[var(--green)] transition-colors min-h-[180px]"
+              >
+                <FiPlus className="w-6 h-6" />
+                <span className="text-sm font-medium">Agregar institución</span>
+              </button>
+            )}
           </div>
         </div>
       </section>
 
+      <SectionDivider />
+
       {/* ---------- Cierre: CTA final ---------- */}
-      <section className="relative py-20 px-6 overflow-hidden bg-gradient-to-br from-[#25bb57] via-[#1dd75b] to-[#0d2e1c]">
+      <section className="relative py-20 px-6 overflow-hidden bg-[var(--bg)]">
         <div className="pointer-events-none absolute inset-0 bg-noise opacity-10" />
         <div className="relative max-w-5xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-8 text-center md:text-left">
           <div>
@@ -469,6 +805,29 @@ export const Aspirantes = () => {
           </div>
         </div>
       </section>
+
+      {/* ---------- Botón: activar/salir de edición ----------
+          Sticky (no fixed) para que solo se mantenga visible mientras el
+          scroll está dentro de este componente, y desaparezca con el resto
+          del contenido al salir de Aspirantes. */}
+      <div className="sticky bottom-6 z-50 flex justify-end px-6 pointer-events-none">
+        <button
+          type="button"
+          onClick={() => setEditMode((v) => !v)}
+          className={`pointer-events-auto flex items-center gap-2 px-5 py-3 rounded-full font-data text-xs uppercase tracking-wider font-medium shadow-lg transition-colors ${
+            editMode
+              ? "bg-[var(--orange)] text-[var(--bg)]"
+              : "bg-[var(--ink)] text-[var(--bg)] hover:bg-[var(--green)]"
+          }`}
+        >
+          {editMode ? (
+            <FiX className="w-4 h-4" />
+          ) : (
+            <FiEdit3 className="w-4 h-4" />
+          )}
+          {editMode ? "Salir de edición" : "Editar página"}
+        </button>
+      </div>
     </div>
   );
 };

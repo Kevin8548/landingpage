@@ -1,14 +1,16 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Hero from "./components/sections/Hero"; 
-import { Careers } from "./components/sections/Careers"; // 🌟 Importamos la sección de Carreras
+import { Careers } from "./components/sections/Careers";
 import { Aspirantes } from "./components/sections/Aspirantes";
 import { WhyChooseTI } from "./components/layout/View";
 import CareerDetail from "./pages/CareerDetail";
 import Footer from "./components/layout/Footer";
-import Navbar from "./components/layout/Navbar"; 
+import Navbar from "./components/layout/Navbar";
+import { ConfirmProvider } from "./components/ui/ConfirmDialog";
 
 export default function App() {
   return (
+    <ConfirmProvider>
     <BrowserRouter basename="/landingpage">
       <Navbar />
       
@@ -33,5 +35,6 @@ export default function App() {
       
       <Footer />
     </BrowserRouter>
+    </ConfirmProvider>
   );
 }
