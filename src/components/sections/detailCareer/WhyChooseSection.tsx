@@ -1,5 +1,5 @@
 // src/components/sections/detail/WhyChooseSection.tsx
-import { useRef } from "react";
+import { memo, useRef } from "react";
 import { motion, useScroll, useTransform, type MotionValue } from "motion/react";
 import StatCard from "../../cards/StatCard";
 
@@ -172,7 +172,7 @@ function StaircaseCard({
   );
 }
 
-export default function WhyChooseSection({ stats }: WhyChooseSectionProps) {
+const WhyChooseSection = memo(function WhyChooseSection({ stats }: WhyChooseSectionProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { scrollYProgress } = useScroll({
@@ -218,4 +218,6 @@ export default function WhyChooseSection({ stats }: WhyChooseSectionProps) {
       </div>
     </div>
   );
-}
+});
+
+export default WhyChooseSection;
