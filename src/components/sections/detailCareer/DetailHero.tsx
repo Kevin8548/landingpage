@@ -1,4 +1,5 @@
 // src/components/sections/detail/DetailHero.tsx
+import { memo } from "react";
 import { motion } from "motion/react";
 import { ArrowDown } from "lucide-react";
 import { Badge } from "../../ui/Badge";
@@ -14,7 +15,7 @@ interface DetailHeroProps {
   posterSrc?: string;
 }
 
-export default function DetailHero({
+const DetailHero = memo(function DetailHero({
   career,
   videoSrc,
   posterSrc,
@@ -76,4 +77,6 @@ export default function DetailHero({
       </div>
     </section>
   );
-}
+});
+
+export default DetailHero;

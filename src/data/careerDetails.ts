@@ -1,8 +1,3 @@
-import { desarrolloSoftware } from "./careers/desarrollo-software";
-import { redes } from "./careers/redes";
-import { entornosVirtuales } from "./careers/entornos-virtuales";
-import { ingenieriaTI } from "./careers/ingenieria-ti";
-
 export interface Materia {
   nombre: string;
   clave: boolean;
@@ -11,6 +6,7 @@ export interface Materia {
 
 export interface StudentLifeImage {
   image: string;
+  imageSmall?: string;
   alt?: string;
 }
 
@@ -28,7 +24,7 @@ export interface CareerDetail {
   imageBack?: string;
   imageFront?: string;
   studyPlanImages: string[];
-  perfilIngresoImages?: string[];
+  perfilImages?: string[];
   stats: { icon: string; label: string; value: string; desc: string }[];
   metodologia: { titulo: string; texto: string };
   cuatrimestres: Cuatrimestre[];
@@ -38,9 +34,25 @@ export interface CareerDetail {
   studentLife?: StudentLifeImage[];
 }
 
-export const careerDetails: Record<string, CareerDetail> = {
-  "desarrollo-software": desarrolloSoftware,
-  "redes": redes,
-  "entornos-virtuales": entornosVirtuales,
-  "ingenieria-ti": ingenieriaTI,
+export type CareerId =
+  | "desarrollo-software"
+  | "redes"
+  | "entornos-virtuales"
+  | "ingenieria-ti";
+
+// Cada carrera contiene muchas referencias a imágenes. Cargarlas bajo demanda
+// evita que la visita a una carrera prepare los datos de las demás.
+const careerLoaders: Record<CareerId, () => Promise<CareerDetail>> = {
+  "desarrollo-software": () =>
+    import("./careers/desarrollo-software").then(({ desarrolloSoftware }) => desarrolloSoftware),
+  redes: () => import("./careers/redes").then(({ redes }) => redes),
+  "entornos-virtuales": () =>
+    import("./careers/entornos-virtuales").then(({ entornosVirtuales }) => entornosVirtuales),
+  "ingenieria-ti": () =>
+    import("./careers/ingenieria-ti").then(({ ingenieriaTI }) => ingenieriaTI),
 };
+
+export function loadCareerDetail(id: string): Promise<CareerDetail | undefined> {
+  const loader = careerLoaders[id as CareerId];
+  return loader ? loader() : Promise.resolve(undefined);
+}

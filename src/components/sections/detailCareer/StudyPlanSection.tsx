@@ -1,5 +1,5 @@
 // components/sections/StudyPlanSection.tsx
-import { useRef } from "react";
+import { memo, useMemo, useRef } from "react";
 import { motion, useTransform, type MotionValue } from "motion/react";
 import { useScroll } from "motion/react";
 import type { Cuatrimestre, Materia } from "../../../data/careerDetails";
@@ -17,7 +17,7 @@ function chunkInPairs<T>(items: T[]): T[][] {
   return pairs;
 }
 
-function MateriaItem({ materia }: { materia: Materia }) {
+const MateriaItem = memo(function MateriaItem({ materia }: { materia: Materia }) {
   return (
     <li className="border-b border-dark-border pb-2 last:border-0">
       <div className="flex items-start gap-2">
@@ -43,9 +43,9 @@ function MateriaItem({ materia }: { materia: Materia }) {
       )}
     </li>
   );
-}
+});
 
-function CuatrimestreCard({ cuatri }: { cuatri: Cuatrimestre }) {
+const CuatrimestreCard = memo(function CuatrimestreCard({ cuatri }: { cuatri: Cuatrimestre }) {
   return (
     <div
       className="w-full md:w-[380px] h-full rounded-2xl bg-dark-bg/60
@@ -63,9 +63,9 @@ function CuatrimestreCard({ cuatri }: { cuatri: Cuatrimestre }) {
       </ul>
     </div>
   );
-}
+});
 
-function StudyImagePanel({ src }: { src?: string }) {
+const StudyImagePanel = memo(function StudyImagePanel({ src }: { src?: string }) {
   if (!src) return null;
 
   return (
@@ -76,12 +76,15 @@ function StudyImagePanel({ src }: { src?: string }) {
       <img
         src={src}
         alt="Estudiantes en actividades del plan de estudios"
+        loading="lazy"
+        decoding="async"
+        fetchPriority="low"
         className="w-full h-full object-cover"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-dark-bg/50 via-transparent to-transparent" />
     </div>
   );
-}
+});
 
 interface StackedCardProps {
   pair: Cuatrimestre[];
@@ -171,12 +174,12 @@ function StackedCard({ pair, index, total, scrollYProgress, image }: StackedCard
   );
 }
 
-export default function StudyPlanSection({
+const StudyPlanSection = memo(function StudyPlanSection({
   cuatrimestres,
   studyPlanImages,
 }: StudyPlanSectionProps) {
   const targetRef = useRef<HTMLDivElement>(null);
-  const pairs = chunkInPairs(cuatrimestres);
+  const pairs = useMemo(() => chunkInPairs(cuatrimestres), [cuatrimestres]);
 
   const { scrollYProgress } = useScroll({
     target: targetRef,
@@ -226,4 +229,6 @@ export default function StudyPlanSection({
       </div>
     </section>
   );
-}
+});
+
+export default StudyPlanSection;
