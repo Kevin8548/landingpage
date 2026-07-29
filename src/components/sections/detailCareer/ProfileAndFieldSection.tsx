@@ -1,5 +1,5 @@
 // src/components/sections/detail/ProfileAndFieldSection.tsx
-import { useRef } from "react";
+import { memo, useRef } from "react";
 import { motion, useScroll, useTransform } from "motion/react";
 import { Check } from "lucide-react";
 import { iconMap } from "../../../lib/iconMap";
@@ -74,6 +74,9 @@ function IngresoBlock({
               <motion.img
                 src={imagen}
                 alt="Perfil de Ingreso"
+                loading="lazy"
+                decoding="async"
+                fetchPriority="low"
                 style={{ scale: imgScale, y: imgY }}
                 className="absolute inset-0 w-full h-full object-cover"
               />
@@ -112,6 +115,9 @@ function EgresoBlock({
               <motion.img
                 src={imagen}
                 alt="Perfil de Egreso"
+                loading="lazy"
+                decoding="async"
+                fetchPriority="low"
                 style={{ scale: imgScale, y: imgY }}
                 className="absolute inset-0 w-full h-full object-cover"
               />
@@ -220,7 +226,7 @@ function CampoLaboralCircle({
     </motion.div>
   );
 }
-export default function ProfileAndFieldSection({
+const ProfileAndFieldSection = memo(function ProfileAndFieldSection({
   perfilIngreso,
   perfilEgreso,
   perfilImages,
@@ -238,4 +244,6 @@ export default function ProfileAndFieldSection({
       <CampoLaboralBlock campoLaboral={campoLaboral} />
     </section>
   );
-}
+});
+
+export default ProfileAndFieldSection;

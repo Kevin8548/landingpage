@@ -1,9 +1,9 @@
 // src/components/sections/FinalCTA.tsx
-import { useRef } from "react";
+import { memo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
-import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
+import { motion, useInView, useScroll, useTransform, type MotionValue } from "motion/react";
 import { Button } from "../../ui/Button";
 import uttBackground from "../../../assets/utt-back.jpg";
 
@@ -78,8 +78,9 @@ function AnimatedWord({ text, scrollYProgress, rangeStart, rangeEnd }: AnimatedW
   );
 }
 
-export default function FinalCTA({ whatsappNumber = "5217712345678" }: FinalCTAProps) {
+const FinalCTA = memo(function FinalCTA({ whatsappNumber = "5217712345678" }: FinalCTAProps) {
   const sectionRef = useRef<HTMLElement>(null);
+  const shouldLoadBackground = useInView(sectionRef, { margin: "2000px 0px" });
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -104,7 +105,9 @@ export default function FinalCTA({ whatsappNumber = "5217712345678" }: FinalCTAP
         ref={sectionRef} 
         className="relative h-[560vh]"
         style={{
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.8)), url(${uttBackground})`,
+          backgroundImage: shouldLoadBackground
+            ? `linear-gradient(rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.8)), url(${uttBackground})`
+            : undefined,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundAttachment: 'fixed', 
@@ -170,4 +173,6 @@ export default function FinalCTA({ whatsappNumber = "5217712345678" }: FinalCTAP
       </div>
     </section>
   );
-}
+});
+
+export default FinalCTA;

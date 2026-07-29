@@ -7,22 +7,38 @@ import studyPlan2 from "../../assets/careers/software/study-2.jpg";
 import studyPlan3 from "../../assets/careers/software/study-3.jpg";
 import perfil1 from "../../assets/careers/software/perfil-1.jpg";
 import perfil2 from "../../assets/careers/software/perfil-2.jpg";
-import life1 from "../../assets/careers/software/life-1.jpg";
-import life2 from "../../assets/careers/software/life-2.jpg";
-import life3 from "../../assets/careers/software/life-3.jpg";
-import life4 from "../../assets/careers/software/life-4.jpg";
-import life5 from "../../assets/careers/software/life-5.jpg";
-import life6 from "../../assets/careers/software/life-6.jpg";
-import life7 from "../../assets/careers/software/life-7.jpg";
-import life8 from "../../assets/careers/software/life-8.jpg";
-import life9 from "../../assets/careers/software/life-9.jpg";
-import life10 from "../../assets/careers/software/life-10.jpg";
-import life11 from "../../assets/careers/software/life-11.jpg";
-import life12 from "../../assets/careers/software/life-12.jpg";
-import life13 from "../../assets/careers/software/life-13.jpg";
-import life14 from "../../assets/careers/software/life-14.jpg";
-import life15 from "../../assets/careers/software/life-15.jpg";
-import life16 from "../../assets/careers/software/life-16.jpg";
+import life1 from "../../assets/careers/software/life-1-640.avif";
+import life1Small from "../../assets/careers/software/life-1-320.avif";
+import life2 from "../../assets/careers/software/life-2-640.avif";
+import life2Small from "../../assets/careers/software/life-2-320.avif";
+import life3 from "../../assets/careers/software/life-3-640.avif";
+import life3Small from "../../assets/careers/software/life-3-320.avif";
+import life4 from "../../assets/careers/software/life-4-640.avif";
+import life4Small from "../../assets/careers/software/life-4-320.avif";
+import life5 from "../../assets/careers/software/life-5-640.avif";
+import life5Small from "../../assets/careers/software/life-5-320.avif";
+import life6 from "../../assets/careers/software/life-6-640.avif";
+import life6Small from "../../assets/careers/software/life-6-320.avif";
+import life7 from "../../assets/careers/software/life-7-640.avif";
+import life7Small from "../../assets/careers/software/life-7-320.avif";
+import life8 from "../../assets/careers/software/life-8-640.avif";
+import life8Small from "../../assets/careers/software/life-8-320.avif";
+import life9 from "../../assets/careers/software/life-9-640.avif";
+import life9Small from "../../assets/careers/software/life-9-320.avif";
+import life10 from "../../assets/careers/software/life-10-640.avif";
+import life10Small from "../../assets/careers/software/life-10-320.avif";
+import life11 from "../../assets/careers/software/life-11-640.avif";
+import life11Small from "../../assets/careers/software/life-11-320.avif";
+import life12 from "../../assets/careers/software/life-12-640.avif";
+import life12Small from "../../assets/careers/software/life-12-320.avif";
+import life13 from "../../assets/careers/software/life-13-640.avif";
+import life13Small from "../../assets/careers/software/life-13-320.avif";
+import life14 from "../../assets/careers/software/life-14-640.avif";
+import life14Small from "../../assets/careers/software/life-14-320.avif";
+import life15 from "../../assets/careers/software/life-15-640.avif";
+import life15Small from "../../assets/careers/software/life-15-320.avif";
+import life16 from "../../assets/careers/software/life-16-640.avif";
+import life16Small from "../../assets/careers/software/life-16-320.avif";
 
 export const desarrolloSoftware: CareerDetail = {
   id: "desarrollo-software",
@@ -135,21 +151,21 @@ export const desarrolloSoftware: CareerDetail = {
     { icon: "database", titulo: "Administrador de Bases de Datos", desc: "Diseña, gestiona y asegura el almacenamiento de datos críticos de la empresa." }
   ],
   studentLife: [
-    { image: life1, alt: "Vida estudiantil - Software 1" },
-    { image: life2, alt: "Vida estudiantil - Software 2" },
-    { image: life3, alt: "Vida estudiantil - Software 3" },
-    { image: life4, alt: "Vida estudiantil - Software 4" },
-    { image: life5, alt: "Vida estudiantil - Software 5" },
-    { image: life6, alt: "Vida estudiantil - Software 6" },
-    { image: life7, alt: "Vida estudiantil - Software 7" },
-    { image: life8, alt: "Vida estudiantil - Software 8" },
-    { image: life9, alt: "Vida estudiantil - Software 9" },
-    { image: life10, alt: "Vida estudiantil - Software 10" },
-    { image: life11, alt: "Vida estudiantil - Software 11" },
-    { image: life12, alt: "Vida estudiantil - Software 12" },
-    { image: life13, alt: "Vida estudiantil - Software 13" },
-    { image: life14, alt: "Vida estudiantil - Software 14" },
-    { image: life15, alt: "Vida estudiantil - Software 15" },
-    { image: life16, alt: "Vida estudiantil - Software 16" },
+    { image: life1, imageSmall: life1Small, alt: "Vida estudiantil - Software 1" },
+    { image: life2, imageSmall: life2Small, alt: "Vida estudiantil - Software 2" },
+    { image: life3, imageSmall: life3Small, alt: "Vida estudiantil - Software 3" },
+    { image: life4, imageSmall: life4Small, alt: "Vida estudiantil - Software 4" },
+    { image: life5, imageSmall: life5Small, alt: "Vida estudiantil - Software 5" },
+    { image: life6, imageSmall: life6Small, alt: "Vida estudiantil - Software 6" },
+    { image: life7, imageSmall: life7Small, alt: "Vida estudiantil - Software 7" },
+    { image: life8, imageSmall: life8Small, alt: "Vida estudiantil - Software 8" },
+    { image: life9, imageSmall: life9Small, alt: "Vida estudiantil - Software 9" },
+    { image: life10, imageSmall: life10Small, alt: "Vida estudiantil - Software 10" },
+    { image: life11, imageSmall: life11Small, alt: "Vida estudiantil - Software 11" },
+    { image: life12, imageSmall: life12Small, alt: "Vida estudiantil - Software 12" },
+    { image: life13, imageSmall: life13Small, alt: "Vida estudiantil - Software 13" },
+    { image: life14, imageSmall: life14Small, alt: "Vida estudiantil - Software 14" },
+    { image: life15, imageSmall: life15Small, alt: "Vida estudiantil - Software 15" },
+    { image: life16, imageSmall: life16Small, alt: "Vida estudiantil - Software 16" },
   ],
 };

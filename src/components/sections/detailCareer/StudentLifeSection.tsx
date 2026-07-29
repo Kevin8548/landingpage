@@ -1,6 +1,11 @@
 // src/components/sections/detailCareer/StudentLifeSection.tsx
-import { useRef } from "react";
-import { motion, useScroll, useTransform, useSpring, type MotionValue } from "motion/react";
+import { memo, useRef } from "react";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  type MotionValue,
+} from "motion/react";
 import type { StudentLifeImage } from "../../../data/careerDetails";
 
 interface Props {
@@ -62,7 +67,41 @@ interface FlyImageProps {
   scrollYProgress: MotionValue<number>;
 }
 
-function FlyImage({ img, index, total, scrollYProgress }: FlyImageProps) {
+function ImageHighlight({
+  scrollYProgress,
+  fadeInEnd,
+  peakEnd,
+  fadeOutStart,
+  alt,
+}: {
+  scrollYProgress: MotionValue<number>;
+  fadeInEnd: number;
+  peakEnd: number;
+  fadeOutStart: number;
+  alt: string;
+}) {
+  const opacity = useTransform(
+    scrollYProgress,
+    makeRange(fadeInEnd, peakEnd, fadeOutStart),
+    [0, 1, 0]
+  );
+
+  return (
+    <motion.p
+      style={{ opacity }}
+      className="absolute -bottom-7 left-0 right-0 text-center text-[11px] text-dark-text-muted truncate px-1"
+    >
+      {alt}
+    </motion.p>
+  );
+}
+
+const FlyImage = memo(function FlyImage({
+  img,
+  index,
+  total,
+  scrollYProgress,
+}: FlyImageProps) {
   const step = 1 / total;
   const duration = step * OVERLAP_COUNT;
   const rawStart = index * step;
@@ -77,27 +116,24 @@ function FlyImage({ img, index, total, scrollYProgress }: FlyImageProps) {
 
   const slot = getSpiralSlot(index, total);
 
-  const scale = useTransform(
-    scrollYProgress,
-    [start, peakEnd, end],
-    [0.25, 1, 1.8]
-  );
-  const rotate = useTransform(
-    scrollYProgress,
-    [start, peakEnd, end],
-    [slot.rotate * 3, slot.rotate, slot.rotate * 0.4]
-  );
-  const y = useTransform(scrollYProgress, [start, peakEnd, end], [40, 0, -10]);
+  const transform = useTransform(scrollYProgress, (progress) => {
+    const duration = end - start;
+    const t = Math.min(1, Math.max(0, (progress - start) / duration));
+    const peak = (peakEnd - start) / duration;
+    const beforePeak = t <= peak;
+    const localProgress = beforePeak ? t / peak : (t - peak) / (1 - peak);
+    const scale = beforePeak ? 0.25 + localProgress * 0.75 : 1 + localProgress * 0.8;
+    const rotate = beforePeak
+      ? slot.rotate * 3 + localProgress * (slot.rotate - slot.rotate * 3)
+      : slot.rotate + localProgress * (slot.rotate * 0.4 - slot.rotate);
+    const y = beforePeak ? 40 - localProgress * 40 : -10 * localProgress;
+
+    return `translateY(${y}px) rotate(${rotate}deg) scale(${scale})`;
+  });
   const opacity = useTransform(
     scrollYProgress,
     [start, fadeInEnd, fadeOutStart, end],
     [0, 1, 1, 0]
-  );
-
-  const highlight = useTransform(
-    scrollYProgress,
-    makeRange(fadeInEnd, peakEnd, fadeOutStart),
-    [0, 1, 0]
   );
 
   return (
@@ -106,36 +142,38 @@ function FlyImage({ img, index, total, scrollYProgress }: FlyImageProps) {
         ...BOX_SIZE,
         top: slot.top,
         left: slot.left,
-        rotate,
-        scale,
-        y,
+        transform,
         opacity,
         position: "absolute",
         contain: "paint",
-        willChange: "transform, opacity",
       }}
       className="rounded-xl overflow-hidden"
     >
       <div className="w-full h-full rounded-xl overflow-hidden bg-dark-bg">
         <img
           src={img.image}
+          srcSet={img.imageSmall ? `${img.imageSmall} 320w, ${img.image} 640w` : undefined}
+          sizes="(max-width: 640px) 20vw, 20vw"
           alt={img.alt ?? ""}
+          loading="lazy"
+          decoding="async"
+          fetchPriority="low"
           className="w-full h-full object-cover"
         />
       </div>
 
       {img.alt && (
-        <motion.p
-          style={{ opacity: highlight }}
-          className="absolute -bottom-7 left-0 right-0 text-center text-[11px] text-dark-text-muted
-                     truncate px-1"
-        >
-          {img.alt}
-        </motion.p>
+        <ImageHighlight
+          scrollYProgress={scrollYProgress}
+          fadeInEnd={fadeInEnd}
+          peakEnd={peakEnd}
+          fadeOutStart={fadeOutStart}
+          alt={img.alt}
+        />
       )}
     </motion.div>
   );
-}
+});
 
 function VerticalProgress({
   total,
@@ -144,7 +182,7 @@ function VerticalProgress({
   total: number;
   scrollYProgress: MotionValue<number>;
 }) {
-  const fillHeight = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+  const fillScale = useTransform(scrollYProgress, [0, 1], [0, 1]);
   const activeIndex = useTransform(scrollYProgress, (v) =>
     Math.min(total - 1, Math.floor(v * total))
   );
@@ -159,28 +197,20 @@ function VerticalProgress({
       </motion.span>
       <div className="relative w-[2px] h-32 rounded-full bg-dark-border overflow-hidden">
         <motion.div
-          style={{ height: fillHeight }}
-          className="absolute top-0 left-0 w-full rounded-full bg-gradient-to-b from-dark-orange-primary to-dark-green-primary"
+          style={{ scaleY: fillScale }}
+          className="absolute inset-0 origin-top rounded-full bg-gradient-to-b from-dark-orange-primary to-dark-green-primary"
         />
       </div>
     </div>
   );
 }
 
-export default function StudentLifeSection({ images }: Props) {
+const StudentLifeSection = memo(function StudentLifeSection({ images }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
   });
-
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 200,
-    damping: 30,
-    mass: 0.5,
-  });
-
-  const textOpacity = useTransform(scrollYProgress, [0, 0.92, 1], [0.15, 0.15, 1]);
 
   const introOpacity = useTransform(scrollYProgress, [0, 0.08, 0.14], [1, 1, 0]);
   const introY = useTransform(scrollYProgress, [0, 0.14], [0, -20]);
@@ -210,24 +240,15 @@ export default function StudentLifeSection({ images }: Props) {
         />
 
         <motion.div
-          style={{ opacity: glowOrangeOpacity, willChange: "opacity" }}
-          className="absolute -top-40 -left-40 w-[32rem] h-[32rem] rounded-full bg-dark-orange-primary blur-[120px] pointer-events-none"
+          style={{ opacity: glowOrangeOpacity }}
+          className="absolute -top-32 -left-32 w-[24rem] h-[24rem] rounded-full bg-dark-orange-primary blur-[80px] pointer-events-none"
         />
         <motion.div
-          style={{ opacity: glowGreenOpacity, willChange: "opacity" }}
-          className="absolute -bottom-40 -right-40 w-[32rem] h-[32rem] rounded-full bg-dark-green-primary blur-[120px] pointer-events-none"
+          style={{ opacity: glowGreenOpacity }}
+          className="absolute -bottom-32 -right-32 w-[24rem] h-[24rem] rounded-full bg-dark-green-primary blur-[80px] pointer-events-none"
         />
 
         <div className="pointer-events-none absolute inset-0 bg-dark-bg/40 z-10" />
-
-        <motion.div
-          style={{ opacity: textOpacity }}
-          className="absolute inset-0 flex items-center justify-center z-20 px-8 pointer-events-none"
-        >
-          {/* <p className="max-w-2xl text-center text-dark-text/70 text-xl leading-relaxed">
-            Más que aulas, somos un ecosistema de innovación y comunidad.
-          </p> */}
-        </motion.div>
 
         <motion.div
           style={{ opacity: introOpacity, y: introY }}
@@ -253,12 +274,14 @@ export default function StudentLifeSection({ images }: Props) {
             img={img}
             index={i}
             total={images.length}
-            scrollYProgress={smoothProgress}
+            scrollYProgress={scrollYProgress}
           />
         ))}
 
-        <VerticalProgress total={images.length} scrollYProgress={smoothProgress} />
+        <VerticalProgress total={images.length} scrollYProgress={scrollYProgress} />
       </div>
     </section>
   );
-}
+});
+
+export default StudentLifeSection;
