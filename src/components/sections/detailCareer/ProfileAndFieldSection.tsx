@@ -226,6 +226,108 @@ function CampoLaboralCircle({
     </motion.div>
   );
 }
+
+function MobileProfileBlock({
+  title,
+  items,
+  image,
+  color,
+  quote,
+}: {
+  title: string;
+  items: string[];
+  image?: string;
+  color: "orange" | "green";
+  quote?: string;
+}) {
+  return (
+    <article className="rounded-2xl border border-[var(--line)] bg-[var(--glass)] p-5 sm:p-7">
+      {image && (
+        <img
+          src={image}
+          alt={title}
+          loading="lazy"
+          decoding="async"
+          fetchPriority="low"
+          className="mb-6 aspect-[4/3] w-full rounded-xl object-cover"
+        />
+      )}
+      <h2 className="font-serif text-3xl sm:text-4xl">{title}</h2>
+      <ul className="mt-6 flex flex-col gap-4">
+        {items.map((item) => (
+          <ChecklistItem key={item} item={item} color={color} />
+        ))}
+      </ul>
+      {quote && (
+        <p className="mt-7 border-l-2 border-dark-orange-primary pl-4 text-sm italic text-neutral-400">
+          {quote}
+        </p>
+      )}
+    </article>
+  );
+}
+
+function MobileProfileAndField({
+  perfilIngreso,
+  perfilEgreso,
+  imagenIngreso,
+  imagenEgreso,
+  campoLaboral,
+}: {
+  perfilIngreso?: string[];
+  perfilEgreso: string[];
+  imagenIngreso?: string;
+  imagenEgreso?: string;
+  campoLaboral: ProfileAndFieldSectionProps["campoLaboral"];
+}) {
+  return (
+    <section className="relative overflow-hidden bg-dark-bg px-4 py-16 sm:px-6 lg:hidden">
+      <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-dark-orange-primary/15 blur-[80px] pointer-events-none" />
+      <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-dark-green-primary/15 blur-[80px] pointer-events-none" />
+      <div className="relative mx-auto max-w-3xl space-y-8">
+        {perfilIngreso && (
+          <MobileProfileBlock
+            title="Perfil de Ingreso"
+            items={perfilIngreso}
+            image={imagenIngreso}
+            color="orange"
+          />
+        )}
+        <MobileProfileBlock
+          title="Perfil de Egreso"
+          items={perfilEgreso}
+          image={imagenEgreso}
+          color="green"
+          quote="Nuestros graduados no solo dominan lenguajes de programación; dominan el arte de resolver problemas mediante arquitectura lógica y diseño eficiente."
+        />
+
+        <div className="pt-4">
+          <h2 className="mb-7 text-center font-serif text-3xl sm:text-4xl">Campo Laboral</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {campoLaboral.map((job) => {
+              const Icon = iconMap[job.icon] ?? Briefcase;
+              return (
+                <article
+                  key={job.titulo}
+                  className="rounded-2xl border border-[var(--line)] bg-[var(--glass)] p-6 text-center"
+                >
+                  <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-md border border-dark-orange-primary bg-dark-orange-primary/10">
+                    <Icon size={20} className="text-dark-orange-primary" />
+                  </div>
+                  <h3 className="font-serif text-xl leading-tight">{job.titulo}</h3>
+                  <p className="mt-3 text-[11px] uppercase tracking-widest leading-relaxed text-neutral-400">
+                    {job.desc}
+                  </p>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 const ProfileAndFieldSection = memo(function ProfileAndFieldSection({
   perfilIngreso,
   perfilEgreso,
@@ -237,11 +339,20 @@ const ProfileAndFieldSection = memo(function ProfileAndFieldSection({
 
   return (
     <section>
-      {perfilIngreso && (
-        <IngresoBlock items={perfilIngreso} imagen={imagenIngreso} />
-      )}
-      <EgresoBlock items={perfilEgreso} imagen={imagenEgreso} />
-      <CampoLaboralBlock campoLaboral={campoLaboral} />
+      <MobileProfileAndField
+        perfilIngreso={perfilIngreso}
+        perfilEgreso={perfilEgreso}
+        imagenIngreso={imagenIngreso}
+        imagenEgreso={imagenEgreso}
+        campoLaboral={campoLaboral}
+      />
+      <div className="hidden lg:block">
+        {perfilIngreso && (
+          <IngresoBlock items={perfilIngreso} imagen={imagenIngreso} />
+        )}
+        <EgresoBlock items={perfilEgreso} imagen={imagenEgreso} />
+        <CampoLaboralBlock campoLaboral={campoLaboral} />
+      </div>
     </section>
   );
 });
