@@ -4,6 +4,8 @@ import redesBack from "../assets/careers/redes/redesII.jpg";
 import redesFront from "../assets/careers/redes/redes.jpg";
 import entornosBack from "../assets/careers/entornos/entornosII.jpg";
 import entornosFront from "../assets/careers/entornos/entornos.jpg";
+import { ShieldCheck, Code2, Boxes } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 
 export interface Career {
@@ -15,6 +17,7 @@ export interface Career {
   imageFront: string;
   altBack: string;
   altFront: string;
+  icon: LucideIcon;
 }
 
 export const careers: Career[] = [
@@ -28,6 +31,7 @@ export const careers: Career[] = [
     imageFront: devFront,
     altBack: "Desarrollador trabajando en múltiples monitores",
     altFront: "Código en pantalla",
+    icon: Code2,
   },
   {
     slug: "redes",
@@ -38,6 +42,7 @@ export const careers: Career[] = [
     imageFront: redesFront,
     altBack: "...",
     altFront: "...",
+    icon: ShieldCheck,
   },
   {
     slug: "entornos-virtuales",
@@ -48,5 +53,6 @@ export const careers: Career[] = [
     imageFront: entornosFront,
     altBack: "...",
     altFront: "...",
+    icon: Boxes
   },
 ];

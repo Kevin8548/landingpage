@@ -42,7 +42,7 @@ import life16Small from "../../assets/careers/redes/life-16-320.avif";
 
 export const redes: CareerDetail = {
   id: "redes",
-  nombre: "T.S.U. en Tecnologías de la Información Área Infraestructura de Redes Digitales",
+  nombre: "Área Infraestructura de Redes Digitales",
   quote: "Garantiza la conectividad global y asegura la infraestructura que sostiene la nube.",
   videoSrc: "videos/redes.mp4",
   imageBack: redesBack,

@@ -42,7 +42,7 @@ import life16Small from "../../assets/careers/software/life-16-320.avif";
 
 export const desarrolloSoftware: CareerDetail = {
   id: "desarrollo-software",
-  nombre: "T.S.U. en Tecnologías de la Información Área Desarrollo de Software Multiplataforma",
+  nombre: "Área Desarrollo de Software Multiplataforma",
   quote: "No solo escribas código, construye soluciones interconectadas que transformen el mundo digital.",
   videoSrc: "videos/software.mp4",
   imageBack: softwareBack,

@@ -204,7 +204,13 @@ const FinalCTA = memo(function FinalCTA({ whatsappNumber = "5217712345678" }: Fi
           </Link>
 
           <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
-            <Button variant="outline" size="lg" icon={<FaWhatsapp size={18} />} iconPosition="left" className="w-full justify-center sm:w-auto">
+            <Button 
+              variant="secondary" 
+              size="lg" 
+              icon={<FaWhatsapp size={18} />} 
+              iconPosition="left" 
+              className="bg-light-orange-primary/5 border-dark-orange-primary/45 w-full justify-center shadow-[0_0_25px_-5px] shadow-dark-green-primary/50 sm:w-auto"
+            >
               WhatsApp Directo
             </Button>
           </a>

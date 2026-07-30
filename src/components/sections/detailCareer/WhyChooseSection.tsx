@@ -208,7 +208,8 @@ const WhyChooseSection = memo(function WhyChooseSection({ stats }: WhyChooseSect
       {/* Desktop / tablet grande (md+): staircase con scroll-pin y parallax */}
       <div
         ref={containerRef}
-        className="relative hidden md:block"
+        className="relative hidden md:block bg-light-bg"
+        // className="relative hidden md:block"
         style={{ height: `${totalSteps * 60 + 100}vh` }}
       >
         <div className="sticky top-0 h-dvh flex flex-col px-6 md:px-16 py-16 overflow-hidden">

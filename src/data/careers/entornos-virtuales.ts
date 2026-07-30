@@ -42,7 +42,7 @@ import life16Small from "../../assets/careers/entornos/life-16-320.avif";
 
 export const entornosVirtuales: CareerDetail = {
   id: "entornos-virtuales",
-  nombre: "T.S.U. en Tecnologías de la Información Área Entornos Virtuales y Negocios Digitales",
+  nombre: "Área Entornos Virtuales y Negocios Digitales",
   quote: "Fusiona el arte digital con la tecnología para crear experiencias interactivas y negocios de alto impacto.",
   videoSrc: "videos/entornos.mp4",
   imageBack: entornosBack,

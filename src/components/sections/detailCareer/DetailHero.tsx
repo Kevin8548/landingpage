@@ -61,6 +61,10 @@ const DetailHero = memo(function DetailHero({
             <Badge color="orange">Convocatoria Abierta 2026</Badge>
           </div>
 
+          <p className="mb-2 font-sans text-sm font-medium tracking-wide text-light-green-primary sm:text-base">
+            Ingeniería en Tecnologías de la Información e Innovación Digital
+          </p>
+
           <h1 className="mb-5 font-serif text-3xl leading-[1.1] text-white drop-shadow-lg sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl [text-wrap:balance]">
             {career.nombre}
           </h1>
@@ -74,7 +78,7 @@ const DetailHero = memo(function DetailHero({
               variant="primary"
               icon={<ArrowDown size={16} />}
               iconPosition="right"
-              className="w-full justify-center sm:w-auto"
+              className="w-full justify-center shadow-[0_0_25px_-5px] shadow-dark-orange-primary/60 sm:w-auto"
             >
               Explora nuestras carreras
             </Button>
