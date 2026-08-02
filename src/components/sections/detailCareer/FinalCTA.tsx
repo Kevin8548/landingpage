@@ -179,7 +179,7 @@ const FinalCTA = memo(function FinalCTA({ whatsappNumber = "5217712345678" }: Fi
 
         <motion.div
           style={{ opacity: overlayOpacity }}
-          className="pointer-events-none absolute inset-0 bg-dark-bg z-[5]"
+          className="pointer-events-none absolute inset-0 bg-dark-bg/55 z-[5]"
         />
 
         <motion.div

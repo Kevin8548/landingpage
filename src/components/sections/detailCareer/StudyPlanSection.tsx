@@ -49,7 +49,7 @@ const MateriaItem = memo(function MateriaItem({ materia }: { materia: Materia })
 const CuatrimestreCard = memo(function CuatrimestreCard({ cuatri }: { cuatri: Cuatrimestre }) {
   return (
     <div
-      className="w-full lg:w-[min(32%,380px)] h-full rounded-2xl bg-dark-bg/60
+      className="w-full lg:w-[min(32%,380px)] h-full rounded-2xl bg-dark-bg-alt/90
                  border border-dark-orange-primary/25 p-6 flex flex-col overflow-hidden
                  shadow-[inset_0_1px_0_0_rgba(255,255,255,0.03)]"
     >
@@ -82,7 +82,7 @@ const StudyImagePanel = memo(function StudyImagePanel({ src }: { src?: string })
         fetchPriority="low"
         className="w-full h-full object-cover"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-dark-bg/50 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-b from-dark-bg-alt via-transparent to-transparent" />
     </div>
   );
 });
@@ -103,7 +103,7 @@ function MobileStudyPlan({
   studyPlanImages: string[];
 }) {
   return (
-    <section className="lg:hidden relative overflow-hidden bg-dark-bg px-4 py-16 sm:px-6">
+    <section className="lg:hidden relative overflow-hidden bg-dark-bg-alt px-4 py-16 sm:px-6">
       <div className="absolute inset-0 opacity-[0.1] pointer-events-none"
         style={{
           backgroundImage:
@@ -115,7 +115,7 @@ function MobileStudyPlan({
         {pairs.map((pair, index) => (
           <article
             key={index}
-            className="rounded-[1.75rem] border border-dark-orange-primary/30 bg-dark-bg/95 p-5 shadow-[0_20px_50px_-28px_rgba(0,0,0,0.9)] sm:p-7"
+            className="rounded-[1.75rem] border border-dark-orange-primary/30 bg-dark-bg p-5 shadow-[0_20px_50px_-28px_rgba(0,0,0,0.9)] sm:p-7"
           >
             <div className="mb-6">
               <span className="text-4xl font-black leading-none text-dark-green-secondary">
@@ -196,13 +196,22 @@ function StackedCard({ pair, index, total, scrollYProgress, image }: StackedCard
     // Wrapper con gradiente naranja -> verde como "marco" (efecto glow-border)
     <motion.div
       style={{ x, scale, zIndex: index + 1 }}
-      className="absolute inset-6 md:inset-16 rounded-[2rem] md:rounded-[2.5rem] p-[1.5px]
-                 bg-dark-orange-primary
-                 shadow-[0_20px_80px_-20px_rgba(0,0,0,0.8)]"
-    >
-      <div className="relative w-full h-full rounded-[2rem] md:rounded-[2.5rem] bg-dark-bg
-                       flex flex-col p-8 md:p-12 overflow-hidden">
-        {/* overlay de profundidad: oscuro, no un color plano */}
+        className="absolute inset-6 md:inset-16 rounded-[2rem] md:rounded-[2.5rem]
+                  shadow-[0_20px_80px_-20px_rgba(0,0,0,0.1)]"
+      >
+      <div
+        className="absolute inset-0 rounded-[2rem] md:rounded-[2.5rem] bg-dark-orange-primary pointer-events-none"
+        style={{
+          padding: "1.5px",
+          WebkitMask:
+            "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+          WebkitMaskComposite: "xor",
+          maskComposite: "exclude",
+        }}
+      />
+
+      <div className="relative w-full h-full rounded-[2rem] md:rounded-[2.5rem] bg-dark-bg-alt/80 backdrop-blur-sm
+                      flex flex-col p-8 md:p-12 overflow-hidden">
         <motion.div
           style={{ opacity: dim }}
           className="absolute inset-0 bg-black pointer-events-none"
@@ -267,7 +276,7 @@ const StudyPlanSection = memo(function StudyPlanSection({
       <section
         ref={targetRef}
         style={{ height: `${pairs.length * 100}vh` }}
-        className="relative hidden bg-dark-bg lg:block"
+        className="relative hidden bg-dark-bg-alt lg:block"
       >
       <div className="sticky top-0 h-screen overflow-hidden">
         <div

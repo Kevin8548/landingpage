@@ -89,7 +89,7 @@ export function CareerItem({
                 variant="secondary"
                 size="sm"
                 icon={<ArrowUpRight size={16} />}
-                className="rounded-full bg-naranja text-black hover:brightness-110"
+                className="rounded-full bg-dark-orange-primary text-black hover:brightness-110"
               >
                 Ver plan de estudios
               </Button>
