@@ -8,6 +8,7 @@
   --violet: #196700;
   --ink: #f4f6fb;
   --ink-dim: rgba(244, 246, 251, 0.66);
+  --hero-exit: 0; /* NUEVO: 0 = hero completo visible, 1 = a punto de salir */
 
   position: relative;
   isolation: isolate;
@@ -45,12 +46,14 @@
   position: absolute;
   top: 50%;
   right: clamp(16px, 6vw, 90px);
-  transform: translateY(-50%);
+  transform: translateY(-50%) scale(calc(1 - var(--hero-exit) * 0.05));
+  filter: blur(calc(var(--hero-exit) * 6px));
   width: min(40vw, 440px);
   height: min(40vw, 440px);
   z-index: 1;
   overflow: visible;
   pointer-events: none;
+  will-change: transform, filter;
 }
 
 /* Constelación de puntos: ahora cubre toda la sección (no solo el dibujo).
@@ -61,6 +64,21 @@
   inset: 0;
   z-index: 1;
   display: block;
+  pointer-events: none;
+}
+
+/* ---------- NUEVO: velo de salida ----------
+   Cubre toda la sección y sube de opacidad conforme --hero-exit avanza,
+   fundiendo el Hero a negro justo antes de que entre la siguiente
+   sección (FuturoReveal), que arranca con su propio velo negro y se
+   destapa al entrar. Así el corte entre secciones no es seco. */
+
+.hero__exit-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: var(--bg);
+  opacity: var(--hero-exit);
   pointer-events: none;
 }
 
@@ -75,6 +93,10 @@
   min-height: 100vh;
   padding: clamp(20px, 3vw, 40px) clamp(20px, 5vw, 72px);
   pointer-events: none;
+  transform: scale(calc(1 - var(--hero-exit) * 0.05));
+  filter: blur(calc(var(--hero-exit) * 6px));
+  transform-origin: center;
+  will-change: transform, filter;
 }
 
 .hero__nav {
@@ -911,7 +933,7 @@ transform:translateY(6px);
   .hero__art {
     top: 6%;
     right: 50%;
-    transform: translateX(50%);
+    transform: translateX(50%) scale(calc(1 - var(--hero-exit) * 0.05));
     width: min(60vw, 260px);
     height: min(60vw, 260px);
   }
@@ -920,6 +942,16 @@ transform:translateY(6px);
 @media (prefers-reduced-motion: reduce) {
   .hero__scroll-line {
     animation: none;
+  }
+
+  .hero__exit-veil {
+    display: none;
+  }
+
+  .hero__content,
+  .hero__art {
+    transform: none !important;
+    filter: none !important;
   }
 
   .tech-visual__glow,

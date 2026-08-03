@@ -15,6 +15,13 @@ import "./Hero.css";
  * con nodos (Software / Redes / Entornos Virtuales) orbitando alrededor,
  * más partículas flotantes. Todo puramente visual (pointer-events: none),
  * no requiere mouse para verse.
+ *
+ * NUEVO: efecto de "salida" al hacer scroll hacia la siguiente sección.
+ * Se calcula --hero-exit (0 a 1) según qué tan cerca está el borde
+ * inferior del hero de salir de la pantalla, y con eso se anima un
+ * encogido + blur del contenido, más un velo negro que sube de opacidad
+ * (ver .hero__exit-veil en Hero.css) para fundir hacia la siguiente
+ * sección en vez de cortar en seco.
  */
 
 function SocialIcon({ children }: { children: ReactNode }) {
@@ -390,12 +397,46 @@ function useConnectionsField(
   }, [sectionRef, canvasRef]);
 }
 
+/**
+ * NUEVO: efecto de "salida" del Hero al acercarse la siguiente sección.
+ * Calcula un valor 0→1 (--hero-exit) según qué tan cerca está el borde
+ * inferior de la sección de salir de la pantalla por arriba, y lo expone
+ * como variable CSS para animar encogido + blur + velo negro (ver CSS).
+ */
+function useHeroExitEffect(sectionRef: React.RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reducedMotion) return;
+
+    let raf = 0;
+
+    const render = () => {
+      const rect = section.getBoundingClientRect();
+      // Empieza a apagarse cuando el borde inferior está a ~85% del viewport
+      // desde arriba, y termina cuando ya casi salió por completo.
+      const startAt = window.innerHeight * 0.85;
+      const endAt = window.innerHeight * -0.15;
+      const raw = (rect.bottom - endAt) / (startAt - endAt);
+      const value = Math.min(1, Math.max(0, raw));
+      section.style.setProperty("--hero-exit", (1 - value).toFixed(3));
+      raf = requestAnimationFrame(render);
+    };
+
+    raf = requestAnimationFrame(render);
+    return () => cancelAnimationFrame(raf);
+  }, [sectionRef]);
+}
+
 export default function Hero() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const sectionRef = useRef<HTMLElement | null>(null);
   const connectionsRef = useRef<HTMLCanvasElement | null>(null);
 
   useConnectionsField(sectionRef, connectionsRef);
+  useHeroExitEffect(sectionRef); // 👈 NUEVO
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -507,6 +548,9 @@ export default function Hero() {
       <canvas ref={canvasRef} className="hero__canvas" />
 
       <canvas ref={connectionsRef} className="hero__connections" aria-hidden="true" />
+
+      {/* NUEVO: velo negro que sube de opacidad al salir de escena */}
+      <div className="hero__exit-veil" aria-hidden="true" />
 
       <div className="hero__art" aria-hidden="true">
         <TechVisual />
