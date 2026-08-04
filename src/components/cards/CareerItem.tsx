@@ -43,12 +43,13 @@ export function CareerItem({
   );
 
   const Icon = career.icon;
+  const Tag = career.tag;
   return (
     <div className="grid justify-items-center gap-5 md:grid-cols-2 md:justify-items-stretch md:gap-10 lg:gap-20 max-w-[18rem] sm:max-w-md md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto">
       <div className="w-full">
         {/* Título y tag: libres, fuera del glass */}
         <div className="flex items-start gap-2 mb-3 md:mb-4">
-          <span className="mt-0.5 text-sm text-verde md:mt-1 md:text-base">{career.tag}</span>
+          <Tag className="mt-0.5 text-verde md:mt-1" size={18} strokeWidth={2} />
           <h3 className="text-xl font-semibold italic text-verde sm:text-2xl lg:text-3xl">
             {career.title}
           </h3>
@@ -73,7 +74,7 @@ export function CareerItem({
           {/* Icono grande incrustado, esquina superior derecha */}
           {Icon && (
             <Icon
-              className="absolute -top-6 -right-6 text-white/[0.04] pointer-events-none select-none"
+              className="absolute -top-6 -right-6 text-white/[0.11] pointer-events-none select-none"
               size={150}
               strokeWidth={1}
             />

@@ -43,8 +43,8 @@ export function generateNetworkPath({
   const branches: NetworkBranch[] = [];
 
   const layout = [
-    { anchor: 0.1, elbow: 0.15, node: 0.45, y: -170, r: 8, filled: true, major: true, colorIndex: 0 },
-    { anchor: 0.56, elbow: 0.62, node: 0.70, y: 180, r: 5.5, filled: false, major: false, colorIndex: 1 },
+    { anchor: 0.1, elbow: 0.15, node: 0.50, y: -170, r: 8, filled: true, major: true, colorIndex: 0 },
+    { anchor: 0.40, elbow: 0.62, node: 0.70, y: 180, r: 5.5, filled: false, major: false, colorIndex: 1 },
   ];
 
   // Cuánto "dobla" el tronco hacia cada rama al pasar por su anchor.

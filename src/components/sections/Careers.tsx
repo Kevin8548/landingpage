@@ -8,7 +8,7 @@ export function Careers() {
   const targetRef = useRef<HTMLDivElement>(null);
   const firstCardRef = useRef<HTMLDivElement>(null);
   const [sectionWidth, setSectionWidth] = useState(1200);
-  const totalSlides = careers.length + 1;
+  const totalSlides = careers.length;
   const horizontalSteps = Math.max(totalSlides - 1, 0);
 
   const { scrollYProgress } = useScroll({
@@ -55,7 +55,9 @@ export function Careers() {
           className="absolute inset-0 z-0 pointer-events-none"
           style={{
             background:
-              "linear-gradient(to bottom, #080d16 0%, #0c1422 50%, #080d16 100%)",
+              // "linear-gradient(to bottom, #080d16 0%, #0c1422 50%, #080d16 100%)",
+              // "linear-gradient(to bottom, #0C0C0D 0%, #0C0C0D 50%, #0C0C0D 100%)",
+              "linear-gradient(to bottom, #000 0%, #000 50%, #000 100%)",
           }}
         >
           {/* Glow verde arriba-izquierda */}
@@ -79,8 +81,8 @@ export function Careers() {
         <div
           className="absolute inset-0"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='150' viewBox='0 0 140 140'%3E%3Cg fill='none' stroke='rgba(140,165,200,0.09)' stroke-width='1'%3E%3Cpath d='M15 15L55 35'/%3E%3Cpath d='M55 35L110 20'/%3E%3Cpath d='M55 35L40 85'/%3E%3Cpath d='M40 85L15 15'/%3E%3Cpath d='M40 85L95 100'/%3E%3Cpath d='M95 100L110 20'/%3E%3Cpath d='M110 20L140 60'/%3E%3Cpath d='M95 100L120 135'/%3E%3Cpath d='M15 15L0 60'/%3E%3Cpath d='M0 60L40 85'/%3E%3C/g%3E%3Cg fill='rgba(140,165,200,0.18)'%3E%3Ccircle cx='15' cy='15' r='2.5'/%3E%3Ccircle cx='55' cy='35' r='1.8'/%3E%3Ccircle cx='110' cy='20' r='2.5'/%3E%3Ccircle cx='40' cy='85' r='2.5'/%3E%3Ccircle cx='95' cy='100' r='1.8'/%3E%3Ccircle cx='140' cy='60' r='1.8'/%3E%3Ccircle cx='120' cy='135' r='1.8'/%3E%3Ccircle cx='0' cy='60' r='1.8'/%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundSize: "140px 140px",
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='150' viewBox='0 0 140 140'%3E%3Cg fill='none' stroke='rgba(218, 218, 221,0.1)' stroke-width='1'%3E%3Cpath d='M15 15L55 35'/%3E%3Cpath d='M55 35L110 20'/%3E%3Cpath d='M55 35L40 85'/%3E%3Cpath d='M40 85L15 15'/%3E%3Cpath d='M40 85L95 100'/%3E%3Cpath d='M95 100L110 20'/%3E%3Cpath d='M110 20L140 60'/%3E%3Cpath d='M95 100L120 135'/%3E%3Cpath d='M15 15L0 60'/%3E%3Cpath d='M0 60L40 85'/%3E%3C/g%3E%3Cg fill='rgba(140,165,200,0.2)'%3E%3Ccircle cx='15' cy='15' r='2.5'/%3E%3Ccircle cx='55' cy='35' r='1.8'/%3E%3Ccircle cx='110' cy='20' r='2.5'/%3E%3Ccircle cx='40' cy='85' r='2.5'/%3E%3Ccircle cx='95' cy='100' r='1.8'/%3E%3Ccircle cx='140' cy='60' r='1.8'/%3E%3Ccircle cx='120' cy='135' r='1.8'/%3E%3Ccircle cx='0' cy='60' r='1.8'/%3E%3C/g%3E%3C/svg%3E")`,
+            backgroundSize: "190px 190px",
             maskImage:
               "radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 75%)",
             WebkitMaskImage:
@@ -89,31 +91,31 @@ export function Careers() {
         />
         </div>
 
-        <h2 className="absolute top-8 left-4 z-10 text-3xl font-bold italic leading-tight text-naranja sm:top-12 sm:left-6 sm:text-4xl md:top-16 md:left-8 md:text-5xl">
+        <h2 className="absolute top-8 left-4 z-10 pb-8 text-3xl font-bold italic leading-tight text-naranja sm:top-12 sm:left-6 sm:text-4xl sm:pb-10 md:top-16 md:left-8 md:text-5xl md:pb-12">
           Conoce nuestras <br /> carreras
         </h2>
 
         <motion.div className="flex relative" style={{ x, willChange: "transform" }}>
           <TimelinePath
-            sections={totalSlides}
-            sectionWidth={sectionWidth}
-            sectionLabels={[...careers.map((c) => c.title), "Tecnologías TI"]}
-            branchLabels={[
-              ["Código", "Producto"],
-              ["Infraestructura", "Defensa"],
-              ["Experiencias XR", "Negocios digitales"],
-              ["Innovación", "Futuro"],
-            ]}
-            progress={smoothProgress}
-            className="left-4 top-[120px] z-0 pointer-events-none sm:left-10 sm:top-[180px] md:left-20 md:top-[290px]"
-          />
+              sections={totalSlides}
+              sectionWidth={sectionWidth}
+              sectionLabels={[...careers.map((c) => c.title)]}
+              branchLabels={[
+                ["Código", "Sistema"],
+                ["Infraestructura", "Seguridad"],
+                ["Experiencias XR", "Negocios digitales"],
+                ["Innovación", "Futuro"],
+              ]}
+              progress={smoothProgress}
+              className="left-4 top-[300px] z-0 pointer-events-none sm:left-10 sm:top-[380px] md:left-20 md:top-[400px]"
+            />
 
-          {careers.map((career, index) => (
-            <div
-              key={career.slug}
-              ref={index === 0 ? firstCardRef : undefined}
-              className={`relative z-10 h-screen w-screen flex-shrink-0 px-4 pt-28 sm:px-6 md:px-8 md:pt-32 ${index === 0 ? "md:pl-28" : ""}`}>
-
+            {careers.map((career, index) => (
+              <div
+                key={career.slug}
+                ref={index === 0 ? firstCardRef : undefined}
+                className={`relative z-10 h-screen w-screen flex-shrink-0 px-4 pt-64 sm:px-6 md:px-8 md:pt-72 ${index === 0 ? "md:pl-28" : ""}`}
+              >
               <CareerItem
                 career={career}
                 priority={index === 0}
@@ -123,8 +125,6 @@ export function Careers() {
               />
             </div>
           ))}
-
-          <TechnologyFinale />
         </motion.div>
       </div>
     </section>

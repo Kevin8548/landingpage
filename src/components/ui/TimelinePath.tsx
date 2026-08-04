@@ -27,9 +27,9 @@ interface MiniBranch {
 
 // Detalles fijos: tres mini-ramas por sección, ancladas a puntos ya existentes.
 const MINI_BRANCH_OFFSETS = [
-  { source: "majorAnchor", dx: -24, dy: -18, colorIndex: 1, r: 1.7 },
-  { source: "majorNode", dx: 26, dy: 15, colorIndex: 0, r: 1.5 },
-  { source: "minorNode", dx: 20, dy: -17, colorIndex: 1, r: 1.4 },
+  { source: "majorAnchor", dx: -32, dy: -24, colorIndex: 1, r: 2.4 },
+  { source: "majorNode", dx: 34, dy: 20, colorIndex: 0, r: 2.1 },
+  { source: "minorNode", dx: 26, dy: -22, colorIndex: 1, r: 2.0 },
 ] as const;
 
 export function TimelinePath({
@@ -126,14 +126,14 @@ function MiniBranchesLayer({ miniBranches }: { miniBranches: MiniBranch[] }) {
         const color = COLORS[branch.colorIndex];
 
         return (
-          <g key={`mini-${index}`} opacity="0.3">
+          <g key={`mini-${index}`} opacity="0.7">
             <line
               x1={branch.x1}
               y1={branch.y1}
               x2={branch.x2}
               y2={branch.y2}
               stroke={color}
-              strokeWidth="0.85"
+              strokeWidth="1.2"
               strokeLinecap="round"
             />
             <circle cx={branch.x2} cy={branch.y2} r={branch.r} fill={color} />
@@ -198,6 +198,7 @@ function revealWindow(section: number, branchIndex: number, sections: number): [
   return [start, end];
 }
 
+const OFFSET_GREEN = -208;
 
 function AnimatedBranch({
   branch,
@@ -213,8 +214,13 @@ function AnimatedBranch({
   progress: MotionValue<number>;
 }) {
   const [start, end] = revealWindow(section, branchIndex, sections);
-  const diagonalLength = Math.hypot(branch.elbowX - branch.anchorX, branch.elbowY - branch.anchorY);
-  const length = diagonalLength + Math.abs(branch.nodeX - branch.elbowX);
+
+  const offsetX = branch.colorIndex === 1 ? OFFSET_GREEN : 0;
+  const elbowX = branch.elbowX + offsetX; // 👈 ahora también se mueve
+  const nodeX = branch.nodeX + offsetX;
+
+  const diagonalLength = Math.hypot(elbowX - branch.anchorX, branch.elbowY - branch.anchorY);
+  const length = diagonalLength + Math.abs(nodeX - elbowX);
   const dashOffset = useTransform(progress, [start, end], [length, 0]);
   const anchorOpacity = useTransform(progress, [start, Math.min(end, start + 0.02)], [0, 1]);
   const nodeOpacity = useTransform(progress, [Math.max(start, end - 0.025), end], [0, 1]);
@@ -223,7 +229,7 @@ function AnimatedBranch({
   return (
     <g>
       <motion.path
-        d={`M${branch.anchorX},${branch.anchorY} L${branch.elbowX},${branch.elbowY} H${branch.nodeX}`}
+        d={`M${branch.anchorX},${branch.anchorY} L${elbowX},${branch.elbowY} H${nodeX}`}
         stroke={color}
         strokeWidth="1.35"
         strokeOpacity="0.7"
@@ -243,7 +249,7 @@ function AnimatedBranch({
       <motion.g style={{ opacity: nodeOpacity }}>
         {branch.filled ? (
           <circle
-            cx={branch.nodeX}
+            cx={nodeX}
             cy={branch.nodeY}
             r={branch.r}
             fill={color}
@@ -251,7 +257,7 @@ function AnimatedBranch({
           />
         ) : (
           <circle
-            cx={branch.nodeX}
+            cx={nodeX}
             cy={branch.nodeY}
             r={branch.r}
             fill={FONDO}
@@ -262,7 +268,7 @@ function AnimatedBranch({
         )}
         <text
           className="hidden md:inline"
-          x={branch.nodeX + branch.r + 10}
+          x={nodeX + branch.r + 10}
           y={branch.nodeY + 4}
           fill="#E5EEF5"
           fontSize="11"
