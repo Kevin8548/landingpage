@@ -67,19 +67,24 @@
   pointer-events: none;
 }
 
-/* ---------- NUEVO: velo de salida ----------
-   Cubre toda la sección y sube de opacidad conforme --hero-exit avanza,
-   fundiendo el Hero a negro justo antes de que entre la siguiente
-   sección (FuturoReveal), que arranca con su propio velo negro y se
-   destapa al entrar. Así el corte entre secciones no es seco. */
+/* ---------- NUEVO: velo de salida tipo "iris" ----------
+   Un círculo negro crece desde el centro hasta cubrir toda la sección
+   conforme --hero-exit avanza de 0 a 1, como un diafragma de cámara
+   cerrándose. Se calcula puramente en CSS con calc() sobre la variable
+   --hero-exit (que ya viene de 0 a 1 desde useHeroExitEffect en el
+   .tsx). Termina de cubrir TODO exactamente cuando el Hero acaba de
+   salir de la pantalla, justo cuando FuturoReveal arranca con su propio
+   iris (que empieza cerrado y se abre) — así el corte entre secciones
+   se siente como una sola transición continua, no dos efectos sueltos. */
 
 .hero__exit-veil {
   position: absolute;
   inset: 0;
   z-index: 3;
   background: var(--bg);
-  opacity: var(--hero-exit);
+  clip-path: circle(calc(var(--hero-exit) * 150%) at 50% 50%);
   pointer-events: none;
+  will-change: clip-path;
 }
 
 /* ---------- Contenido ---------- */
@@ -244,7 +249,7 @@
 
 .hero__title .thin-2 {
   font-weight: 500;
-  color: #ffb703;
+  color: var(--amber);
   font-size: 70px;
 }
 

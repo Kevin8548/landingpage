@@ -349,7 +349,7 @@ function useConnectionsField(
           if (d < CONNECT_DIST) {
             const alpha = (1 - d / CONNECT_DIST) * 0.22;
             ctx.strokeStyle = `rgba(${a.color},${alpha})`;
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
             ctx.lineTo(b.x, b.y);
@@ -363,7 +363,7 @@ function useConnectionsField(
           if (d < radius) {
             const alpha = (1 - d / radius) * 0.3;
             ctx.strokeStyle = `rgba(${points[i].color},${alpha})`;
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 0.5 + (1 - d / CONNECT_DIST) * 5;
             ctx.beginPath();
             ctx.moveTo(points[i].x, points[i].y);
             ctx.lineTo(pointer.x, pointer.y);
@@ -401,7 +401,16 @@ function useConnectionsField(
  * NUEVO: efecto de "salida" del Hero al acercarse la siguiente sección.
  * Calcula un valor 0→1 (--hero-exit) según qué tan cerca está el borde
  * inferior de la sección de salir de la pantalla por arriba, y lo expone
- * como variable CSS para animar encogido + blur + velo negro (ver CSS).
+ * como variable CSS para animar encogido + blur + un iris negro que se
+ * cierra (ver .hero__exit-veil en Hero.css).
+ *
+ * OJO: la fórmula anterior (con "startAt"/"endAt" ajustados a mano)
+ * hacía que el oscurecido llegara solo a ~85% justo cuando la sección
+ * ya había salido por completo de la pantalla — el 15% final nunca se
+ * alcanzaba a ver. Esta versión amarra el 0→1 directamente a "cuánto
+ * del borde inferior ya cruzó la parte de arriba del viewport", así que
+ * --hero-exit llega a 1 exactamente en el instante en que el Hero
+ * termina de desaparecer, ni antes ni después.
  */
 function useHeroExitEffect(sectionRef: React.RefObject<HTMLElement | null>) {
   useEffect(() => {
@@ -415,13 +424,13 @@ function useHeroExitEffect(sectionRef: React.RefObject<HTMLElement | null>) {
 
     const render = () => {
       const rect = section.getBoundingClientRect();
-      // Empieza a apagarse cuando el borde inferior está a ~85% del viewport
-      // desde arriba, y termina cuando ya casi salió por completo.
-      const startAt = window.innerHeight * 0.85;
-      const endAt = window.innerHeight * -0.15;
-      const raw = (rect.bottom - endAt) / (startAt - endAt);
+      // rect.bottom == innerHeight  -> la sección todavía llena toda la
+      //                                pantalla, apenas va a empezar a salir.
+      // rect.bottom == 0            -> la sección acaba de terminar de
+      //                                salir por completo (ya no se ve nada).
+      const raw = 1 - rect.bottom / window.innerHeight;
       const value = Math.min(1, Math.max(0, raw));
-      section.style.setProperty("--hero-exit", (1 - value).toFixed(3));
+      section.style.setProperty("--hero-exit", value.toFixed(3));
       raf = requestAnimationFrame(render);
     };
 
