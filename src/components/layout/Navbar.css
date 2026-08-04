@@ -1,3 +1,8 @@
+:root {
+  --amber: #fbbf24;
+}
+
+
 .tid-nav {
   position: fixed;
   left: 0px;
@@ -8,9 +13,6 @@
   align-items: center;
   justify-content: space-between;
   padding: 13px 26px;
-  background: #0000;
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
   opacity: 0;
   animation: tidFadeIn 0.9s ease 0.05s forwards;
 }
@@ -22,43 +24,24 @@
 }
 
 .tid-logo-mark {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  position: relative; /* necesario para el pedacito de abajo */
 }
 
-.tid-logo-glyph {
-  width: 40px;
-  height: 40px;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.tid-logo-mark::after,
+.tid-nav-links li > a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -9px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
 }
 
-.logo-h img {
-  position: relative;
-  width: 200px;
-  height: 300px;
-  object-fit: contain;
-}
 
-@keyframes tidSpinSlow {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes tidPulseGlow {
-  0%,
-  100% {
-    opacity: 0.5;
-    transform: scale(0.9);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.15);
-  }
+/* apagamos la línea continua de fondo, ya no la necesitamos */
+.tid-nav-track {
+  display: none;
 }
 
 .tid-logo-text {
@@ -85,24 +68,26 @@
   padding-bottom: 8px;
 }
 
-.tid-nav-center::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -2px;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.12);
+.tid-nav-track {
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:2px;
+  background:rgba(255,255,255,.15);
 }
 
 .tid-nav-links {
   display: flex;
-  gap: 66px;
+  align-items: center;
+  flex: 1;                       /* ocupa todo el espacio restante del nav */
+  justify-content: space-between; /* reparte cada link a lo largo de ese espacio */
+  margin-left: 64px;              /* separación respecto al logo */
+  gap: 0;                         /* ya no usamos gap fijo, ahora se reparte solo */
   list-style: none;
   font-size: 13.5px;
   font-weight: 500;
   position: relative;
-  margin: 0;
   padding: 0;
 }
 
@@ -112,8 +97,10 @@
 }
 
 .tid-nav-links li a {
-  display: block;
-  padding: 8px 17px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 17px;
   color: var(--muted);
   text-decoration: none;
   transition: color 0.3s ease;
@@ -125,42 +112,65 @@
 }
 
 /* ===========================
-   INDICADOR EN FORMA DE LÍNEA
+   CIRCULITO QUE SE VA LLENANDO
+   =========================== */
+
+.tid-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: border-color 0.3s ease;
+}
+
+.tid-nav-links li a.active .tid-dot {
+  border-color: rgba(61, 220, 132, 0.9);
+}
+
+.tid-dot-fill {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background: linear-gradient(
+    180deg,
+    rgb(26, 79, 1),
+    #196700
+  );
+  transition: height 0.15s linear;
+}
+
+/* ===========================
+   LÍNEA DE PROGRESO POR SCROLL
    =========================== */
 
 .tid-nav-indicator {
   position: absolute;
   left: 0;
   bottom: -2px;
-  width: 0;
   height: 2px;
   z-index: 2;
-
   border-radius: 999px;
   background: linear-gradient(
     90deg,
-    rgba(61, 220, 132, 1),
-    rgba(61, 220, 132, 0.9)
+    rgb(26, 79, 1),
+    #196700
   );
-
-  transition:
-    left 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-    width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: width 0.1s linear;
 }
 
 .tid-nav-cta {
+  border: 1px solid rgb(251 191 36 / 40%);
   position: relative;
-  overflow: hidden;
   font-family: "Inter", sans-serif;
   font-weight: 600;
   font-size: 12.5px;
-  color: #1c0e04;
-  background: linear-gradient(100deg, var(--orange), #d36200);
-  padding: 10px 20px;
+  padding: 10px 55px;
   border-radius: 22px;
-  border: none;
   cursor: pointer;
-  box-shadow: 0 8px 22px -8px rgba(255, 122, 69, 0.55);
   transition: transform 0.25s ease;
   margin-left: 4px;
 }
@@ -180,3 +190,62 @@
     display: none;
   }
 }
+
+.tid-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+}
+
+.tid-nav::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+}
+
+.tid-nav-login {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  height: 38px;
+  padding: 4px 20px 4px 4px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  background: radial-gradient(circle at 22px center, rgba(26, 79, 1, 0.48) 10%, rgba(26, 79, 1, 0.48) 5%, #0c0c0c 25%);
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.tid-nav-login:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.tid-nav-login:active {
+  transform: translateY(0);
+  filter: brightness(0.95);
+}
+
+.tid-nav-login__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  min-width: 25px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, rgb(26, 79, 1),#196700 );
+  color: #fff;
+}
+
+.tid-nav-login__text {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  margin-left: -1px;
+  white-space: nowrap;
+}
+

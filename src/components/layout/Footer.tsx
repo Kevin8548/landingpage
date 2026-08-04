@@ -1,4 +1,5 @@
 import React from "react";
+import { CircleUserRound } from "lucide-react";
 import {
   FaFacebookF,
   FaInstagram,
@@ -208,8 +209,17 @@ const Footer = () => {
             </span>
             Periodo de admisiones abierto
           </div>
-        </div>
-      </div>
+
+      <button className="tid-nav-login">
+      <span className="tid-nav-login__icon">
+        <CircleUserRound size={20} strokeWidth={2} />
+      </span>
+      <span className="tid-nav-login__text">
+        Iniciar Sesión
+      </span>
+    </button>
+            </div>
+          </div>
 
       {/* Barra inferior */}
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 border-t border-light-border px-6 py-5 dark:border-dark-border sm:px-8">
