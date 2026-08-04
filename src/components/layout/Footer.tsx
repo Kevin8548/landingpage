@@ -1,4 +1,5 @@
 import React from "react";
+import { CircleUserRound } from "lucide-react";
 import {
   FaFacebookF,
   FaInstagram,
@@ -11,8 +12,6 @@ import {
   FaClock,
 } from "react-icons/fa";
 import { SocialLinks } from "../ui/SocialLinks";
-
-
 
 const Footer = () => {
   const footerSocials = [
@@ -40,125 +39,159 @@ const Footer = () => {
 
   const schedule = [
     { days: "Lunes – Viernes", hours: "9:00 – 17:00" },
-    { days: "Sabado – Domingo", hours: "Cerrado" },
+    { days: "Sábado – Domingo", hours: "Cerrado" },
   ];
 
-  return (
-    <footer style={styles.footer}>
-      {/* Accent bar */}
-      <div style={styles.accentBar} />
+  const linkClasses =
+    "group flex items-start gap-2 text-sm leading-snug text-light-text-muted dark:text-dark-text-muted transition-colors hover:text-light-orange-primary dark:hover:text-dark-orange-primary";
 
-      <div style={styles.container}>
-        {/* ── Col 1: Brand + redes ── */}
-        <div style={styles.col}>
-          <div style={styles.logoArea}>
-            <div style={styles.logoIcon}>TIC</div>
+  return (
+    <footer className="relative border-t border-light-border dark:border-dark-border bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text">
+      {/* Barra de acento */}
+      <div className="h-[3px] w-full bg-gradient-to-r from-light-green-primary via-light-orange-primary to-light-green-primary dark:from-dark-green-primary dark:via-dark-orange-primary dark:to-dark-green-secondary" />
+
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-6 py-12 sm:grid-cols-2 sm:px-8 lg:grid-cols-4">
+        {/* Col 1: Marca + redes */}
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-light-green-primary to-light-orange-primary text-[13px] font-extrabold tracking-wide text-white shadow-[0_0_16px_rgba(61,220,132,0.35)] dark:from-dark-green-primary dark:to-dark-orange-primary [font-family:'Unbounded']">
+              TIC
+            </div>
             <div>
-              <p style={styles.institutionName}>División de Tecnologías</p>
-              <p style={styles.institutionSub}>de la Información y Comunicación</p>
+              <p className="text-sm font-bold leading-tight text-light-text dark:text-dark-text [font-family:'Unbounded']">
+                División de Tecnologías
+              </p>
+              <p className="text-xs leading-snug text-light-green-primary dark:text-dark-green-primary">
+                de la Información y Comunicación
+              </p>
             </div>
           </div>
-          <p style={styles.description}>
+
+          <p className="text-sm leading-relaxed text-light-text-muted dark:text-dark-text-muted">
             Formando ingenieros y profesionistas en tecnología con visión crítica,
             ética y competencias para el mundo digital.
           </p>
+
           <SocialLinks links={footerSocials} />
         </div>
 
-        {/* ── Col 2: Carreras ── */}
-        <div style={styles.col}>
-          <h3 style={styles.colTitle}>Carreras TIC</h3>
-          <ul style={styles.linkList}>
+        {/* Col 2: Carreras */}
+        <div className="flex flex-col gap-4">
+          <h3 className="border-b border-light-border pb-2 text-xs font-bold uppercase tracking-[0.15em] text-light-green-primary dark:border-dark-border dark:text-dark-green-primary [font-family:'JetBrains_Mono']">
+            Carreras TIC
+          </h3>
+          <ul className="flex flex-col gap-2">
             {careers.map((c) => (
               <li key={c.name}>
-                <a
-                  href={c.href}
-                  style={styles.link}
-                  onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "#a78bfa")}
-                  onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "#c4b5fd")}
-                >
-                  <span style={styles.linkDot}>▸</span> {c.name}
+                <a href={c.href} className={linkClasses}>
+                  <span className="mt-0.5 flex-shrink-0 text-[10px] text-light-orange-primary dark:text-dark-orange-primary [font-family:'JetBrains_Mono']">
+                    ▸
+                  </span>
+                  {c.name}
                 </a>
               </li>
             ))}
           </ul>
         </div>
 
-        {/* ── Col 3: Navegación ── */}
-        <div style={styles.col}>
-          <h3 style={styles.colTitle}>Navegación</h3>
-          <ul style={styles.linkList}>
+        {/* Col 3: Navegación */}
+        <div className="flex flex-col gap-4">
+          <h3 className="border-b border-light-border pb-2 text-xs font-bold uppercase tracking-[0.15em] text-light-green-primary dark:border-dark-border dark:text-dark-green-primary [font-family:'JetBrains_Mono']">
+            Navegación
+          </h3>
+          <ul className="flex flex-col gap-2">
             {quickLinks.map((l) => (
               <li key={l.name}>
-                <a
-                  href={l.href}
-                  style={styles.link}
-                  onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "#a78bfa")}
-                  onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "#c4b5fd")}
-                >
-                  <span style={styles.linkDot}>▸</span> {l.name}
+                <a href={l.href} className={linkClasses}>
+                  <span className="mt-0.5 flex-shrink-0 text-[10px] text-light-orange-primary dark:text-dark-orange-primary [font-family:'JetBrains_Mono']">
+                    ▸
+                  </span>
+                  {l.name}
                 </a>
               </li>
             ))}
           </ul>
         </div>
 
-        {/* ── Col 4: Contacto + Ubicación + Horario ── */}
-        <div style={styles.col}>
-          {/* Contacto */}
-          <h3 style={styles.colTitle}>Contacto</h3>
-          <ul style={styles.contactList}>
-            <li style={styles.contactItem}>
-              <FaMapMarkerAlt style={styles.contactIcon} />
-              <div>
-                <p style={styles.contactLabel}>Ubicación</p>
-                <a
-                  href="https://maps.app.goo.gl/BfakwLm6X1L5A27a9"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={styles.contactLink}
-                >
-                  El Carmen Xalpatlahuaya s/n<br />
-                  90513 Huamantla, Tlax.
-                </a>
-              </div>
-            </li>
-            <li style={styles.contactItem}>
-              <FaPhone style={styles.contactIcon} />
-              <div>
-                <p style={styles.contactLabel}>Teléfono</p>
-                <a href="tel:+522474725300" style={styles.contactLink}>
-                  247 472 5300
-                </a>
-              </div>
-            </li>
-            <li style={styles.contactItem}>
-              <FaEnvelope style={styles.contactIcon} />
-              <div>
-                <p style={styles.contactLabel}>Correo</p>
-                <a href="mailto:contacto@uttlaxcala.edu.mx" style={styles.contactLink}>
-                  contacto@uttlaxcala.edu.mx
-                </a>
-              </div>
-            </li>
-          </ul>
+        {/* Col 4: Contacto + Ubicación + Horario */}
+        <div className="flex flex-col gap-5">
+          <div>
+            <h3 className="mb-4 border-b border-light-border pb-2 text-xs font-bold uppercase tracking-[0.15em] text-light-green-primary dark:border-dark-border dark:text-dark-green-primary [font-family:'JetBrains_Mono']">
+              Contacto
+            </h3>
+            <ul className="flex flex-col gap-4">
+              <li className="flex items-start gap-3">
+                <FaMapMarkerAlt className="mt-0.5 flex-shrink-0 text-sm text-light-green-primary dark:text-dark-green-primary" />
+                <div>
+                  <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-widest text-light-text-muted/70 dark:text-dark-text-muted/60 [font-family:'JetBrains_Mono']">
+                    Ubicación
+                  </p>
+                  <a
+                    href="https://maps.app.goo.gl/BfakwLm6X1L5A27a9"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm leading-relaxed text-light-text-muted transition-colors hover:text-light-orange-primary dark:text-dark-text-muted dark:hover:text-dark-orange-primary"
+                  >
+                    El Carmen Xalpatlahuaya s/n<br />
+                    90513 Huamantla, Tlax.
+                  </a>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <FaPhone className="mt-0.5 flex-shrink-0 text-sm text-light-green-primary dark:text-dark-green-primary" />
+                <div>
+                  <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-widest text-light-text-muted/70 dark:text-dark-text-muted/60 [font-family:'JetBrains_Mono']">
+                    Teléfono
+                  </p>
+                  <a
+                    href="tel:+522474725300"
+                    className="text-sm text-light-text-muted transition-colors hover:text-light-orange-primary dark:text-dark-text-muted dark:hover:text-dark-orange-primary"
+                  >
+                    247 472 5300
+                  </a>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <FaEnvelope className="mt-0.5 flex-shrink-0 text-sm text-light-green-primary dark:text-dark-green-primary" />
+                <div>
+                  <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-widest text-light-text-muted/70 dark:text-dark-text-muted/60 [font-family:'JetBrains_Mono']">
+                    Correo
+                  </p>
+                  <a
+                    href="mailto:contacto@uttlaxcala.edu.mx"
+                    className="text-sm text-light-text-muted transition-colors hover:text-light-orange-primary dark:text-dark-text-muted dark:hover:text-dark-orange-primary"
+                  >
+                    contacto@uttlaxcala.edu.mx
+                  </a>
+                </div>
+              </li>
+            </ul>
+          </div>
 
           {/* Horario */}
-          <div style={styles.scheduleBox}>
-            <div style={styles.scheduleHeader}>
-              <FaClock style={styles.scheduleIcon} />
-              <span style={styles.scheduleTitle}>Horario de atención</span>
+          <div className="rounded-xl border border-light-border bg-light-green-primary/5 p-4 dark:border-dark-border dark:bg-dark-green-primary/10">
+            <div className="mb-3 flex items-center gap-2">
+              <FaClock className="text-sm text-light-green-primary dark:text-dark-green-primary" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-light-green-primary dark:text-dark-green-primary [font-family:'JetBrains_Mono']">
+                Horario de atención
+              </span>
             </div>
-            <table style={styles.scheduleTable}>
+            <table className="w-full border-collapse">
               <tbody>
                 {schedule.map(({ days, hours }) => (
-                  <tr key={days} style={styles.scheduleRow}>
-                    <td style={styles.scheduleDay}>{days}</td>
+                  <tr
+                    key={days}
+                    className="border-b border-light-border/50 last:border-none dark:border-dark-border/50"
+                  >
+                    <td className="py-1.5 pr-2 text-sm font-medium text-light-text-muted dark:text-dark-text-muted">
+                      {days}
+                    </td>
                     <td
-                      style={{
-                        ...styles.scheduleHours,
-                        ...(hours === "Cerrado" ? styles.scheduleClosed : {}),
-                      }}
+                      className={
+                        hours === "Cerrado"
+                          ? "py-1.5 text-right text-sm italic text-light-text-muted/60 dark:text-dark-text-muted/60"
+                          : "py-1.5 text-right text-sm font-semibold text-light-text dark:text-dark-text"
+                      }
                     >
                       {hours}
                     </td>
@@ -169,296 +202,46 @@ const Footer = () => {
           </div>
 
           {/* Badge admisiones */}
-          <div style={styles.badge}>
-            <span style={styles.badgeDot} />
+          <div className="flex w-fit items-center gap-2 rounded-full border border-light-green-primary/40 bg-light-green-primary/10 px-3 py-1.5 text-[11px] uppercase tracking-wider text-light-green-primary dark:border-dark-green-primary/40 dark:bg-dark-green-primary/15 dark:text-dark-green-primary [font-family:'JetBrains_Mono']">
+            <span className="relative flex h-2 w-2">
+              <span className="node-halo absolute inline-flex h-full w-full rounded-full bg-light-green-primary dark:bg-dark-green-primary" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-light-green-primary dark:bg-dark-green-primary" />
+            </span>
             Periodo de admisiones abierto
           </div>
-        </div>
-      </div>
 
-      {/* Bottom bar */}
-      <div style={styles.bottomBar}>
-        <p style={styles.bottomText}>
+      <button className="tid-nav-login">
+      <span className="tid-nav-login__icon">
+        <CircleUserRound size={20} strokeWidth={2} />
+      </span>
+      <span className="tid-nav-login__text">
+        Iniciar Sesión
+      </span>
+    </button>
+            </div>
+          </div>
+
+      {/* Barra inferior */}
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 border-t border-light-border px-6 py-5 dark:border-dark-border sm:px-8">
+        <p className="text-xs text-light-text-muted/70 dark:text-dark-text-muted/60">
           © {new Date().getFullYear()} División TIC — Institución Educativa. Todos los derechos reservados.
         </p>
-        <div style={styles.bottomLinks}>
-          <a href="#aviso" style={styles.bottomLink}>Aviso de Privacidad</a>
-          <span style={styles.sep}>·</span>
-          <a href="#terminos" style={styles.bottomLink}>Términos de Uso</a>
-          <span style={styles.sep}>·</span>
-          <a href="#accesibilidad" style={styles.bottomLink}>Accesibilidad</a>
+        <div className="flex items-center gap-2 text-xs text-light-text-muted/70 dark:text-dark-text-muted/60">
+          <a href="#aviso" className="transition-colors hover:text-light-orange-primary dark:hover:text-dark-orange-primary">
+            Aviso de Privacidad
+          </a>
+          <span className="text-light-border dark:text-dark-border">·</span>
+          <a href="#terminos" className="transition-colors hover:text-light-orange-primary dark:hover:text-dark-orange-primary">
+            Términos de Uso
+          </a>
+          <span className="text-light-border dark:text-dark-border">·</span>
+          <a href="#accesibilidad" className="transition-colors hover:text-light-orange-primary dark:hover:text-dark-orange-primary">
+            Accesibilidad
+          </a>
         </div>
       </div>
     </footer>
   );
-};
-
-// Styles
-
-const styles: Record<string, React.CSSProperties> = {
-  footer: {
-    background: "linear-gradient(180deg, #2e1065 0%, #1e0a4a 100%)",
-    color: "#e9d5ff",
-    fontFamily: "'Segoe UI', system-ui, sans-serif",
-    borderTop: "1px solid rgba(167,139,250,0.15)",
-  },
-  accentBar: {
-    height: "3px",
-    background: "linear-gradient(90deg, #7c3aed, #a855f7, #c084fc, #7c3aed)",
-  },
-  container: {
-    maxWidth: "1200px",
-    margin: "0 auto",
-    padding: "3rem 2rem 2rem",
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-    gap: "2.5rem",
-  },
-  col: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "1rem",
-  },
-
-  // Brand
-  logoArea: {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.75rem",
-  },
-  logoIcon: {
-    width: "44px",
-    height: "44px",
-    borderRadius: "10px",
-    background: "linear-gradient(135deg, #7c3aed, #a855f7)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontWeight: "800",
-    fontSize: "0.85rem",
-    letterSpacing: "0.05em",
-    color: "#fff",
-    flexShrink: 0,
-    boxShadow: "0 0 16px rgba(167,139,250,0.3)",
-  },
-  institutionName: {
-    margin: 0,
-    fontWeight: "700",
-    fontSize: "0.9rem",
-    color: "#f5f3ff",
-    lineHeight: 1.2,
-  },
-  institutionSub: {
-    margin: 0,
-    fontSize: "0.72rem",
-    color: "#a78bfa",
-    lineHeight: 1.3,
-  },
-  description: {
-    fontSize: "0.82rem",
-    lineHeight: "1.65",
-    color: "#c4b5fd",
-    margin: 0,
-  },
-  socialRow: {
-    display: "flex",
-    gap: "0.5rem",
-    flexWrap: "wrap",
-  },
-  socialBtn: {
-    width: "36px",
-    height: "36px",
-    borderRadius: "8px",
-    background: "rgba(255,255,255,0.08)",
-    border: "1px solid rgba(167,139,250,0.2)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    color: "#e9d5ff",
-    fontSize: "0.85rem",
-    textDecoration: "none",
-    transition: "background 0.2s, transform 0.2s",
-    cursor: "pointer",
-  },
-
-  // Column headings
-  colTitle: {
-    margin: 0,
-    fontSize: "0.78rem",
-    fontWeight: "700",
-    letterSpacing: "0.1em",
-    textTransform: "uppercase",
-    color: "#a78bfa",
-    paddingBottom: "0.5rem",
-    borderBottom: "1px solid rgba(167,139,250,0.2)",
-  },
-
-  // Link lists
-  linkList: {
-    listStyle: "none",
-    margin: 0,
-    padding: 0,
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.5rem",
-  },
-  link: {
-    color: "#c4b5fd",
-    textDecoration: "none",
-    fontSize: "0.83rem",
-    display: "flex",
-    alignItems: "flex-start",
-    gap: "0.4rem",
-    lineHeight: "1.4",
-    transition: "color 0.15s",
-  },
-  linkDot: {
-    color: "#7c3aed",
-    fontSize: "0.7rem",
-    marginTop: "2px",
-    flexShrink: 0,
-  },
-
-  // Contact
-  contactList: {
-    listStyle: "none",
-    margin: 0,
-    padding: 0,
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.9rem",
-  },
-  contactItem: {
-    display: "flex",
-    alignItems: "flex-start",
-    gap: "0.65rem",
-    fontSize: "0.82rem",
-    color: "#c4b5fd",
-    lineHeight: "1.5",
-  },
-  contactIcon: {
-    color: "#a78bfa",
-    marginTop: "3px",
-    flexShrink: 0,
-    fontSize: "0.9rem",
-  },
-  contactLabel: {
-    margin: "0 0 1px",
-    fontSize: "0.68rem",
-    fontWeight: "600",
-    letterSpacing: "0.06em",
-    textTransform: "uppercase",
-    color: "#7c6fa0",
-  },
-  contactLink: {
-    color: "#c4b5fd",
-    textDecoration: "none",
-    fontSize: "0.82rem",
-    lineHeight: "1.5",
-  },
-
-  // Schedule
-  scheduleBox: {
-    background: "rgba(124,58,237,0.1)",
-    border: "1px solid rgba(167,139,250,0.18)",
-    borderRadius: "10px",
-    padding: "0.9rem 1rem",
-  },
-  scheduleHeader: {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.5rem",
-    marginBottom: "0.65rem",
-  },
-  scheduleIcon: {
-    color: "#a78bfa",
-    fontSize: "0.82rem",
-  },
-  scheduleTitle: {
-    fontSize: "0.74rem",
-    fontWeight: "700",
-    letterSpacing: "0.08em",
-    textTransform: "uppercase",
-    color: "#a78bfa",
-  },
-  scheduleTable: {
-    width: "100%",
-    borderCollapse: "collapse",
-  },
-  scheduleRow: {
-    borderBottom: "1px solid rgba(167,139,250,0.08)",
-  },
-  scheduleDay: {
-    fontSize: "0.78rem",
-    color: "#c4b5fd",
-    padding: "0.3rem 0.5rem 0.3rem 0",
-    fontWeight: "500",
-  },
-  scheduleHours: {
-    fontSize: "0.78rem",
-    color: "#e9d5ff",
-    textAlign: "right",
-    fontWeight: "600",
-    padding: "0.3rem 0",
-  },
-  scheduleClosed: {
-    color: "#7c6fa0",
-    fontWeight: "400",
-    fontStyle: "italic",
-  },
-
-  // Badge
-  badge: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "0.5rem",
-    background: "rgba(124,58,237,0.2)",
-    border: "1px solid rgba(124,58,237,0.4)",
-    borderRadius: "20px",
-    padding: "0.35rem 0.85rem",
-    fontSize: "0.75rem",
-    color: "#c4b5fd",
-    width: "fit-content",
-  },
-  badgeDot: {
-    width: "7px",
-    height: "7px",
-    borderRadius: "50%",
-    background: "#4ade80",
-    boxShadow: "0 0 6px #4ade80",
-    display: "inline-block",
-  },
-
-  // Bottom bar
-  bottomBar: {
-    borderTop: "1px solid rgba(167,139,250,0.12)",
-    maxWidth: "1200px",
-    margin: "0 auto",
-    padding: "1.25rem 2rem",
-    display: "flex",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: "0.75rem",
-  },
-  bottomText: {
-    margin: 0,
-    fontSize: "0.76rem",
-    color: "#7c6fa0",
-  },
-  bottomLinks: {
-    display: "flex",
-    gap: "0.5rem",
-    alignItems: "center",
-  },
-  bottomLink: {
-    color: "#7c6fa0",
-    textDecoration: "none",
-    fontSize: "0.76rem",
-  },
-  sep: {
-    color: "#4a3970",
-  },
 };
 
 export default Footer;

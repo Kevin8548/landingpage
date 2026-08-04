@@ -25,7 +25,7 @@ interface GenerateOptions {
   sectionWidth?: number;
   anchorsPerSection?: number;
   maxDepth?: number;
-  maxBranches?: number; // tope duro, protege el rendimiento
+  maxBranches?: number;
 }
 
 function randomRadius(depth: number): number {

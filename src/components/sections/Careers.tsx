@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, useScroll, useTransform, useSpring } from "motion/react";
 import { careers } from "../../data/careers";
 import { CareerItem } from "../cards/CareerItem";
@@ -6,6 +6,9 @@ import { TimelinePath } from "../ui/TimelinePath";
 
 export function Careers() {
   const targetRef = useRef<HTMLDivElement>(null);
+  const firstCardRef = useRef<HTMLDivElement>(null);
+  const [sectionWidth, setSectionWidth] = useState(1200);
+
   const { scrollYProgress } = useScroll({ target: targetRef });
 
   const smoothProgress = useSpring(scrollYProgress, {
@@ -20,6 +23,21 @@ export function Careers() {
     ["0%", `-${(careers.length - 1) * 100}%`]
   );
 
+  useEffect(() => {
+    const el = firstCardRef.current;
+    if (!el) return;
+
+    setSectionWidth(el.offsetWidth);
+
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width;
+      if (width) setSectionWidth(width);
+    });
+    observer.observe(el);
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <section ref={targetRef} className="relative" style={{ height: `${careers.length * 100}vh` }}>
       <div className="sticky top-0 h-screen overflow-hidden flex items-center">
@@ -27,16 +45,27 @@ export function Careers() {
           Conoce nuestras <br /> carreras
         </h2>
 
-        <motion.div className="flex relative" style={{ x }}>
-          {/* Línea única, continua, cruza TODAS las tarjetas */}
+        <motion.div className="flex relative" style={{ x, willChange: "transform" }}>
           <TimelinePath
             sections={careers.length}
+            sectionWidth={sectionWidth}
             className="left-0 top-[350px] pointer-events-none"
           />
 
-          {careers.map((career) => (
-            <div key={career.slug} className="w-screen flex-shrink-0 px-8 pt-32 relative z-10">
-              <CareerItem career={career} />
+          {careers.map((career, index) => (
+            <div
+              key={career.slug}
+              ref={index === 0 ? firstCardRef : undefined}
+              className={`w-screen flex-shrink-0 px-8 ${index === 0 ? "md:pl-20" : ""} pt-32 relative z-10`}>
+              {index === careers.length - 1 && (
+                <div className="hidden lg:flex absolute inset-0 items-center justify-end pr-8 md:pr-16 lg:pr-24 pl-[88rem] pointer-events-none select-none z-0 overflow-hidden">
+                  <span className="text-[clamp(2rem,3.2vw,2rem)] leading-[1.05] font-extrabold italic uppercase text-right text-naranja opacity-[0.8] max-w-xl">
+                    Tecnologías de la Información e Innovación Digital
+                  </span>
+                </div>
+              )}
+
+              <CareerItem career={career} priority={index === 0} />
             </div>
           ))}
         </motion.div>
