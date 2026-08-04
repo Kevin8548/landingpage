@@ -1,0 +1,67 @@
+name: "🐛 Reporte de Bug"
+description: Crea un informe detallado para ayudarnos a identificar y solucionar un error.
+title: "[BUG]: <breve descripción del problema>"
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ¡Gracias por tomarte el tiempo de reportar este problema! Tu ayuda es fundamental para mantener la estabilidad del proyecto. Por favor, completa las siguientes secciones lo mejor posible.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 📝 Descripción del Bug
+      description: Una descripción clara y concisa de lo que es el error.
+      placeholder: Describe qué está fallando, bajo qué circunstancias ocurre y cuál es el comportamiento incorrecto.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction_steps
+    attributes:
+      label: 🔄 Pasos para Reproducir
+      description: Indica los pasos detallados para que podamos reproducir el error en nuestro entorno local.
+      placeholder: |
+        1. Ve a '...'
+        2. Haz clic en '...'
+        3. Desplázate hacia abajo hasta '...'
+        4. Mira el error.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: 🎯 Comportamiento Esperado
+      description: Una descripción clara de lo que esperabas que sucediera si el bug no existiera.
+      placeholder: Ej. El sistema debería redirigir al panel principal en menos de 2 segundos.
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 📸 Capturas de Pantalla o Grabaciones
+      description: Si es aplicable, añade capturas de pantalla o un enlace a un video para ayudar a explicar el problema.
+      placeholder: Arrastra o pega imágenes/videos aquí.
+    validations:
+      required: false
+
+  - type: input
+    id: environment
+    attributes:
+      label: 💻 Entorno / Contexto
+      description: Especifica el sistema operativo, navegador, versión de la app o dependencias donde ocurre el fallo.
+      placeholder: Ej. Windows 11, Chrome v124.0, Node.js v20.11.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: 📋 Contexto Adicional
+      description: Añade cualquier otro contexto, logs de la consola, trazas de error o notas sobre el bug aquí.
+      placeholder: Pega logs o detalles técnicos adicionales aquí.
+    validations:
+      required: false

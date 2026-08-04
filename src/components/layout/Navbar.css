@@ -24,9 +24,24 @@
 }
 
 .tid-logo-mark {
-  display: flex;
-  align-items: center;
-  gap: 100px;
+  position: relative; /* necesario para el pedacito de abajo */
+}
+
+.tid-logo-mark::after,
+.tid-nav-links li > a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -9px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+
+/* apagamos la línea continua de fondo, ya no la necesitamos */
+.tid-nav-track {
+  display: none;
 }
 
 .tid-logo-text {
@@ -53,24 +68,26 @@
   padding-bottom: 8px;
 }
 
-/* Línea de fondo, siempre visible, tenue */
 .tid-nav-track {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: calc(100% - 64px); /* Ajusta según la altura de tu navbar */
-  height: 1px;
-  background: rgba(255, 255, 255, 0.12);
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:2px;
+  background:rgba(255,255,255,.15);
 }
 
 .tid-nav-links {
   display: flex;
-  gap: 110px;
+  align-items: center;
+  flex: 1;                       /* ocupa todo el espacio restante del nav */
+  justify-content: space-between; /* reparte cada link a lo largo de ese espacio */
+  margin-left: 64px;              /* separación respecto al logo */
+  gap: 0;                         /* ya no usamos gap fijo, ahora se reparte solo */
   list-style: none;
   font-size: 13.5px;
   font-weight: 500;
   position: relative;
-  margin: 0;
   padding: 0;
 }
 
