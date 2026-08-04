@@ -1,14 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import "./Navbar.css";
 
-const LINKS = [
+const NAV_ITEMS = [
   { label: "¿Por qué TI?", href: "#por-que-ti" },
   { label: "Carreras", href: "#carreras" },
   { label: "Eventos", href: "#eventos" },
   { label: "Aspirantes", href: "#aspirantes" },
 ];
 
-const SECTIONS = [
+const SECTION_IDS = [
   "hero",
   "por-que-ti",
   "carreras",
@@ -16,151 +16,118 @@ const SECTIONS = [
   "aspirantes",
 ];
 
+const clamp = (value: number) => Math.max(0, Math.min(100, value));
+
 export default function Navbar() {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [progress, setProgress] = useState(0);
-
-  const linkRefs = useRef<Array<HTMLAnchorElement | null>>([]);
+  const [sectionProgress, setSectionProgress] = useState(
+    Array(SECTION_IDS.length).fill(0),
+  );
 
   useEffect(() => {
+    const updateNavigation = () => {
+      const scrollY = window.scrollY;
+      const maxScroll = Math.max(
+        document.documentElement.scrollHeight - window.innerHeight,
+        1,
+      );
 
-    const handleScroll = () => {
+      const sectionStarts = SECTION_IDS.map(
+        (id) => document.getElementById(id)?.offsetTop ?? 0,
+      );
 
-      const scrollTop = window.scrollY;
-      const documentHeight =
-        document.documentElement.scrollHeight - window.innerHeight;
+      const progressBySection = sectionStarts.map((start, index) => {
+        const end =
+          index < sectionStarts.length - 1
+            ? sectionStarts[index + 1]
+            : maxScroll;
 
-
-      // porcentaje total del scroll
-      const totalProgress =
-        (scrollTop / documentHeight) * 100;
-
-      setProgress(totalProgress);
-
-
-      // detectar sección activa
-      let current = 0;
-
-      SECTIONS.forEach((section, index) => {
-
-        const element = document.getElementById(section);
-
-        if(element){
-
-          const offsetTop = element.offsetTop - 150;
-
-          if(scrollTop >= offsetTop){
-            current = index;
-          }
-
-        }
-
+        return clamp(((scrollY - start) / Math.max(end - start, 1)) * 100);
       });
 
-      setActiveIndex(current);
+      let currentSection = 0;
 
+      sectionStarts.forEach((start, index) => {
+        if (scrollY >= start - 120) currentSection = index;
+      });
+
+      setActiveIndex(currentSection);
+      setSectionProgress(progressBySection);
     };
 
+    window.addEventListener("scroll", updateNavigation, { passive: true });
+    window.addEventListener("resize", updateNavigation);
+    updateNavigation();
 
-    window.addEventListener("scroll", handleScroll);
-
-    handleScroll();
-
-
-    return () =>
-      window.removeEventListener("scroll", handleScroll);
-
+    return () => {
+      window.removeEventListener("scroll", updateNavigation);
+      window.removeEventListener("resize", updateNavigation);
+    };
   }, []);
 
-
   const scrollToSection = (
-    e: React.MouseEvent<HTMLAnchorElement>,
-    href:string
+    event: React.MouseEvent<HTMLAnchorElement>,
+    href: string,
   ) => {
+    event.preventDefault();
 
-    e.preventDefault();
-
-    const section = document.querySelector(href);
-
-    section?.scrollIntoView({
-      behavior:"smooth",
-      block:"start"
+    document.querySelector(href)?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
     });
-
   };
 
-
   return (
-    <nav className="tid-nav">
-
-      <a 
-        className="tid-logo-mark"
+    <nav className="tid-nav" aria-label="Navegación principal">
+      <a
+        className="tid-nav-brand"
         href="#hero"
-        onClick={(e)=>scrollToSection(e,"#hero")}
+        onClick={(event) => scrollToSection(event, "#hero")}
+        aria-label="Ir al inicio"
       >
-        <div className="tid-logo-text">
+        <span className="tid-logo-text">
           UTT
-          <span>TLAXCALA</span>
-        </div>
+          <small>TLAXCALA</small>
+        </span>
+
+        <span className="tid-nav-line" aria-hidden="true">
+          <span
+            className="tid-nav-line-fill"
+            style={{ width: `${sectionProgress[0]}%` }}
+          />
+        </span>
       </a>
 
+      {NAV_ITEMS.map((item, index) => {
+        const sectionIndex = index + 1;
+        const isActive = activeIndex === sectionIndex;
 
+        return (
+          <a
+            key={item.href}
+            className={`tid-nav-item ${isActive ? "active" : ""}`}
+            href={item.href}
+            onClick={(event) => scrollToSection(event, item.href)}
+            aria-current={isActive ? "page" : undefined}
+          >
+            <span className="tid-dot" aria-hidden="true">
+              <span
+                className="tid-dot-fill"
+                style={{ height: `${sectionProgress[sectionIndex]}%` }}
+              />
+            </span>
 
-      <ul className="tid-nav-links">
+            <span>{item.label}</span>
 
-        {LINKS.map((link,i)=>(
-
-          <li key={link.label}>
-
-            <a
-              href={link.href}
-              ref={(el)=>{
-                linkRefs.current[i]=el;
-              }}
-              className={
-                activeIndex === i+1 
-                ? "active"
-                : ""
-              }
-              onClick={(e)=>
-                scrollToSection(e,link.href)
-              }
-            >
-
-              <span className="tid-dot">
-                <span
-                  className="tid-dot-fill"
-                  style={{
-                    height:
-                    activeIndex >= i+1
-                    ? "100%"
-                    :"0%"
-                  }}
-                />
-              </span>
-
-              {link.label}
-
-            </a>
-
-          </li>
-
-        ))}
-
-      </ul>
-
-
-
-      <div className="tid-nav-track"/>
-
-      <div
-        className="tid-nav-indicator"
-        style={{
-          width:`${progress}%`
-        }}
-      />
-
-
+            <span className="tid-nav-line" aria-hidden="true">
+              <span
+                className="tid-nav-line-fill"
+                style={{ width: `${sectionProgress[sectionIndex]}%` }}
+              />
+            </span>
+          </a>
+        );
+      })}
     </nav>
   );
 }
