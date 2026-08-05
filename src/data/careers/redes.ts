@@ -7,6 +7,7 @@ import studyPlan2 from "../../assets/careers/redes/study-2.jpg";
 import studyPlan3 from "../../assets/careers/redes/study-3.jpg";
 import perfil1 from "../../assets/careers/redes/perfil-1.jpg";
 import perfil2 from "../../assets/careers/redes/perfil-2.jpg";
+import perfil3 from "../../assets/careers/redes/perfil-3.avif";
 import life1 from "../../assets/careers/redes/life-1-640.avif";
 import life1Small from "../../assets/careers/redes/life-1-320.avif";
 import life2 from "../../assets/careers/redes/life-2-640.avif";
@@ -48,7 +49,7 @@ export const redes: CareerDetail = {
   imageBack: redesBack,
   imageFront: redesFront,
   studyPlanImages: [studyPlan1, studyPlan2, studyPlan3],
-  perfilImages: [perfil1, perfil2],
+  perfilImages: [perfil1, perfil2, perfil3],
   stats: [
     { icon: "shield", label: "Tasa de Empleo", value: "94%", desc: "De egresados trabajando en administración de redes, soporte y ciberseguridad." },
     { icon: "server", label: "Certificaciones", value: "CCNA", desc: "Currículo alineado con estándares internacionales de la industria como Cisco." },

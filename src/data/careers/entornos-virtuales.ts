@@ -7,6 +7,7 @@ import studyPlan2 from "../../assets/careers/entornos/study-2.jpg";
 import studyPlan3 from "../../assets/careers/entornos/study-3.jpg";
 import perfil1 from "../../assets/careers/entornos/perfil-1.jpg";
 import perfil2 from "../../assets/careers/entornos/perfil-2.jpg";
+import perfil3 from "../../assets/careers/entornos/perfil-3.avif";
 import life1 from "../../assets/careers/entornos/life-1-640.avif";
 import life1Small from "../../assets/careers/entornos/life-1-320.avif";
 import life2 from "../../assets/careers/entornos/life-2-640.avif";
@@ -48,7 +49,7 @@ export const entornosVirtuales: CareerDetail = {
   imageBack: entornosBack,
   imageFront: entornosFront,
   studyPlanImages: [studyPlan1, studyPlan2, studyPlan3],
-  perfilImages: [perfil1, perfil2],
+  perfilImages: [perfil1, perfil2, perfil3],
   stats: [
     { icon: "palette", label: "Creatividad", value: "100%", desc: "Orientado al diseño interactivo, modelado 3D y estrategias de marketing digital." },
     { icon: "vr", label: "Inmersión", value: "AR/VR", desc: "Especialización en desarrollo para Realidad Virtual y Realidad Aumentada." },
