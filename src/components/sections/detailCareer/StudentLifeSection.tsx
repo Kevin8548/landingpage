@@ -1,5 +1,5 @@
 // src/components/sections/detailCareer/StudentLifeSection.tsx
-import { memo, useRef } from "react";
+import { memo, useRef, useState } from "react";
 import {
   motion,
   useScroll,
@@ -7,6 +7,7 @@ import {
   type MotionValue,
 } from "motion/react";
 import type { StudentLifeImage } from "../../../data/careerDetails";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Props {
   images?: StudentLifeImage[];
@@ -65,35 +66,6 @@ interface FlyImageProps {
   index: number;
   total: number;
   scrollYProgress: MotionValue<number>;
-}
-
-function ImageHighlight({
-  scrollYProgress,
-  fadeInEnd,
-  peakEnd,
-  fadeOutStart,
-  alt,
-}: {
-  scrollYProgress: MotionValue<number>;
-  fadeInEnd: number;
-  peakEnd: number;
-  fadeOutStart: number;
-  alt: string;
-}) {
-  const opacity = useTransform(
-    scrollYProgress,
-    makeRange(fadeInEnd, peakEnd, fadeOutStart),
-    [0, 1, 0]
-  );
-
-  return (
-    <motion.p
-      style={{ opacity }}
-      className="absolute -bottom-7 left-0 right-0 text-center text-[11px] text-dark-text-muted truncate px-1"
-    >
-      {alt}
-    </motion.p>
-  );
 }
 
 const FlyImage = memo(function FlyImage({
@@ -161,16 +133,6 @@ const FlyImage = memo(function FlyImage({
           className="w-full h-full object-cover"
         />
       </div>
-
-      {img.alt && (
-        <ImageHighlight
-          scrollYProgress={scrollYProgress}
-          fadeInEnd={fadeInEnd}
-          peakEnd={peakEnd}
-          fadeOutStart={fadeOutStart}
-          alt={img.alt}
-        />
-      )}
     </motion.div>
   );
 });
@@ -205,6 +167,115 @@ function VerticalProgress({
   );
 }
 
+function MobileStudentLife({ images }: { images: StudentLifeImage[] }) {
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const goToSlide = (index: number) => {
+    const carousel = carouselRef.current;
+    if (!carousel) return;
+    carousel.scrollTo({ left: carousel.clientWidth * index, behavior: "smooth" });
+  };
+
+  const updateActiveSlide = () => {
+    const carousel = carouselRef.current;
+    if (!carousel) return;
+    setActiveIndex(Math.round(carousel.scrollLeft / carousel.clientWidth));
+  };
+
+  return (
+    <section className="relative overflow-hidden bg-dark-bg py-16 lg:hidden">
+      <div
+        className="absolute inset-0 opacity-[0.08] pointer-events-none"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, rgba(244,244,245,0.4) 1px, transparent 1px), linear-gradient(to bottom, rgba(244,244,245,0.4) 1px, transparent 1px)",
+          backgroundSize: "36px 36px",
+        }}
+      />
+      <div className="absolute -top-28 -left-28 h-72 w-72 rounded-full bg-dark-orange-primary/20 blur-[80px] pointer-events-none" />
+      <div className="absolute -bottom-28 -right-28 h-72 w-72 rounded-full bg-dark-green-primary/20 blur-[80px] pointer-events-none" />
+
+      <header className="relative mb-8 px-4 text-center sm:px-6">
+        <span className="text-xs tracking-[0.28em] text-dark-orange-primary uppercase">
+          Vida Estudiantil
+        </span>
+        <h2 className="mt-2 text-4xl font-bold tracking-tight bg-gradient-to-r from-dark-orange-primary to-dark-green-primary bg-clip-text text-transparent">
+          TIEID
+        </h2>
+        <p className="mx-auto mt-2 max-w-sm text-xs text-dark-text/60 sm:text-sm">
+          Tecnologías de la Información e Innovación Digital
+        </p>
+      </header>
+
+      <div className="relative px-4 sm:px-6">
+        <div
+          ref={carouselRef}
+          onScroll={updateActiveSlide}
+          className="flex snap-x snap-mandatory overflow-x-auto rounded-2xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {images.map((img, index) => (
+            <figure
+              key={img.image}
+              className="relative aspect-[4/3] w-full shrink-0 snap-center overflow-hidden border border-dark-border bg-dark-bg"
+            >
+              <img
+                src={img.image}
+                srcSet={img.imageSmall ? `${img.imageSmall} 320w, ${img.image} 640w` : undefined}
+                sizes="(max-width: 1024px) 100vw, 640px"
+                alt={img.alt ?? `Actividad estudiantil ${index + 1}`}
+                loading="lazy"
+                decoding="async"
+                fetchPriority="low"
+                className="h-full w-full object-cover"
+              />
+            </figure>
+          ))}
+        </div>
+
+        {images.length > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={() => goToSlide(Math.max(0, activeIndex - 1))}
+              disabled={activeIndex === 0}
+              aria-label="Imagen anterior"
+              className="absolute left-7 top-1/2 -translate-y-1/2 rounded-full border border-white/20 bg-black/45 p-2 text-dark-text backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-35"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={() => goToSlide(Math.min(images.length - 1, activeIndex + 1))}
+              disabled={activeIndex === images.length - 1}
+              aria-label="Imagen siguiente"
+              className="absolute right-7 top-1/2 -translate-y-1/2 rounded-full border border-white/20 bg-black/45 p-2 text-dark-text backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-35"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </>
+        )}
+      </div>
+
+      {images.length > 1 && (
+        <div className="relative mt-4 flex justify-center gap-2" aria-label="Navegación del carrusel">
+          {images.map((img, index) => (
+            <button
+              key={img.image}
+              type="button"
+              onClick={() => goToSlide(index)}
+              aria-label={`Ver imagen ${index + 1}`}
+              aria-current={activeIndex === index ? "true" : undefined}
+              className={`h-1.5 rounded-full transition-all ${
+                activeIndex === index ? "w-6 bg-dark-orange-primary" : "w-1.5 bg-dark-text-muted/50"
+              }`}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
 const StudentLifeSection = memo(function StudentLifeSection({ images }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -221,11 +292,13 @@ const StudentLifeSection = memo(function StudentLifeSection({ images }: Props) {
   if (!images || images.length === 0) return null;
 
   return (
-    <section
-      ref={containerRef}
-      style={{ height: `${images.length * 60}vh` }}
-      className="relative bg-dark-bg"
-    >
+    <>
+      <MobileStudentLife images={images} />
+      <section
+        ref={containerRef}
+        style={{ height: `${images.length * 60}vh` }}
+        className="relative hidden bg-dark-bg lg:block"
+      >
       <div
         className="sticky top-0 h-screen overflow-hidden"
         style={{ perspective: "900px" }}
@@ -280,7 +353,8 @@ const StudentLifeSection = memo(function StudentLifeSection({ images }: Props) {
 
         <VerticalProgress total={images.length} scrollYProgress={scrollYProgress} />
       </div>
-    </section>
+      </section>
+    </>
   );
 });
 

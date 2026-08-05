@@ -53,7 +53,7 @@ function ScrollRevealTitle({
   const words = text.split(" ");
 
   return (
-    <h2 className="font-serif text-4xl mb-4 flex flex-wrap gap-x-3">
+    <h2 className="mb-3 flex flex-wrap gap-x-2 font-serif text-3xl leading-tight sm:mb-4 sm:gap-x-3 sm:text-4xl">
       {words.map((word, i) => (
         <RevealWord
           key={i}
@@ -83,7 +83,7 @@ function ScrollRevealParagraph({
   const y = useTransform(progress, [start, end], [20, 0]);
 
   return (
-    <motion.p style={{ opacity, y }} className="text-neutral-400 max-w-2xl">
+    <motion.p style={{ opacity, y }} className="max-w-2xl text-sm leading-relaxed text-neutral-400 sm:text-base">
       {text}
     </motion.p>
   );
@@ -148,26 +148,46 @@ function StaircaseCard({
   const verticalPercent = total > 1 ? (index / (total - 1)) * 65 : 0;
 
   return (
-    <motion.div
+    <div
       style={{
-        y,
-        opacity,
-        rotate,
         position: "absolute",
         left: `${horizontalPercent}%`,
         top: `${verticalPercent}%`,
       }}
-      className="w-[80vw] sm:w-[38vw] md:w-[20vw] max-w-xs"
     >
-      <div
-        className="relative rounded-2xl p-5 backdrop-blur-md"
-        style={{
-          background: "var(--glass)",
-          border: "1px solid var(--line)",
-        }}
+      <motion.div
+        style={{ y, opacity, rotate }}
+        className="w-[38vw] md:w-[20vw] max-w-xs"
       >
-        <StatCard {...stat} />
-      </div>
+        <div
+          className="relative rounded-2xl p-5 backdrop-blur-md"
+          style={{
+            background: "var(--glass)",
+            border: "1px solid var(--line)",
+          }}
+        >
+          <StatCard {...stat} />
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ── Versión móvil: sin pin de scroll, sin parallax, lista apilada simple ──
+function MobileStatCard({ stat, index }: { stat: Stat; index: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.4, ease: "easeOut", delay: index * 0.05 }}
+      className="rounded-xl p-4 backdrop-blur-sm"
+      style={{
+        background: "var(--glass)",
+        border: "1px solid var(--line)",
+      }}
+    >
+      <StatCard {...stat} />
     </motion.div>
   );
 }
@@ -184,39 +204,60 @@ const WhyChooseSection = memo(function WhyChooseSection({ stats }: WhyChooseSect
   const totalSteps = stats.length + bufferSteps;
 
   return (
-    <div
-      ref={containerRef}
-      className="relative"
-      style={{ height: `${totalSteps * 60 + 100}vh` }}
-    >
-      <div className="sticky top-0 h-dvh flex flex-col px-6 md:px-16 py-16 overflow-hidden">
-        <div className="mb-8">
-          <ScrollRevealTitle
-            text="¿Por qué elegir esta carrera?"
-            progress={scrollYProgress}
-          />
-          <ScrollRevealParagraph
-            text="Formamos líderes técnicos capaces de transformar ideas complejas en soluciones digitales robustas y escalables."
-            progress={scrollYProgress}
-            startAt={0.15}
-          />
-        </div>
-
-        <div className="relative flex-1 min-h-0">
-          <ConnectorLine progress={scrollYProgress} />
-          {stats.map((stat, i) => (
-            <StaircaseCard
-              key={stat.label}
-              stat={stat}
-              index={i}
-              total={stats.length}
-              totalSteps={totalSteps}
+    <>
+      {/* Desktop / tablet grande (md+): staircase con scroll-pin y parallax */}
+      <div
+        ref={containerRef}
+        className="relative hidden md:block bg-dark-bg"
+        // className="relative hidden md:block"
+        style={{ height: `${totalSteps * 60 + 100}vh` }}
+      >
+        <div className="sticky top-0 h-dvh flex flex-col px-6 md:px-16 py-16 overflow-hidden">
+          <div className="mb-8">
+            <ScrollRevealTitle
+              text="¿Por qué elegir esta carrera?"
               progress={scrollYProgress}
             />
+            <ScrollRevealParagraph
+              text="Formamos líderes técnicos capaces de transformar ideas complejas en soluciones digitales robustas y escalables."
+              progress={scrollYProgress}
+              startAt={0.15}
+            />
+          </div>
+
+          <div className="relative flex-1 min-h-0">
+            <ConnectorLine progress={scrollYProgress} />
+            {stats.map((stat, i) => (
+              <StaircaseCard
+                key={stat.label}
+                stat={stat}
+                index={i}
+                total={stats.length}
+                totalSteps={totalSteps}
+                progress={scrollYProgress}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Móvil (< md): lista apilada, sin pin ni parallax, solo fade-in */}
+      <div className="md:hidden px-6 py-16">
+        <h2 className="mb-3 font-serif text-3xl leading-tight">
+          ¿Por qué elegir esta carrera?
+        </h2>
+        <p className="mb-8 text-sm leading-relaxed text-neutral-400">
+          Formamos líderes técnicos capaces de transformar ideas complejas en
+          soluciones digitales robustas y escalables.
+        </p>
+
+        <div className="flex flex-col gap-4">
+          {stats.map((stat, i) => (
+            <MobileStatCard key={stat.label} stat={stat} index={i} />
           ))}
         </div>
       </div>
-    </div>
+    </>
   );
 });
 

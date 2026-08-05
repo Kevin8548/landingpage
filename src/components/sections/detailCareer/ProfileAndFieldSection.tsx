@@ -1,16 +1,18 @@
 // src/components/sections/detail/ProfileAndFieldSection.tsx
-import { memo, useRef } from "react";
-import { motion, useScroll, useTransform } from "motion/react";
-import { Check } from "lucide-react";
+import { memo, useRef, useState } from "react";
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent, MotionValue } from "motion/react";
+import { Check, Briefcase } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { iconMap } from "../../../lib/iconMap";
-import { Briefcase } from "lucide-react";
-// import JobCard from "../../cards/JobCard";
 
 
 interface ProfileAndFieldSectionProps {
+  title: string;
+  icon?: LucideIcon;
+  titleImage?: string;
   perfilIngreso?: string[];
   perfilEgreso: string[];
-  perfilImages?: string[]; 
+  perfilImages?: string[];
   campoLaboral: { icon: string; titulo: string; desc: string }[];
 }
 
@@ -33,116 +35,180 @@ function ChecklistItem({
       >
         <Check size={12} className={textColor} />
       </span>
-      <span className="text-sm text-neutral-200">{item}</span>
+      <span className="md:text-lg text-neutral-200">{item}</span>
     </li>
   );
 }
 
-function IngresoBlock({
-  items,
-  imagen,
+function VerticalLabel({ text }: { text: string }) {
+  return (
+    <span
+      style={{ writingMode: "vertical-rl" }}
+      className="rotate-180 font-serif text-base md:text-lg tracking-widest text-neutral-300 whitespace-nowrap"
+    >
+      {text}
+    </span>
+  );
+}
+
+/* ---------------- Sequential horizontal accordion ---------------- */
+
+type PanelType = "title" | "points" | "image";
+
+interface Panel {
+  id: string;
+  type: PanelType;
+  title: string;
+  subtitle?: string;
+  icon?: LucideIcon;
+  items?: string[];
+  image?: string;
+  color?: "orange" | "green";
+}
+
+function SequentialPanel({
+  panel,
+  index,
+  total,
+  scrollYProgress,
 }: {
-  items: string[];
-  imagen?: string;
+  panel: Panel;
+  index: number;
+  total: number;
+  scrollYProgress: MotionValue<number>;
 }) {
+  const per = 1 / total;
+  const s0 = index * per;
+  const s1 = s0 + per * 0.3;
+  const s2 = (index + 1) * per - per * 0.35;
+  const s3 = (index + 1) * per;
+  const isLast = index === total - 1;
+
+  const flexGrow = useTransform(
+    scrollYProgress,
+    [s0, s1, s2, s3],
+    isLast ? [1, 6, 6, 6] : [1, 6, 6, 1.6]
+  );
+
+  const panelOpacity = useTransform(
+    scrollYProgress,
+    [s0, s1, s2, s3],
+    isLast ? [0.15, 1, 1, 1] : [0.15, 1, 1, 0.45]
+  );
+
+  // estado discreto: ¿está "abierto" ahora? (mismo umbral que usa el flexGrow para terminar de expandirse)
+  const [isOpen, setIsOpen] = useState(false);
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    setIsOpen(v >= s1 && v < s3);
+  });
+
+  return (
+    <motion.div
+      style={{ flexGrow, opacity: panelOpacity }}
+      className="relative h-full min-w-0 flex-1 overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--glass)]"
+    >
+      {(panel.type === "image" || panel.type === "title") && panel.image && (
+        <img
+          src={panel.image}
+          alt={panel.title}
+          loading="lazy"
+          decoding="async"
+          className={`absolute inset-0 h-full w-full object-cover ${
+            panel.type === "title" ? "opacity-25" : ""
+          }`}
+        />
+      )}
+      {panel.type === "image" && panel.image && (
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/10" />
+      )}
+      {panel.type === "title" && panel.image && (
+        <div className="absolute inset-0 bg-black/70" />
+      )}
+
+      <AnimatePresence initial={false} mode="wait">
+        {!isOpen ? (
+          <motion.div
+            key="label"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="pointer-events-none absolute inset-0 flex items-center justify-center"
+          >
+            <VerticalLabel text={panel.title} />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="content"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, delay: 0.1 }}
+            className="relative flex h-full min-w-[260px] flex-col items-center justify-center p-6 text-center md:p-10"
+          >
+            {panel.type === "title" && (
+              <>
+                {panel.icon && (
+                  <panel.icon
+                    className="mb-6 h-12 w-12 md:h-16 md:w-16 text-dark-orange-primary"
+                    strokeWidth={1.9}
+                  />
+                )}
+                <h2 className="max-w-[14ch] text-center font-serif text-3xl md:text-5xl leading-tight md:max-w-[18ch]">
+                  {panel.title}
+                </h2>
+              </>
+            )}
+
+            {panel.type === "points" && (
+              <div className="w-full text-left">
+                <h3 className="font-serif text-2xl md:text-5xl mb-6 whitespace-nowrap">{panel.title}</h3>
+                <ul className="flex flex-col gap-4">
+                  {panel.items?.map((item) => (
+                    <ChecklistItem key={item} item={item} color={panel.color ?? "orange"} />
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {panel.type === "image" && (
+              <h3 className="font-serif text-2xl md:text-3xl text-white whitespace-nowrap self-start mt-auto">
+                {panel.title}
+              </h3>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+
+function SequentialProfileAccordion({ panels }: { panels: Panel[] }) {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end end"],
   });
 
-  const textX = useTransform(scrollYProgress, [0, 0.3], [-60, 0]);
-  const textOpacity = useTransform(scrollYProgress, [0, 0.2], [0, 1]);
-  const imgScale = useTransform(scrollYProgress, [0, 0.5, 1], [1.2, 1, 1.1]);
-  const imgY = useTransform(scrollYProgress, [0, 1], [-60, 60]);
-
   return (
-    <div ref={ref} className="relative h-[200vh]">
-      <div className="sticky top-0 h-screen overflow-hidden flex items-center px-6 md:px-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center w-full">
-          <motion.div style={{ x: textX, opacity: textOpacity }}>
-            <h2 className="font-serif text-4xl mb-8">Perfil de Ingreso</h2>
-            <ul className="flex flex-col gap-4">
-              {items.map((item) => (
-                <ChecklistItem key={item} item={item} color="orange" />
-              ))}
-            </ul>
-          </motion.div>
-
-          <div className="relative aspect-[4/5] rounded-2xl overflow-hidden border border-[var(--line)] order-first md:order-last bg-[var(--glass)]">
-            {imagen && (
-              <motion.img
-                src={imagen}
-                alt="Perfil de Ingreso"
-                loading="lazy"
-                decoding="async"
-                fetchPriority="low"
-                style={{ scale: imgScale, y: imgY }}
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-            )}
-          </div>
-        </div>
+    <div ref={ref} className="relative" style={{ height: `${panels.length * 100}vh` }}>
+      <div className="sticky top-0 flex h-screen items-stretch gap-3 overflow-hidden px-6 py-24 md:px-16">
+        {panels.map((panel, i) => (
+          <SequentialPanel
+            key={panel.id}
+            panel={panel}
+            index={i}
+            total={panels.length}
+            scrollYProgress={scrollYProgress}
+          />
+        ))}
       </div>
     </div>
   );
 }
 
-function EgresoBlock({
-  items,
-  imagen,
-}: {
-  items: string[];
-  imagen?: string;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start start", "end end"],
-  });
-
-  const textX = useTransform(scrollYProgress, [0, 0.3], [60, 0]);
-  const textOpacity = useTransform(scrollYProgress, [0, 0.2], [0, 1]);
-  const imgScale = useTransform(scrollYProgress, [0, 0.5, 1], [1.2, 1, 1.1]);
-  const imgY = useTransform(scrollYProgress, [0, 1], [60, -60]);
-
-  return (
-    <div ref={ref} className="relative h-[200vh]">
-      <div className="sticky top-0 h-screen overflow-hidden flex items-center px-6 md:px-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center w-full">
-          <div className="relative aspect-[4/5] rounded-2xl overflow-hidden border border-[var(--line)] order-first bg-[var(--glass)]">
-            {imagen && (
-              <motion.img
-                src={imagen}
-                alt="Perfil de Egreso"
-                loading="lazy"
-                decoding="async"
-                fetchPriority="low"
-                style={{ scale: imgScale, y: imgY }}
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-            )}
-          </div>
-
-          <motion.div style={{ x: textX, opacity: textOpacity }} className="order-last">
-            <h2 className="font-serif text-4xl mb-8">Perfil de Egreso</h2>
-            <ul className="flex flex-col gap-4 mb-8">
-              {items.map((item) => (
-                <ChecklistItem key={item} item={item} color="green" />
-              ))}
-            </ul>
-            <p className="italic text-neutral-400 border-l-2 border-dark-orange-primary pl-4">
-              "Nuestros graduados no solo dominan lenguajes de programación;
-              dominan el arte de resolver problemas mediante arquitectura
-              lógica y diseño eficiente."
-            </p>
-          </motion.div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
+/* ---------------- Campo Laboral ---------------- */
 
 function CampoLaboralBlock({
   campoLaboral,
@@ -157,7 +223,6 @@ function CampoLaboralBlock({
 
   const titleY = useTransform(scrollYProgress, [0, 0.15], [40, 0]);
   const titleOpacity = useTransform(scrollYProgress, [0, 0.1], [0, 1]);
-
   const count = campoLaboral.length;
 
   return (
@@ -201,7 +266,7 @@ function CampoLaboralCircle({
   end,
 }: {
   job: ProfileAndFieldSectionProps["campoLaboral"][number];
-  scrollYProgress: import("motion/react").MotionValue<number>;
+  scrollYProgress: MotionValue<number>;
   start: number;
   end: number;
 }) {
@@ -217,16 +282,126 @@ function CampoLaboralCircle({
       <div className="w-11 h-11 rounded-md bg-dark-orange-primary/10 border border-dark-orange-primary flex items-center justify-center mb-4">
         <Icon size={20} className="text-dark-orange-primary" />
       </div>
-      <span className="font-serif text-xl md:text-2xl leading-tight mb-3">
-        {job.titulo}
-      </span>
+      <span className="font-serif text-xl md:text-2xl leading-tight mb-3">{job.titulo}</span>
       <span className="text-[11px] tracking-widest uppercase text-neutral-400 leading-relaxed">
         {job.desc}
       </span>
     </motion.div>
   );
 }
+
+/* ---------------- Mobile (sin cambios) ---------------- */
+
+function MobileProfileBlock({
+  title,
+  items,
+  image,
+  color,
+  quote,
+}: {
+  title: string;
+  items: string[];
+  image?: string;
+  color: "orange" | "green";
+  quote?: string;
+}) {
+  return (
+    <article className="rounded-2xl border border-[var(--line)] bg-[var(--glass)] p-5 sm:p-7">
+      {image && (
+        <img
+          src={image}
+          alt={title}
+          loading="lazy"
+          decoding="async"
+          className="mb-6 aspect-[4/3] w-full rounded-xl object-cover"
+        />
+      )}
+      <h2 className="font-serif text-3xl sm:text-4xl">{title}</h2>
+      <ul className="mt-6 flex flex-col gap-4">
+        {items.map((item) => (
+          <ChecklistItem key={item} item={item} color={color} />
+        ))}
+      </ul>
+      {quote && (
+        <p className="mt-7 border-l-2 border-dark-orange-primary pl-4 text-sm italic text-neutral-400">
+          {quote}
+        </p>
+      )}
+    </article>
+  );
+}
+
+function MobileProfileAndField({
+  perfilIngreso,
+  perfilEgreso,
+  imagenIngreso,
+  imagenEgreso,
+  campoLaboral,
+}: {
+  perfilIngreso?: string[];
+  perfilEgreso: string[];
+  imagenIngreso?: string;
+  imagenEgreso?: string;
+  campoLaboral: ProfileAndFieldSectionProps["campoLaboral"];
+}) {
+  return (
+    <section className="relative overflow-hidden bg-dark-bg px-4 py-16 sm:px-6 lg:hidden">
+      <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-dark-orange-primary/15 blur-[80px] pointer-events-none" />
+      <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-dark-green-primary/15 blur-[80px] pointer-events-none" />
+      <div className="relative mx-auto max-w-3xl space-y-8">
+        <h2 className="text-center font-serif text-3xl sm:text-4xl">
+          Perfil de Ingreso <span className="text-neutral-500">·</span> Perfil de Egreso
+        </h2>
+
+        {perfilIngreso && (
+          <MobileProfileBlock
+            title="--"
+            items={perfilIngreso}
+            image={imagenIngreso}
+            color="orange"
+          />
+        )}
+        <MobileProfileBlock
+          title="Perfil de Egreso"
+          items={perfilEgreso}
+          image={imagenEgreso}
+          color="green"
+          quote="Nuestros graduados no solo dominan lenguajes de programación; dominan el arte de resolver problemas mediante arquitectura lógica y diseño eficiente."
+        />
+
+        <div className="pt-4">
+          <h2 className="mb-7 text-center font-serif text-3xl sm:text-4xl">Campo Laboral</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {campoLaboral.map((job) => {
+              const Icon = iconMap[job.icon] ?? Briefcase;
+              return (
+                <article
+                  key={job.titulo}
+                  className="rounded-2xl border border-[var(--line)] bg-[var(--glass)] p-6 text-center"
+                >
+                  <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-md border border-dark-orange-primary bg-dark-orange-primary/10">
+                    <Icon size={20} className="text-dark-orange-primary" />
+                  </div>
+                  <h3 className="font-serif text-xl leading-tight">{job.titulo}</h3>
+                  <p className="mt-3 text-[11px] uppercase tracking-widest leading-relaxed text-neutral-400">
+                    {job.desc}
+                  </p>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------------- Main ---------------- */
+
 const ProfileAndFieldSection = memo(function ProfileAndFieldSection({
+  title,
+  icon,
+  titleImage,
   perfilIngreso,
   perfilEgreso,
   perfilImages,
@@ -235,13 +410,27 @@ const ProfileAndFieldSection = memo(function ProfileAndFieldSection({
   const imagenIngreso = perfilImages?.[0];
   const imagenEgreso = perfilImages?.[1];
 
+  const panels: Panel[] = [
+    { id: "titulo", type: "title", title, icon, image: titleImage },
+    { id: "points-ingreso", type: "points", title: "Perfil de Ingreso", items: perfilIngreso ?? [], color: "green" },
+    { id: "img-ingreso", type: "image", title: "Perfil de Ingreso", image: imagenIngreso },
+    { id: "points-egreso", type: "points", title: "Perfil de Egreso", items: perfilEgreso, color: "orange" },
+    { id: "img-egreso", type: "image", title: "Perfil de Egreso", image: imagenEgreso },
+  ];
+
   return (
     <section>
-      {perfilIngreso && (
-        <IngresoBlock items={perfilIngreso} imagen={imagenIngreso} />
-      )}
-      <EgresoBlock items={perfilEgreso} imagen={imagenEgreso} />
-      <CampoLaboralBlock campoLaboral={campoLaboral} />
+      <MobileProfileAndField
+        perfilIngreso={perfilIngreso}
+        perfilEgreso={perfilEgreso}
+        imagenIngreso={imagenIngreso}
+        imagenEgreso={imagenEgreso}
+        campoLaboral={campoLaboral}
+      />
+      <div className="hidden lg:block">
+        <SequentialProfileAccordion panels={panels} />
+        <CampoLaboralBlock campoLaboral={campoLaboral} />
+      </div>
     </section>
   );
 });

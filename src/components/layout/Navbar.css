@@ -107,8 +107,8 @@
 .tid-nav-line-fill {
   display: block;
   height: 100%;
-  background: linear-gradient(90deg,  rgb(26, 79, 1),
-  #196700);
+  background: linear-gradient(90deg,  rgb(83, 246, 7),
+  #42f308);
   transition: width 0.12s linear;
 }
 

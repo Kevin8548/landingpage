@@ -2,6 +2,7 @@
 import { memo, useMemo, useRef } from "react";
 import { motion, useTransform, type MotionValue } from "motion/react";
 import { useScroll } from "motion/react";
+import { ChevronDown } from "lucide-react";
 import type { Cuatrimestre, Materia } from "../../../data/careerDetails";
 
 interface StudyPlanSectionProps {
@@ -48,7 +49,7 @@ const MateriaItem = memo(function MateriaItem({ materia }: { materia: Materia })
 const CuatrimestreCard = memo(function CuatrimestreCard({ cuatri }: { cuatri: Cuatrimestre }) {
   return (
     <div
-      className="w-full md:w-[380px] h-full rounded-2xl bg-dark-bg/60
+      className="w-full lg:w-[min(32%,380px)] h-full rounded-2xl bg-dark-bg-alt/90
                  border border-dark-orange-primary/25 p-6 flex flex-col overflow-hidden
                  shadow-[inset_0_1px_0_0_rgba(255,255,255,0.03)]"
     >
@@ -70,7 +71,7 @@ const StudyImagePanel = memo(function StudyImagePanel({ src }: { src?: string })
 
   return (
     <div
-      className="w-full md:w-[280px] h-40 md:h-full shrink-0 rounded-2xl overflow-hidden
+      className="w-full lg:w-[min(24%,280px)] h-40 lg:h-full shrink-0 rounded-2xl overflow-hidden
                  border border-dark-orange-primary/25 relative"
     >
       <img
@@ -81,7 +82,7 @@ const StudyImagePanel = memo(function StudyImagePanel({ src }: { src?: string })
         fetchPriority="low"
         className="w-full h-full object-cover"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-dark-bg/50 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-b from-dark-bg-alt via-transparent to-transparent" />
     </div>
   );
 });
@@ -92,6 +93,78 @@ interface StackedCardProps {
   total: number;
   scrollYProgress: MotionValue<number>;
   image?: string;
+}
+
+function MobileStudyPlan({
+  pairs,
+  studyPlanImages,
+}: {
+  pairs: Cuatrimestre[][];
+  studyPlanImages: string[];
+}) {
+  return (
+    <section className="lg:hidden relative overflow-hidden bg-dark-bg-alt px-4 py-16 sm:px-6">
+      <div className="absolute inset-0 opacity-[0.1] pointer-events-none"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, rgba(244,244,245,0.4) 1px, transparent 1px), linear-gradient(to bottom, rgba(244,244,245,0.4) 1px, transparent 1px)",
+          backgroundSize: "36px 36px",
+        }}
+      />
+      <div className="relative mx-auto max-w-xl space-y-8">
+        {pairs.map((pair, index) => (
+          <article
+            key={index}
+            className="rounded-[1.75rem] border border-dark-orange-primary/30 bg-dark-bg p-5 shadow-[0_20px_50px_-28px_rgba(0,0,0,0.9)] sm:p-7"
+          >
+            <div className="mb-6">
+              <span className="text-4xl font-black leading-none text-dark-green-secondary">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-dark-orange-primary">
+                Plan de Estudios
+              </p>
+              <h3 className="mt-1 text-xl font-black uppercase leading-tight text-dark-text sm:text-2xl">
+                {pair.length === 2
+                  ? `Cuatrimestres ${pair[0].numero} y ${pair[1].numero}`
+                  : `Cuatrimestre ${pair[0].numero}`}
+              </h3>
+            </div>
+
+            <div className="space-y-4">
+              {pair.map((cuatri) => (
+                <MobileCuatrimestreCard key={cuatri.numero} cuatri={cuatri} />
+              ))}
+              <StudyImagePanel src={studyPlanImages[index]} />
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function MobileCuatrimestreCard({ cuatri }: { cuatri: Cuatrimestre }) {
+  return (
+    <details className="group rounded-2xl border border-dark-orange-primary/25 bg-dark-bg/60">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 [&::-webkit-details-marker]:hidden">
+        <span>
+          <span className="block text-xs font-semibold uppercase tracking-wider text-dark-orange-primary">
+            {cuatri.numero}° Cuatrimestre
+          </span>
+          <span className="mt-1 block text-sm text-dark-text-muted">{cuatri.nivel}</span>
+        </span>
+        <ChevronDown className="shrink-0 text-dark-orange-primary transition-transform duration-200 group-open:rotate-180" size={20} />
+      </summary>
+      <div className="border-t border-dark-border px-5 pb-5 pt-4">
+        <ul className="space-y-2">
+          {cuatri.materias.map((materia) => (
+            <MateriaItem key={materia.nombre} materia={materia} />
+          ))}
+        </ul>
+      </div>
+    </details>
+  );
 }
 
 function StackedCard({ pair, index, total, scrollYProgress, image }: StackedCardProps) {
@@ -123,13 +196,22 @@ function StackedCard({ pair, index, total, scrollYProgress, image }: StackedCard
     // Wrapper con gradiente naranja -> verde como "marco" (efecto glow-border)
     <motion.div
       style={{ x, scale, zIndex: index + 1 }}
-      className="absolute inset-6 md:inset-16 rounded-[2rem] md:rounded-[2.5rem] p-[1.5px]
-                 bg-dark-orange-primary
-                 shadow-[0_20px_80px_-20px_rgba(0,0,0,0.8)]"
-    >
-      <div className="relative w-full h-full rounded-[2rem] md:rounded-[2.5rem] bg-dark-bg
-                       flex flex-col p-8 md:p-12 overflow-hidden">
-        {/* overlay de profundidad: oscuro, no un color plano */}
+        className="absolute inset-6 md:inset-16 rounded-[2rem] md:rounded-[2.5rem]
+                  shadow-[0_20px_80px_-20px_rgba(0,0,0,0.1)]"
+      >
+      <div
+        className="absolute inset-0 rounded-[2rem] md:rounded-[2.5rem] bg-dark-orange-primary pointer-events-none"
+        style={{
+          padding: "1.5px",
+          WebkitMask:
+            "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+          WebkitMaskComposite: "xor",
+          maskComposite: "exclude",
+        }}
+      />
+
+      <div className="relative w-full h-full rounded-[2rem] md:rounded-[2.5rem] bg-dark-bg-alt/80 backdrop-blur-sm
+                      flex flex-col p-8 md:p-12 overflow-hidden">
         <motion.div
           style={{ opacity: dim }}
           className="absolute inset-0 bg-black pointer-events-none"
@@ -155,7 +237,7 @@ function StackedCard({ pair, index, total, scrollYProgress, image }: StackedCard
           </h3>
         </div>
 
-        <div className="flex-1 flex flex-col md:flex-row gap-6 min-h-0 justify-center items-stretch relative">
+        <div className="flex-1 flex flex-col lg:flex-row gap-4 xl:gap-6 min-h-0 justify-center items-stretch relative">
           {pair.length === 2 ? (
             <>
               <CuatrimestreCard cuatri={pair[0]} />
@@ -189,11 +271,13 @@ const StudyPlanSection = memo(function StudyPlanSection({
   const progressWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
 
   return (
-    <section
-      ref={targetRef}
-      style={{ height: `${pairs.length * 100}vh` }}
-      className="relative bg-dark-bg"
-    >
+    <>
+      <MobileStudyPlan pairs={pairs} studyPlanImages={studyPlanImages} />
+      <section
+        ref={targetRef}
+        style={{ height: `${pairs.length * 100}vh` }}
+        className="relative hidden bg-dark-bg-alt lg:block"
+      >
       <div className="sticky top-0 h-screen overflow-hidden">
         <div
           className="absolute inset-0 opacity-[0.15] pointer-events-none"
@@ -227,7 +311,8 @@ const StudyPlanSection = memo(function StudyPlanSection({
           />
         </div>
       </div>
-    </section>
+      </section>
+    </>
   );
 });
 
