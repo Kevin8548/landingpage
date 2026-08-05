@@ -1,11 +1,6 @@
 // src/components/sections/detailCareer/StudentLifeSection.tsx
-import { memo, useRef, useState } from "react";
-import {
-  motion,
-  useScroll,
-  useTransform,
-  type MotionValue,
-} from "motion/react";
+import { memo, useCallback, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import type { StudentLifeImage } from "../../../data/careerDetails";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -13,159 +8,104 @@ interface Props {
   images?: StudentLifeImage[];
 }
 
-// Tamaño de caja único para todas las fotos (mismo tamaño de entrada y salida)
-const BOX_SIZE = { width: "20%", height: "20%" };
+/* ---------------- Image Trail (sigue al cursor) ---------------- */
 
-// Genera la posición de cada foto sobre una espiral: el ángulo avanza por
-// índice y el radio crece poco a poco, así van "saliendo en secuencia"
-// desde el centro hacia afuera en vez de saltar a puntos random.
-const SPIRAL_TURNS = 2.2; // cuántas vueltas completas da la espiral en total (aumentado para más espaciado)
-const SPIRAL_START_ANGLE = -90; // empieza arriba
-const RADIUS_MIN = 5; // % de radio para la primera imagen (reducido)
-const RADIUS_MAX = 50; // % de radio para la última imagen (aumentado para más distancia)
-
-function getSpiralSlot(index: number, total: number) {
-  const t = total <= 1 ? 0 : index / (total - 1);
-  const angleDeg = SPIRAL_START_ANGLE + t * 360 * SPIRAL_TURNS;
-  const angleRad = (angleDeg * Math.PI) / 180;
-  const radius = RADIUS_MIN + t * (RADIUS_MAX - RADIUS_MIN);
-
-  // Centro del contenedor + desplazamiento polar (ajustado a la relación 16:9
-  // aproximada de la pantalla para que la espiral no se vea aplastada)
-  const centerX = 50;
-  const centerY = 45; // Reducido de 50 a 45 para mover todo más arriba
-  const left = centerX + Math.cos(angleRad) * radius * 1.15;
-  const top = centerY + Math.sin(angleRad) * radius;
-
-  // La rotación de cada tarjeta sigue el ángulo de la espiral (efecto orgánico)
-  const rotate = Math.sin(angleRad) * 8;
-
-  return {
-    top: `${top}%`,
-    left: `${left}%`,
-    rotate,
-  };
+interface TrailItem {
+  id: number;
+  x: number;
+  y: number;
+  src: string;
+  alt: string;
+  rotation: number;
 }
 
-const OVERLAP_COUNT = 3;
+const TRAIL_THRESHOLD = 260; // px que debe moverse el cursor antes de soltar la siguiente imagen
+const TRAIL_DURATION = 2000; // ms que dura cada imagen visible antes de desvanecerse
+const TRAIL_MAX_ITEMS = 12; // cuántas imágenes conviven en pantalla al mismo tiempo
+const TRAIL_ROTATION_RANGE = 20; // grados de rotación aleatoria por imagen
 
-const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
-
-function makeRange(...values: number[]): number[] {
-  const clamped = values.map(clamp01);
-  for (let i = 1; i < clamped.length; i++) {
-    if (clamped[i] <= clamped[i - 1]) {
-      clamped[i] = Math.min(1, clamped[i - 1] + 0.0001);
-    }
-  }
-  return clamped;
-}
-
-interface FlyImageProps {
-  img: StudentLifeImage;
-  index: number;
-  total: number;
-  scrollYProgress: MotionValue<number>;
-}
-
-const FlyImage = memo(function FlyImage({
-  img,
-  index,
-  total,
-  scrollYProgress,
-}: FlyImageProps) {
-  const step = 1 / total;
-  const duration = step * OVERLAP_COUNT;
-  const rawStart = index * step;
-
-  const [start, fadeInEnd, peakEnd, fadeOutStart, end] = makeRange(
-    rawStart,
-    rawStart + duration * 0.15,
-    rawStart + duration * 0.5,
-    rawStart + duration * 0.8,
-    rawStart + duration
-  );
-
-  const slot = getSpiralSlot(index, total);
-
-  const transform = useTransform(scrollYProgress, (progress) => {
-    const duration = end - start;
-    const t = Math.min(1, Math.max(0, (progress - start) / duration));
-    const peak = (peakEnd - start) / duration;
-    const beforePeak = t <= peak;
-    const localProgress = beforePeak ? t / peak : (t - peak) / (1 - peak);
-    const scale = beforePeak ? 0.25 + localProgress * 0.75 : 1 + localProgress * 0.8;
-    const rotate = beforePeak
-      ? slot.rotate * 3 + localProgress * (slot.rotate - slot.rotate * 3)
-      : slot.rotate + localProgress * (slot.rotate * 0.4 - slot.rotate);
-    const y = beforePeak ? 40 - localProgress * 40 : -10 * localProgress;
-
-    return `translateY(${y}px) rotate(${rotate}deg) scale(${scale})`;
-  });
-  const opacity = useTransform(
-    scrollYProgress,
-    [start, fadeInEnd, fadeOutStart, end],
-    [0, 1, 1, 0]
-  );
-
-  return (
-    <motion.div
-      style={{
-        ...BOX_SIZE,
-        top: slot.top,
-        left: slot.left,
-        transform,
-        opacity,
-        position: "absolute",
-        contain: "paint",
-      }}
-      className="rounded-xl overflow-hidden"
-    >
-      <div className="w-full h-full rounded-xl overflow-hidden bg-dark-bg">
-        <img
-          src={img.image}
-          srcSet={img.imageSmall ? `${img.imageSmall} 320w, ${img.image} 640w` : undefined}
-          sizes="(max-width: 640px) 20vw, 20vw"
-          alt={img.alt ?? ""}
-          loading="lazy"
-          decoding="async"
-          fetchPriority="low"
-          className="w-full h-full object-cover"
-        />
-      </div>
-    </motion.div>
-  );
-});
-
-function VerticalProgress({
-  total,
-  scrollYProgress,
+function ImageTrail({
+  images,
+  className,
 }: {
-  total: number;
-  scrollYProgress: MotionValue<number>;
+  images: StudentLifeImage[];
+  className?: string;
 }) {
-  const fillScale = useTransform(scrollYProgress, [0, 1], [0, 1]);
-  const activeIndex = useTransform(scrollYProgress, (v) =>
-    Math.min(total - 1, Math.floor(v * total))
+  const [trail, setTrail] = useState<TrailItem[]>([]);
+  const lastPos = useRef<{ x: number; y: number } | null>(null);
+  const nextIndex = useRef(0);
+  const idCounter = useRef(0);
+  const timeouts = useRef<Set<number>>(new Set());
+
+  const removeItem = useCallback((id: number) => {
+    setTrail((prev) => prev.filter((item) => item.id !== id));
+  }, []);
+
+  const handlePointerMove = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      const bounds = event.currentTarget.getBoundingClientRect();
+      const x = event.clientX - bounds.left;
+      const y = event.clientY - bounds.top;
+
+      if (lastPos.current) {
+        const dx = x - lastPos.current.x;
+        const dy = y - lastPos.current.y;
+        if (Math.hypot(dx, dy) < TRAIL_THRESHOLD) return;
+      }
+      lastPos.current = { x, y };
+
+      const img = images[nextIndex.current % images.length];
+      nextIndex.current += 1;
+
+      const id = idCounter.current++;
+      const rotation = (Math.random() - 0.5) * TRAIL_ROTATION_RANGE * 2;
+
+      setTrail((prev) => {
+        const next = [...prev, { id, x, y, src: img.image, alt: img.alt ?? "", rotation }];
+        return next.slice(Math.max(0, next.length - TRAIL_MAX_ITEMS));
+      });
+
+      const timeout = window.setTimeout(() => {
+        timeouts.current.delete(timeout);
+        removeItem(id);
+      }, TRAIL_DURATION);
+      timeouts.current.add(timeout);
+    },
+    [images, removeItem]
   );
 
+  const handlePointerLeave = useCallback(() => {
+    lastPos.current = null;
+  }, []);
+
   return (
-    <div className="absolute right-8 top-1/2 -translate-y-1/2 z-20 flex items-center gap-3">
-      <motion.span className="text-xs font-mono text-dark-text-muted tabular-nums">
-        <motion.span className="text-dark-orange-primary">
-          {useTransform(activeIndex, (i) => String(i + 1).padStart(2, "0"))}
-        </motion.span>
-        {` / ${String(total).padStart(2, "0")}`}
-      </motion.span>
-      <div className="relative w-[2px] h-32 rounded-full bg-dark-border overflow-hidden">
-        <motion.div
-          style={{ scaleY: fillScale }}
-          className="absolute inset-0 origin-top rounded-full bg-gradient-to-b from-dark-orange-primary to-dark-green-primary"
-        />
+    <div
+      onPointerMove={handlePointerMove}
+      onPointerLeave={handlePointerLeave}
+      className={`overflow-hidden ${className ?? "relative"}`}
+    >
+      <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden">
+        <AnimatePresence>
+          {trail.map((item) => (
+            <motion.div
+              key={item.id}
+              className="absolute h-32 w-24 overflow-hidden rounded-xl border border-[var(--line)] shadow-2xl md:h-54 md:w-72"
+              style={{ left: item.x, top: item.y }}
+              initial={{ x: "-50%", y: "-50%", scale: 0.7, opacity: 0, rotate: item.rotation }}
+              animate={{ x: "-50%", y: "-50%", scale: 1, opacity: 1, rotate: item.rotation }}
+              exit={{ scale: 0.85, opacity: 0 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <img src={item.src} alt={item.alt} className="h-full w-full object-cover" />
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
     </div>
   );
 }
+
+/* ---------------- Mobile ---------------- */
 
 function MobileStudentLife({ images }: { images: StudentLifeImage[] }) {
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -276,33 +216,16 @@ function MobileStudentLife({ images }: { images: StudentLifeImage[] }) {
     </section>
   );
 }
+
+/* ---------------- Desktop: sección estática + trail de mouse ---------------- */
+
 const StudentLifeSection = memo(function StudentLifeSection({ images }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"],
-  });
-
-  const introOpacity = useTransform(scrollYProgress, [0, 0.08, 0.14], [1, 1, 0]);
-  const introY = useTransform(scrollYProgress, [0, 0.14], [0, -20]);
-
-  const glowOrangeOpacity = useTransform(scrollYProgress, [0, 0.5, 1], [0.2, 0.06, 0.2]);
-  const glowGreenOpacity = useTransform(scrollYProgress, [0, 0.5, 1], [0.06, 0.2, 0.06]);
-
   if (!images || images.length === 0) return null;
 
   return (
     <>
       <MobileStudentLife images={images} />
-      <section
-        ref={containerRef}
-        style={{ height: `${images.length * 60}vh` }}
-        className="relative hidden bg-dark-bg lg:block"
-      >
-      <div
-        className="sticky top-0 h-screen overflow-hidden"
-        style={{ perspective: "900px" }}
-      >
+      <section className="relative hidden h-screen overflow-hidden bg-dark-bg lg:block">
         <div
           className="absolute inset-0 opacity-[0.08] pointer-events-none"
           style={{
@@ -311,26 +234,14 @@ const StudentLifeSection = memo(function StudentLifeSection({ images }: Props) {
             backgroundSize: "48px 48px",
           }}
         />
+        <div className="absolute -top-32 -left-32 w-[24rem] h-[24rem] rounded-full bg-dark-orange-primary/10 blur-[80px] pointer-events-none" />
+        <div className="absolute -bottom-32 -right-32 w-[24rem] h-[24rem] rounded-full bg-dark-green-primary/10 blur-[80px] pointer-events-none" />
 
-        <motion.div
-          style={{ opacity: glowOrangeOpacity }}
-          className="absolute -top-32 -left-32 w-[24rem] h-[24rem] rounded-full bg-dark-orange-primary blur-[80px] pointer-events-none"
-        />
-        <motion.div
-          style={{ opacity: glowGreenOpacity }}
-          className="absolute -bottom-32 -right-32 w-[24rem] h-[24rem] rounded-full bg-dark-green-primary blur-[80px] pointer-events-none"
-        />
-
-        <div className="pointer-events-none absolute inset-0 bg-dark-bg/40 z-10" />
-
-        <motion.div
-          style={{ opacity: introOpacity, y: introY }}
-          className="absolute inset-0 flex flex-col items-center justify-center z-30 px-6 pointer-events-none text-center gap-2"
-        >
-          <span className="text-[20px] md:text-xs tracking-[0.4em] text-dark-orange-primary uppercase">
+        <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 px-6 text-center">
+          <span className="text-xs tracking-[0.4em] text-dark-orange-primary uppercase">
             Vida Estudiantil
           </span>
-          <span className="text-[10px] md:text-xs tracking-[0.4em] text-dark-text-muted uppercase">
+          <span className="text-xs tracking-[0.4em] text-dark-text-muted uppercase">
             Bienvenido a
           </span>
           <h2 className="text-4xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-dark-orange-primary to-dark-green-primary bg-clip-text text-transparent">
@@ -339,20 +250,12 @@ const StudentLifeSection = memo(function StudentLifeSection({ images }: Props) {
           <p className="max-w-sm text-dark-text/60 text-xs md:text-sm">
             Tecnologías de la Información e Innovación Digital
           </p>
-        </motion.div>
+          <p className="mt-6 text-[11px] tracking-widest text-dark-text-muted uppercase">
+            Mueve el cursor para explorar
+          </p>
+        </div>
 
-        {images.map((img, i) => (
-          <FlyImage
-            key={img.image}
-            img={img}
-            index={i}
-            total={images.length}
-            scrollYProgress={scrollYProgress}
-          />
-        ))}
-
-        <VerticalProgress total={images.length} scrollYProgress={scrollYProgress} />
-      </div>
+        <ImageTrail images={images} className="absolute inset-0" />
       </section>
     </>
   );
