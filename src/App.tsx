@@ -1,15 +1,16 @@
 import { lazy, Suspense, useEffect } from "react";
 import {
   BrowserRouter,
-  Routes,
   Route,
+  Routes,
   useLocation,
 } from "react-router-dom";
-import { Careers } from "./components/sections/Careers";
 import { Aspirantes } from "./components/sections/Aspirantes";
+import { Careers } from "./components/sections/Careers";
 import { WhyChooseTI } from "./components/layout/View";
 import Footer from "./components/layout/Footer";
 import Navbar from "./components/layout/Navbar";
+import Auth from "./components/auth/Auth";
 import Hero from "./components/sections/Hero";
 import FuturoReveal from "./components/sections/Futuro_Reveal";
 import { ConfirmProvider } from "./components/ui/ConfirmDialog";
@@ -41,6 +42,16 @@ function ScrollManager() {
   return null;
 }
 
+function AppFooter() {
+  const { pathname } = useLocation();
+
+  if (pathname === "/acceso") {
+    return null;
+  }
+
+  return <Footer />;
+}
+
 export default function App() {
   return (
     <ConfirmProvider>
@@ -48,6 +59,7 @@ export default function App() {
         <ScrollManager />
 
         <Routes>
+          {/* Landing principal */}
           <Route
             path="/"
             element={
@@ -78,6 +90,10 @@ export default function App() {
             }
           />
 
+          {/* Pantalla estática de acceso */}
+          <Route path="/acceso" element={<Auth />} />
+
+          {/* Detalle de cada carrera */}
           <Route
             path="/carreras/:careerId"
             element={
@@ -92,7 +108,7 @@ export default function App() {
           />
         </Routes>
 
-        <Footer />
+        <AppFooter />
       </BrowserRouter>
     </ConfirmProvider>
   );
