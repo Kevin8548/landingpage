@@ -137,10 +137,10 @@ function MobileStudentLife({ images }: { images: StudentLifeImage[] }) {
       <div className="absolute -bottom-28 -right-28 h-72 w-72 rounded-full bg-dark-green-primary/20 blur-[80px] pointer-events-none" />
 
       <header className="relative mb-8 px-4 text-center sm:px-6">
-        <span className="text-xs tracking-[0.28em] text-dark-orange-primary uppercase">
+        <span className="text-xs tracking-[0.28em] text-dark-green-primary uppercase">
           Vida Estudiantil
         </span>
-        <h2 className="mt-2 text-4xl font-bold tracking-tight bg-gradient-to-r from-dark-orange-primary to-dark-green-primary bg-clip-text text-transparent">
+        <h2 className="mt-2 text-4xl font-bold tracking-tight bg-amber bg-clip-text text-transparent">
           TIEID
         </h2>
         <p className="mx-auto mt-2 max-w-sm text-xs text-dark-text/60 sm:text-sm">
@@ -207,7 +207,7 @@ function MobileStudentLife({ images }: { images: StudentLifeImage[] }) {
               aria-label={`Ver imagen ${index + 1}`}
               aria-current={activeIndex === index ? "true" : undefined}
               className={`h-1.5 rounded-full transition-all ${
-                activeIndex === index ? "w-6 bg-dark-orange-primary" : "w-1.5 bg-dark-text-muted/50"
+                activeIndex === index ? "w-6 bg-amber" : "w-1.5 bg-dark-text-muted/50"
               }`}
             />
           ))}
@@ -237,20 +237,24 @@ const StudentLifeSection = memo(function StudentLifeSection({ images }: Props) {
         <div className="absolute -top-32 -left-32 w-[24rem] h-[24rem] rounded-full bg-dark-orange-primary/10 blur-[80px] pointer-events-none" />
         <div className="absolute -bottom-32 -right-32 w-[24rem] h-[24rem] rounded-full bg-dark-green-primary/10 blur-[80px] pointer-events-none" />
 
-        <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 px-6 text-center">
-          <span className="text-xs tracking-[0.4em] text-dark-orange-primary uppercase">
+        <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 px-6 text-center">
+          <span className="text-sm md:text-base tracking-[0.45em] text-dark-green-primary uppercase">
             Vida Estudiantil
           </span>
-          <span className="text-xs tracking-[0.4em] text-dark-text-muted uppercase">
+
+          <span className="text-sm md:text-base tracking-[0.45em] text-dark-text-muted uppercase">
             Bienvenido a
           </span>
-          <h2 className="text-4xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-dark-orange-primary to-dark-green-primary bg-clip-text text-transparent">
-            TIEID
+
+          <h2 className="text-6xl md:text-6xl lg:text-7xl font-bold tracking-tight bg-gradient-to-t from-amber-400 to-amber-800 bg-clip-text text-transparent">
+            T I E I D
           </h2>
-          <p className="max-w-sm text-dark-text/60 text-xs md:text-sm">
+
+          <p className="max-w-xl text-base md:text-lg tracking-[0.2em] text-dark-text/70 leading-relaxed">
             Tecnologías de la Información e Innovación Digital
           </p>
-          <p className="mt-6 text-[11px] tracking-widest text-dark-text-muted uppercase">
+
+          <p className="mt-8 text-sm tracking-[0.1em] text-dark-text uppercase">
             Mueve el cursor para explorar
           </p>
         </div>

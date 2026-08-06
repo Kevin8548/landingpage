@@ -24,9 +24,9 @@ function ChecklistItem({
   color: "orange" | "green";
 }) {
   const borderColor =
-    color === "orange" ? "border-dark-orange-primary" : "border-dark-green-primary";
+    color === "orange" ? "border-amber" : "border-dark-green-primary";
   const textColor =
-    color === "orange" ? "text-dark-orange-primary" : "text-dark-green-primary";
+    color === "orange" ? "text-amber" : "text-dark-green-primary";
 
   return (
     <li className="flex items-start gap-3">
@@ -150,11 +150,11 @@ function SequentialPanel({
               <>
                 {panel.icon && (
                   <panel.icon
-                    className="mb-6 h-12 w-12 md:h-16 md:w-16 text-dark-orange-primary"
+                    className="mb-6 h-12 w-12 md:h-16 md:w-16 text-amber"
                     strokeWidth={1.9}
                   />
                 )}
-                <h2 className="max-w-[14ch] text-center font-serif text-3xl md:text-5xl leading-tight md:max-w-[18ch]">
+                <h2 className="max-w-[14ch] text-center font-serif text-3xl md:text-5xl tracking-[0.1em] leading-tight md:max-w-[18ch]">
                   {panel.title}
                 </h2>
               </>
@@ -227,10 +227,10 @@ function CampoLaboralBlock({
 
   return (
     <div ref={ref} className="relative h-[200vh]">
-      <div className="sticky top-0 h-screen overflow-hidden flex flex-col items-center justify-center px-6 md:px-16">
+      <div className="sticky top-0 h-screen bg-dark-bg overflow-hidden flex flex-col items-center justify-center px-6 md:px-16">
         <motion.h2
           style={{ y: titleY, opacity: titleOpacity }}
-          className="font-serif text-4xl mb-16 md:mb-24 text-center"
+          className="font-serif text-4xl mb-16 md:mb-24 tracking-[0.1em] text-center text-amber uppercase"
         >
           Campo Laboral
         </motion.h2>
@@ -277,10 +277,10 @@ function CampoLaboralCircle({
   return (
     <motion.div
       style={{ opacity, scale }}
-      className="relative w-[260px] h-[260px] md:w-[300px] md:h-[300px] rounded-full border border-[var(--line)] bg-[var(--glass)] flex flex-col items-center justify-center text-center px-8 shrink-0"
+      className="relative w-[260px] h-[260px] md:w-[300px] md:h-[300px] rounded-full border border-amber-500/30 bg-[var(--glass)] flex flex-col items-center justify-center text-center px-8 shrink-0"
     >
-      <div className="w-11 h-11 rounded-md bg-dark-orange-primary/10 border border-dark-orange-primary flex items-center justify-center mb-4">
-        <Icon size={20} className="text-dark-orange-primary" />
+      <div className="w-11 h-11 rounded-md bg-dark-orange-primary/10 border border-amber flex items-center justify-center mb-4">
+        <Icon size={20} className="text-amber" />
       </div>
       <span className="font-serif text-xl md:text-2xl leading-tight mb-3">{job.titulo}</span>
       <span className="text-[11px] tracking-widest uppercase text-neutral-400 leading-relaxed">
@@ -323,7 +323,7 @@ function MobileProfileBlock({
         ))}
       </ul>
       {quote && (
-        <p className="mt-7 border-l-2 border-dark-orange-primary pl-4 text-sm italic text-neutral-400">
+        <p className="mt-7 border-l-2 border-amber pl-4 text-sm italic text-neutral-400">
           {quote}
         </p>
       )}
@@ -355,7 +355,7 @@ function MobileProfileAndField({
 
         {perfilIngreso && (
           <MobileProfileBlock
-            title="--"
+            title="Perfil de Ingreso"
             items={perfilIngreso}
             image={imagenIngreso}
             color="orange"
@@ -370,7 +370,7 @@ function MobileProfileAndField({
         />
 
         <div className="pt-4">
-          <h2 className="mb-7 text-center font-serif text-3xl sm:text-4xl">Campo Laboral</h2>
+          <h2 className="mb-7 text-center font-serif text-3xl sm:text-4xl text-amber">Campo Laboral</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             {campoLaboral.map((job) => {
               const Icon = iconMap[job.icon] ?? Briefcase;
@@ -379,8 +379,8 @@ function MobileProfileAndField({
                   key={job.titulo}
                   className="rounded-2xl border border-[var(--line)] bg-[var(--glass)] p-6 text-center"
                 >
-                  <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-md border border-dark-orange-primary bg-dark-orange-primary/10">
-                    <Icon size={20} className="text-dark-orange-primary" />
+                  <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-md border border-amber bg-amber/10">
+                    <Icon size={20} className="text-amber" />
                   </div>
                   <h3 className="font-serif text-xl leading-tight">{job.titulo}</h3>
                   <p className="mt-3 text-[11px] uppercase tracking-widest leading-relaxed text-neutral-400">

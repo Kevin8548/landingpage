@@ -56,4 +56,15 @@ export const careers: Career[] = [
     altFront: "...",
     icon: Boxes
   },
+  {
+    slug: "ingenieria-ti",
+    tag: Pyramid, 
+    title: "Ingeniería en Tecnologías de la Información e Innovación Digital",
+    description: "Continuación de las TSU hacia el nivel de Ingeniería.",
+    imageBack: devBack,   
+    imageFront: devFront, 
+    altBack: "",
+    altFront: "",
+    icon: Code2,
+  },
 ];
