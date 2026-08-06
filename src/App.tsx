@@ -12,6 +12,7 @@ import Footer from "./components/layout/Footer";
 import Navbar from "./components/layout/Navbar";
 import Hero from "./components/sections/Hero";
 import FuturoReveal from "./components/sections/Futuro_Reveal";
+import Proyectos from "./components/layout/Proyectos";
 import { ConfirmProvider } from "./components/ui/ConfirmDialog";
 
 const CareerDetail = lazy(() => import("./pages/CareerDetail"));
@@ -66,6 +67,8 @@ export default function App() {
                 <section id="carreras">
                   <Careers />
                 </section>
+
+                <Proyectos />
 
                 <section id="eventos">
                   {/* Sección de eventos */}

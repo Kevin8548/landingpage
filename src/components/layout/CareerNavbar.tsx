@@ -70,7 +70,6 @@ export default function CareerNavbar() {
   const goBackToCareers = () => {
     sessionStorage.setItem("landing-scroll-target", "carreras");
 
-    // Lleva siempre a /landingpage/ con la diagonal final.
     window.location.assign(import.meta.env.BASE_URL);
   };
 

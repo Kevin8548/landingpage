@@ -8,12 +8,11 @@
   inset: 0 0 auto;
   z-index: 50;
   display: grid;
-  grid-template-columns: 1.7fr repeat(4, 1fr);
+  grid-template-columns: 1.7fr repeat(5, 1fr);
   gap: 6px;
   min-height: 66px;
   padding: 8px 15px 0;
   box-sizing: border-box;
-
 }
 
 @keyframes tidFadeIn {
@@ -60,7 +59,6 @@
   font-weight: 600;
   line-height: 1;
   letter-spacing: 0.30em;
-  
 }
 
 .tid-logo-text small {
@@ -107,8 +105,7 @@
 .tid-nav-line-fill {
   display: block;
   height: 100%;
-  background: linear-gradient(90deg,  rgb(83, 246, 7),
-  #42f308);
+  background: linear-gradient(90deg, rgb(83, 246, 7), #42f308);
   transition: width 0.12s linear;
 }
 
