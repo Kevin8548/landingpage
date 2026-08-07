@@ -14,6 +14,7 @@ import Auth from "./components/auth/Auth";
 import Hero from "./components/sections/Hero";
 import FuturoReveal from "./components/sections/Futuro_Reveal";
 import { ConfirmProvider } from "./components/ui/ConfirmDialog";
+import { Eventos } from "./components/sections/eventos";
 
 const CareerDetail = lazy(() => import("./pages/CareerDetail"));
 
@@ -80,7 +81,7 @@ export default function App() {
                 </section>
 
                 <section id="eventos">
-                  {/* Sección de eventos */}
+                  <Eventos />
                 </section>
 
                 <section id="aspirantes">
