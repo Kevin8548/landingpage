@@ -1,8 +1,12 @@
-// src/pages/CareerDetail.tsx
 import { useEffect, useState } from "react";
 import { useParams, Navigate } from "react-router-dom";
-import { loadCareerDetail, type CareerDetail as CareerDetailData } from "../data/careerDetails";
+import {
+  loadCareerDetail,
+  type CareerDetail as CareerDetailData,
+} from "../data/careerDetails";
+import { careers, type Career } from "../data/careers";
 
+import CareerNavbar from "../components/layout/CareerNavbar";
 import DetailHero from "../components/sections/detailCareer/DetailHero";
 import WhyChooseSection from "../components/sections/detailCareer/WhyChooseSection";
 import StudyPlanSection from "../components/sections/detailCareer/StudyPlanSection";
@@ -10,12 +14,16 @@ import ProfileAndFieldSection from "../components/sections/detailCareer/ProfileA
 import StudentLifeSection from "../components/sections/detailCareer/StudentLifeSection";
 import FinalCTA from "../components/sections/detailCareer/FinalCTA";
 
+type FullCareer = Career &
+  Omit<CareerDetailData, "imageBack" | "imageFront">;
+
 export default function CareerDetail() {
   const { careerId } = useParams<{ careerId: string }>();
+
   const [detail, setDetail] = useState<{
     careerId: string;
-    career: CareerDetailData | undefined;
-    ingenieriaTI: CareerDetailData | undefined;
+    career: FullCareer | undefined;
+    ingenieriaTI: FullCareer | undefined;
   }>();
 
   useEffect(() => {
@@ -24,16 +32,47 @@ export default function CareerDetail() {
     if (!careerId) return undefined;
 
     const isTSU = careerId !== "ingenieria-ti";
-    const details = isTSU
-      ? Promise.all([loadCareerDetail(careerId), loadCareerDetail("ingenieria-ti")])
-      : Promise.all([loadCareerDetail(careerId), Promise.resolve(undefined)]);
 
-    void details.then(([nextCareer, nextIngenieriaTI]) => {
+    const details = isTSU
+      ? Promise.all([
+          loadCareerDetail(careerId),
+          loadCareerDetail("ingenieria-ti"),
+        ])
+      : Promise.all([
+          loadCareerDetail(careerId),
+          Promise.resolve(undefined),
+        ]);
+
+    void details.then(([nextCareerDetail, nextIngenieriaTIDetail]) => {
       if (cancelled) return;
+
+      const baseCareer = careers.find((career) => career.slug === careerId);
+      const baseIngenieriaTI = careers.find(
+        (career) => career.slug === "ingenieria-ti",
+      );
+
+      const mergeCareer = (
+        base: Career | undefined,
+        detailData: CareerDetailData | undefined,
+      ): FullCareer | undefined => {
+        if (!base || !detailData) return undefined;
+
+        const {
+          imageBack: _ignoredBack,
+          imageFront: _ignoredFront,
+          ...rest
+        } = detailData;
+
+        return { ...base, ...rest };
+      };
+
       setDetail({
         careerId,
-        career: nextCareer,
-        ingenieriaTI: nextIngenieriaTI,
+        career: mergeCareer(baseCareer, nextCareerDetail),
+        ingenieriaTI: mergeCareer(
+          baseIngenieriaTI,
+          nextIngenieriaTIDetail,
+        ),
       });
     });
 
@@ -42,7 +81,9 @@ export default function CareerDetail() {
     };
   }, [careerId]);
 
-  if (!careerId) return <Navigate to="/" replace />;
+  if (!careerId) {
+    return <Navigate to="/" replace />;
+  }
 
   if (!detail || detail.careerId !== careerId) {
     return <main className="min-h-dvh bg-dark-bg" aria-busy="true" />;
@@ -50,15 +91,17 @@ export default function CareerDetail() {
 
   const { career, ingenieriaTI } = detail;
 
-  if (!career) return <Navigate to="/" replace />;
+  if (!career) {
+    return <Navigate to="/" replace />;
+  }
 
-  // Todas las TSU continúan con Ingeniería en TI (misma para las 3)
-  const esTSU = career.id !== "ingenieria-ti";
+  const esTSU = career.slug !== "ingenieria-ti";
 
   const cuatrimestresCompletos =
     esTSU && ingenieriaTI
       ? [...career.cuatrimestres, ...ingenieriaTI.cuatrimestres]
       : career.cuatrimestres;
+
   const studyPlanImagesCompletas =
     esTSU && ingenieriaTI
       ? [...career.studyPlanImages, ...ingenieriaTI.studyPlanImages]
@@ -66,28 +109,42 @@ export default function CareerDetail() {
 
   return (
     <>
-      <DetailHero
-        career={career}
-        videoSrc={career.videoSrc ?? "/videos/redes.mp4"}
-      />
+      <CareerNavbar />
 
-      <WhyChooseSection stats={career.stats} />
+      <section id="detalle-inicio">
+        <DetailHero
+          career={career}
+          videoSrc={career.videoSrc ?? "/videos/redes.mp4"}
+        />
+      </section>
 
-      <StudyPlanSection
-        cuatrimestres={cuatrimestresCompletos}
-        studyPlanImages={studyPlanImagesCompletas}
-      />
+      <section id="detalle-por-que">
+        <WhyChooseSection stats={career.stats} />
+      </section>
 
-      <ProfileAndFieldSection
-        perfilIngreso={career.perfilIngreso}
-        perfilEgreso={career.perfilEgreso}
-        perfilImages={career.perfilImages}
-        campoLaboral={career.campoLaboral}
-      />
+      <section id="detalle-plan">
+        <StudyPlanSection
+          cuatrimestres={cuatrimestresCompletos}
+          studyPlanImages={studyPlanImagesCompletas}
+        />
+      </section>
 
-      <StudentLifeSection images={career.studentLife} />
+      <section id="detalle-perfil">
+        <ProfileAndFieldSection
+          title={career.title}
+          icon={career.icon}
+          titleImage={career.perfilImages?.[2]}
+          perfilIngreso={career.perfilIngreso}
+          perfilEgreso={career.perfilEgreso}
+          perfilImages={career.perfilImages}
+          campoLaboral={career.campoLaboral}
+        />
+      </section>
 
-      <FinalCTA />
+      <section id="detalle-vida">
+        <StudentLifeSection images={career.studentLife} />
+        <FinalCTA />
+      </section>
     </>
   );
 }

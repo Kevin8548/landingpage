@@ -21,16 +21,17 @@ const DetailHero = memo(function DetailHero({
   posterSrc,
 }: DetailHeroProps) {
   return (
-    <section className="relative min-h-dvh flex items-center px-6 md:px-16 py-16 overflow-hidden">
+    <section className="relative flex min-h-[100svh] items-center overflow-hidden px-4 py-24 sm:min-h-dvh sm:px-6 sm:py-16 md:px-12 lg:px-16">
       {/* Video de fondo */}
       {videoSrc && (
         <video
-          className="absolute inset-0 w-full h-full object-cover -z-10"
+          className="absolute inset-0 -z-10 h-full w-full object-cover object-[58%_center] sm:object-center"
           poster={posterSrc}
           autoPlay
           muted
           loop
           playsInline
+          aria-hidden="true"
         >
           <source src={`${baseUrl}${videoSrc.replace(".mp4", ".webm")}`} type="video/webm" />
           <source src={`${baseUrl}${videoSrc}`} type="video/mp4" />
@@ -42,34 +43,43 @@ const DetailHero = memo(function DetailHero({
         <img
           src={posterSrc}
           alt=""
-          className="absolute inset-0 w-full h-full object-cover -z-10"
+          className="absolute inset-0 -z-10 h-full w-full object-cover object-[58%_center] sm:object-center"
         />
       )}
 
       {/* Gradiente sutil para todo el fondo */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-black/10 -z-10" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black/85 via-black/60 to-black/15 sm:from-black/70 sm:via-black/35 sm:to-black/10" />
 
-      <div className="grid grid-cols-1 items-center w-full">
+      <div className="grid w-full grid-cols-1 items-center">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="bg-black/25 backdrop-blur-sm rounded-2xl p-8 md:p-10 max-w-2xl"
+          className="w-full max-w-2xl rounded-xl bg-black/35 p-5 backdrop-blur-sm sm:rounded-2xl sm:p-8 md:p-10"
         >
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <Badge color="orange">Convocatoria Abierta 2026</Badge>
           </div>
 
-          <h1 className="font-serif text-4xl md:text-5xl leading-tight mb-6 text-white drop-shadow-lg">
+          <p className="mb-2 font-sans text-sm font-medium tracking-wide text-light-green-primary sm:text-base">
+            Ingeniería en Tecnologías de la Información e Innovación Digital
+          </p>
+
+          <h1 className="mb-5 font-serif text-3xl leading-[1.1] text-white drop-shadow-lg sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl [text-wrap:balance]">
             {career.nombre}
           </h1>
 
-          <p className="italic text-neutral-200 border-l-2 border-dark-green-primary pl-4 mb-10 max-w-lg">
+          <p className="mb-7 max-w-lg border-l-2 border-dark-green-primary pl-4 text-sm italic leading-relaxed text-neutral-200 sm:mb-10 sm:text-base">
             "{career.quote}"
           </p>
 
-          <div className="flex items-center gap-4">
-            <Button variant="primary" icon={<ArrowDown size={16} />} iconPosition="right">
+          <div className="flex w-full items-center sm:w-auto">
+            <Button
+              variant="primary"
+              icon={<ArrowDown size={16} />}
+              iconPosition="right"
+              className="w-full justify-center shadow-[0_0_25px_-5px] shadow-dark-orange-primary/60 sm:w-auto"
+            >
               Explora nuestras carreras
             </Button>
           </div>

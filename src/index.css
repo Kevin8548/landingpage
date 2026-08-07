@@ -37,6 +37,15 @@ body {
   --color-dark-text: #f4f4f5;        /* texto principal, alto contraste sobre negro */
   --color-dark-text-muted: #a1a1aa;  /* texto secundario, gris real (no casi-blanco) */
   --color-dark-border: #27272a;
+
+  --color-amber: #FFB703;
+  --color-green-light: #196700;
+  --color-green-dark: #1A4F01;
+
+
+
+  /* others  */
+  --color-dark-bg-alt: #0d0f0d;
 }
 
 
