@@ -1,67 +1,105 @@
-import { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Careers } from "./components/sections/Careers";
+import { lazy, Suspense, useEffect } from "react";
+import {
+  BrowserRouter,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
 import { Aspirantes } from "./components/sections/Aspirantes";
+import { Careers } from "./components/sections/Careers";
 import { WhyChooseTI } from "./components/layout/View";
 import Footer from "./components/layout/Footer";
 import Navbar from "./components/layout/Navbar";
+import Auth from "./components/auth/Auth";
 import Hero from "./components/sections/Hero";
 import FuturoReveal from "./components/sections/Futuro_Reveal";
 import { ConfirmProvider } from "./components/ui/ConfirmDialog";
 
-// La página de detalle no forma parte de la carga inicial de la landing.
 const CareerDetail = lazy(() => import("./pages/CareerDetail"));
+
+function ScrollManager() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const targetId = sessionStorage.getItem("landing-scroll-target");
+
+    if (pathname === "/" && targetId) {
+      sessionStorage.removeItem("landing-scroll-target");
+
+      requestAnimationFrame(() => {
+        document.getElementById(targetId)?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      });
+
+      return;
+    }
+
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
+
+function AppFooter() {
+  const { pathname } = useLocation();
+
+  if (pathname === "/acceso") {
+    return null;
+  }
+
+  return <Footer />;
+}
 
 export default function App() {
   return (
     <ConfirmProvider>
       <BrowserRouter basename="/landingpage">
-        <Navbar />
+        <ScrollManager />
 
         <Routes>
-        {/* Landing principal */}
+          {/* Landing principal */}
           <Route
-          path="/"
-          element={
-          <>
-            <section id="hero">
-                <Hero />
-                <FuturoReveal />
-            </section>
+            path="/"
+            element={
+              <>
+                <Navbar />
 
+                <section id="hero">
+                  <Hero />
+                  <FuturoReveal />
+                </section>
 
-            <section id="por-que-ti">
-                <WhyChooseTI />
-            </section>
+                <section id="por-que-ti">
+                  <WhyChooseTI />
+                </section>
 
+                <section id="carreras">
+                  <Careers />
+                </section>
 
-            <section id="carreras">
-                <Careers />
-            </section>
+                <section id="eventos">
+                  {/* Sección de eventos */}
+                </section>
 
-
-            <section id="eventos">
-              {/* sección de eventos */}
-            </section>
-
-
-            <section id="aspirantes">
-                <Aspirantes />
-            </section>
-          </>
-          }
+                <section id="aspirantes">
+                  <Aspirantes />
+                </section>
+              </>
+            }
           />
 
-          {/* Detalle de carrera */}
+          {/* Pantalla estática de acceso */}
+          <Route path="/acceso" element={<Auth />} />
+
+          {/* Detalle de cada carrera */}
           <Route
             path="/carreras/:careerId"
             element={
               <Suspense
                 fallback={
-                  <main
-                    className="min-h-dvh bg-dark-bg"
-                    aria-busy="true"
-                  />
+                  <main className="min-h-dvh bg-dark-bg" aria-busy="true" />
                 }
               >
                 <CareerDetail />
@@ -70,7 +108,7 @@ export default function App() {
           />
         </Routes>
 
-        <Footer />
+        <AppFooter />
       </BrowserRouter>
     </ConfirmProvider>
   );

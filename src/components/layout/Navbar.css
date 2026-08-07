@@ -1,20 +1,23 @@
 :root {
-  --amber: #fbbf24;
+  --nav-green-dark: rgb(26, 79, 1);
+  --nav-green: #196700;
 }
-
 
 .tid-nav {
   position: fixed;
-  left: 0px;
-  right: 0px;
+  inset: 0 0 auto;
   z-index: 50;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 13px 26px;
-  opacity: 0;
-  animation: tidFadeIn 0.9s ease 0.05s forwards;
+  display: grid;
+  grid-template-columns: 1.7fr repeat(4, 1fr);
+  gap: 6px;
+  min-height: 66px;
+  padding: 8px 15px 0;
+  box-sizing: border-box;
+
+}
+
+.auth-field--full {
+  width: 100%;
 }
 
 @keyframes tidFadeIn {
@@ -23,190 +26,132 @@
   }
 }
 
-.tid-logo-mark {
-  position: relative; /* necesario para el pedacito de abajo */
+.tid-nav-brand,
+.tid-nav-item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  min-width: 0;
+  height: 56px;
+  padding-top: 13px;
+  color: rgba(255, 255, 255, 0.86);
+  text-decoration: none;
+  box-sizing: border-box;
 }
 
-.tid-logo-mark::after,
-.tid-nav-links li > a::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -9px;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.15);
+.tid-nav-brand {
+  color: var(--ink, #fff);
 }
 
+.tid-nav-item {
+  gap: 16px;
+  font-family: "Inter", sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  transition: color 0.25s ease;
+}
 
-/* apagamos la línea continua de fondo, ya no la necesitamos */
-.tid-nav-track {
-  display: none;
+.tid-nav-item:hover,
+.tid-nav-item.active {
+  color: #fff;
 }
 
 .tid-logo-text {
+  display: flex;
+  flex-direction: column;
   font-family: "Unbounded", sans-serif;
+  font-size: 13px;
   font-weight: 600;
-  font-size: 14.5px;
-  letter-spacing: 0.01em;
-  line-height: 1.1;
-  color: var(--ink);
+  line-height: 1;
+  letter-spacing: 0.30em;
+  
 }
 
-.tid-logo-text span {
-  display: block;
+.tid-logo-text small {
+  margin-top: 5px;
+  color: var(--muted, rgba(255, 255, 255, 0.55));
   font-family: "JetBrains Mono", monospace;
+  font-size: 8px;
   font-weight: 400;
-  font-size: 9px;
-  letter-spacing: 0.18em;
-  color: var(--muted);
-  margin-top: 4px;
+  letter-spacing: 0.50em;
 }
-
-.tid-nav-center {
-  position: relative;
-  padding-bottom: 8px;
-}
-
-.tid-nav-track {
-  position:absolute;
-  left:0;
-  right:0;
-  bottom:0;
-  height:2px;
-  background:rgba(255,255,255,.15);
-}
-
-.tid-nav-links {
-  display: flex;
-  align-items: center;
-  flex: 1;                       /* ocupa todo el espacio restante del nav */
-  justify-content: space-between; /* reparte cada link a lo largo de ese espacio */
-  margin-left: 64px;              /* separación respecto al logo */
-  gap: 0;                         /* ya no usamos gap fijo, ahora se reparte solo */
-  list-style: none;
-  font-size: 13.5px;
-  font-weight: 500;
-  position: relative;
-  padding: 0;
-}
-
-.tid-nav-links li {
-  position: relative;
-  z-index: 2;
-}
-
-.tid-nav-links li a {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 17px;
-  color: var(--muted);
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-
-.tid-nav-links li a:hover,
-.tid-nav-links li a.active {
-  color: var(--ink);
-}
-
-/* ===========================
-   CIRCULITO QUE SE VA LLENANDO
-   =========================== */
 
 .tid-dot {
   position: relative;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  flex: 0 0 10px;
   overflow: hidden;
-  flex-shrink: 0;
-  transition: border-color 0.3s ease;
-}
-
-.tid-nav-links li a.active .tid-dot {
-  border-color: rgba(61, 220, 132, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
 }
 
 .tid-dot-fill {
   position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  background: linear-gradient(
-    180deg,
-    rgb(26, 79, 1),
-    #196700
-  );
-  transition: height 0.15s linear;
+  inset: auto 0 0;
+  background: linear-gradient(180deg, var(--nav-green-dark), var(--nav-green));
+  transition: height 0.12s linear;
 }
 
-/* ===========================
-   LÍNEA DE PROGRESO POR SCROLL
-   =========================== */
+.tid-nav-item.active .tid-dot {
+  border-color: rgba(88, 201, 78, 0.9);
+}
 
-.tid-nav-indicator {
+.tid-nav-line {
   position: absolute;
+  right: 0;
+  bottom: 0;
   left: 0;
-  bottom: -2px;
-  height: 2px;
-  z-index: 2;
-  border-radius: 999px;
-  background: linear-gradient(
-    90deg,
-    rgb(26, 79, 1),
-    #196700
-  );
-  transition: width 0.1s linear;
+  height: 1px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.17);
 }
 
-.tid-nav-cta {
-  border: 1px solid rgb(251 191 36 / 40%);
-  position: relative;
-  font-family: "Inter", sans-serif;
-  font-weight: 600;
-  font-size: 12.5px;
-  padding: 10px 55px;
-  border-radius: 22px;
-  cursor: pointer;
-  transition: transform 0.25s ease;
-  margin-left: 4px;
+.tid-nav-line-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg,  rgb(83, 246, 7),
+  #42f308);
+  transition: width 0.12s linear;
 }
 
-.tid-nav-cta:hover {
-  transform: translateY(-2px);
+@media (max-width: 900px) {
+  .tid-nav {
+    gap: 3px;
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+
+  .tid-nav-item {
+    gap: 10px;
+    font-size: 13px;
+  }
 }
 
 @media (max-width: 760px) {
   .tid-nav {
-    padding: 12px 16px;
-    left: 12px;
-    right: 12px;
+    display: block;
+    min-height: 64px;
+    padding: 16px 18px 0;
   }
 
-  .tid-nav-center {
+  .tid-nav-brand {
+    height: 48px;
+  }
+
+  .tid-nav-item {
     display: none;
   }
 }
 
-.tid-nav {
-  position: fixed;
-  left: 0;
-  right: 0;
-}
 
-.tid-nav::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1px;
-}
 
-.tid-nav-login {
+
+
+
+
+/* .tid-nav-login {
   display: inline-flex;
   align-items: center;
   gap: 12px;
@@ -217,7 +162,7 @@
   cursor: pointer;
   background: radial-gradient(circle at 22px center, rgba(26, 79, 1, 0.48) 10%, rgba(26, 79, 1, 0.48) 5%, #0c0c0c 25%);
   transition: transform 0.15s ease, filter 0.15s ease;
-}
+} */
 
 .tid-nav-login:hover {
   filter: brightness(1.08);
@@ -248,4 +193,3 @@
   margin-left: -1px;
   white-space: nowrap;
 }
-

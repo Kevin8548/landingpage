@@ -7,6 +7,7 @@ import studyPlan2 from "../../assets/careers/software/study-2.jpg";
 import studyPlan3 from "../../assets/careers/software/study-3.jpg";
 import perfil1 from "../../assets/careers/software/perfil-1.jpg";
 import perfil2 from "../../assets/careers/software/perfil-2.jpg";
+import perfil3 from "../../assets/careers/software/perfil-3.avif";
 import life1 from "../../assets/careers/software/life-1-640.avif";
 import life1Small from "../../assets/careers/software/life-1-320.avif";
 import life2 from "../../assets/careers/software/life-2-640.avif";
@@ -42,13 +43,13 @@ import life16Small from "../../assets/careers/software/life-16-320.avif";
 
 export const desarrolloSoftware: CareerDetail = {
   id: "desarrollo-software",
-  nombre: "T.S.U. en Tecnologías de la Información Área Desarrollo de Software Multiplataforma",
+  nombre: "Área Desarrollo de Software Multiplataforma",
   quote: "No solo escribas código, construye soluciones interconectadas que transformen el mundo digital.",
   videoSrc: "videos/software.mp4",
   imageBack: softwareBack,
   imageFront: softwareFront,
   studyPlanImages: [studyPlan1, studyPlan2, studyPlan3],
-  perfilImages: [perfil1, perfil2],
+  perfilImages: [perfil1, perfil2, perfil3],
   stats: [
     { icon: "terminal", label: "Empleabilidad", value: "95%", desc: "Egresados laborando en desarrollo de software y TI a nivel nacional." },
     { icon: "code", label: "Enfoque Práctico", value: "70/30", desc: "Relación de horas de desarrollo práctico frente a teoría conceptual." },
