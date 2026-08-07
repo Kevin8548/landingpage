@@ -56,11 +56,11 @@ function AnimatedWord({ text, scrollYProgress, rangeStart, rangeEnd }: AnimatedW
   const chars = Array.from(text);
   return (
     <span
-      className="font-serif font-bold leading-none tracking-wide sm:tracking-wider text-dark-green-primary/30"
+      className="font-serif font-bold leading-none tracking-wide sm:tracking-wider text-amber/80"
       style={{
         fontSize: "clamp(2.75rem, 9vw, 7.5rem)",
         textShadow:
-          "0 0 10px rgba(29, 215, 91, 0.55)",
+          "0 0 25px rgba(255, 183, 3, 0.55)",
       }}
     >
       {chars.map((char, i) => (
@@ -205,18 +205,18 @@ const FinalCTA = memo(function FinalCTA({ whatsappNumber = "5217712345678" }: Fi
 
           <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
             <Button 
-              variant="secondary" 
+              variant="primary" 
               size="lg" 
               icon={<FaWhatsapp size={18} />} 
               iconPosition="left" 
-              className="bg-light-orange-primary/5 border-dark-orange-primary/45 w-full justify-center shadow-[0_0_25px_-5px] shadow-dark-green-primary/50 sm:w-auto"
+              className="bg-light-orange-primary/5 border-dark-orange-primary/45 w-full justify-center shadow-[0_0_25px_-5px] shadow-amber sm:w-auto"
             >
               WhatsApp Directo
             </Button>
           </a>
         </motion.div>
 
-        <p className="absolute bottom-4 z-10 max-w-xs px-4 text-center text-[10px] uppercase tracking-widest text-dark-orange-primary sm:bottom-10 sm:max-w-none sm:text-xs">
+        <p className="absolute bottom-4 z-10 max-w-xs px-4 text-center text-[10px] uppercase tracking-widest text-dark-green-primary sm:bottom-10 sm:max-w-none sm:text-xs">
           Inscripciones Abiertas · Próximo Ciclo: Septiembre 2026
         </p>
       </div>

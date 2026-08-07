@@ -18,6 +18,11 @@ function chunkInPairs<T>(items: T[]): T[][] {
   return pairs;
 }
 
+// Cuatrimestres 1-6 pertenecen a TSU, 7-10 a Ingeniería.
+function getPrograma(pair: Cuatrimestre[]): string {
+  return pair[0].numero <= 6 ? "TSU" : "ING";
+}
+
 const MateriaItem = memo(function MateriaItem({ materia }: { materia: Materia }) {
   return (
     <li className="border-b border-dark-border pb-2 last:border-0">
@@ -25,14 +30,14 @@ const MateriaItem = memo(function MateriaItem({ materia }: { materia: Materia })
         <span
           className={
             materia.clave
-              ? "text-sm font-semibold text-dark-orange-primary"
+              ? "text-sm font-semibold text-amber"
               : "text-sm text-dark-text-muted"
           }
         >
           {materia.nombre}
         </span>
         {materia.clave && (
-          <span className="shrink-0 rounded-full bg-dark-orange-primary/15 px-2 py-0.5 text-[10px] font-medium text-dark-green-secondary">
+          <span className="shrink-0 rounded-full bg-amber/55 px-2 py-0.5 text-[10px] font-medium text-dark-bg">
             Clave
           </span>
         )}
@@ -50,10 +55,10 @@ const CuatrimestreCard = memo(function CuatrimestreCard({ cuatri }: { cuatri: Cu
   return (
     <div
       className="w-full lg:w-[min(32%,380px)] h-full rounded-2xl bg-dark-bg-alt/90
-                 border border-dark-orange-primary/25 p-6 flex flex-col overflow-hidden
+                 border border-amber/25 p-6 flex flex-col overflow-hidden
                  shadow-[inset_0_1px_0_0_rgba(255,255,255,0.03)]"
     >
-      <span className="text-xs uppercase tracking-wider text-dark-orange-primary font-semibold">
+      <span className="text-xl tracking-[0.2em] uppercase text-amber font-semibold">
         {cuatri.numero}° Cuatrimestre
       </span>
       <span className="text-sm text-dark-text-muted mb-4">{cuatri.nivel}</span>
@@ -72,7 +77,7 @@ const StudyImagePanel = memo(function StudyImagePanel({ src }: { src?: string })
   return (
     <div
       className="w-full lg:w-[min(24%,280px)] h-40 lg:h-full shrink-0 rounded-2xl overflow-hidden
-                 border border-dark-orange-primary/25 relative"
+                 border border-amber/25 relative"
     >
       <img
         src={src}
@@ -104,10 +109,10 @@ function MobileStudyPlan({
 }) {
   return (
     <section className="lg:hidden relative overflow-hidden bg-dark-bg-alt px-4 py-16 sm:px-6">
-      <div className="absolute inset-0 opacity-[0.1] pointer-events-none"
+      <div className="absolute inset-0 opacity-[0.04] pointer-events-none"
         style={{
           backgroundImage:
-            "linear-gradient(to right, rgba(244,244,245,0.4) 1px, transparent 1px), linear-gradient(to bottom, rgba(244,244,245,0.4) 1px, transparent 1px)",
+            "linear-gradient(to right, rgba(244,244,245,0.3) 1px, transparent 1px), linear-gradient(to bottom, rgba(244,244,245,0.3) 1px, transparent 1px)",
           backgroundSize: "36px 36px",
         }}
       />
@@ -115,23 +120,32 @@ function MobileStudyPlan({
         {pairs.map((pair, index) => (
           <article
             key={index}
-            className="rounded-[1.75rem] border border-dark-orange-primary/30 bg-dark-bg p-5 shadow-[0_20px_50px_-28px_rgba(0,0,0,0.9)] sm:p-7"
+            className="relative overflow-hidden rounded-[1.75rem] border border-amber/30 bg-dark-bg p-5 shadow-[0_20px_50px_-28px_rgba(0,0,0,0.9)] sm:p-7"
           >
-            <div className="mb-6">
+            {/* watermark de nivel (TSU / ING) */}
+            <span
+              className="absolute -top-2 -right-2 text-[5rem] font-black leading-none
+                        text-dark-text/[0.09] tracking-[0.2em] select-none pointer-events-none"
+              aria-hidden="true"
+            >
+              {getPrograma(pair)}
+            </span>
+
+            <div className="relative mb-6">
               <span className="text-4xl font-black leading-none text-dark-green-secondary">
                 {String(index + 1).padStart(2, "0")}
               </span>
-              <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-dark-orange-primary">
+              <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-amber">
                 Plan de Estudios
               </p>
               <h3 className="mt-1 text-xl font-black uppercase leading-tight text-dark-text sm:text-2xl">
                 {pair.length === 2
-                  ? `Cuatrimestres ${pair[0].numero} y ${pair[1].numero}`
+                  ? `Cuatrimestres ${pair[0].numero} - ${pair[1].numero}`
                   : `Cuatrimestre ${pair[0].numero}`}
               </h3>
             </div>
 
-            <div className="space-y-4">
+            <div className="relative space-y-4">
               {pair.map((cuatri) => (
                 <MobileCuatrimestreCard key={cuatri.numero} cuatri={cuatri} />
               ))}
@@ -146,15 +160,15 @@ function MobileStudyPlan({
 
 function MobileCuatrimestreCard({ cuatri }: { cuatri: Cuatrimestre }) {
   return (
-    <details className="group rounded-2xl border border-dark-orange-primary/25 bg-dark-bg/60">
+    <details className="group rounded-2xl border border-amber/25 bg-dark-bg/60">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 [&::-webkit-details-marker]:hidden">
         <span>
-          <span className="block text-xs font-semibold uppercase tracking-wider text-dark-orange-primary">
+          <span className="block text-xs font-semibold uppercase tracking-wider text-amber">
             {cuatri.numero}° Cuatrimestre
           </span>
           <span className="mt-1 block text-sm text-dark-text-muted">{cuatri.nivel}</span>
         </span>
-        <ChevronDown className="shrink-0 text-dark-orange-primary transition-transform duration-200 group-open:rotate-180" size={20} />
+        <ChevronDown className="shrink-0 text-amber transition-transform duration-200 group-open:rotate-180" size={20} />
       </summary>
       <div className="border-t border-dark-border px-5 pb-5 pt-4">
         <ul className="space-y-2">
@@ -200,7 +214,7 @@ function StackedCard({ pair, index, total, scrollYProgress, image }: StackedCard
                   shadow-[0_20px_80px_-20px_rgba(0,0,0,0.1)]"
       >
       <div
-        className="absolute inset-0 rounded-[2rem] md:rounded-[2.5rem] bg-dark-orange-primary pointer-events-none"
+        className="absolute inset-0 rounded-[2rem] md:rounded-[2.5rem] bg-amber pointer-events-none"
         style={{
           padding: "1.5px",
           WebkitMask:
@@ -217,6 +231,16 @@ function StackedCard({ pair, index, total, scrollYProgress, image }: StackedCard
           className="absolute inset-0 bg-black pointer-events-none"
         />
 
+        {/* watermark de nivel (TSU / ING) */}
+        <span
+        className="absolute -top-4 -right-4 md:-top-8 md:-right-6 text-[8rem] md:text-[11rem]
+                    font-black leading-none text-dark-text/[0.09] select-none pointer-events-none
+                    tracking-[0.2em]"
+        aria-hidden="true"
+        >
+        {getPrograma(pair)}
+        </span>
+
         {/* glow interno sutil en verde, esquina opuesta al acento naranja */}
         <div className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-dark-green-primary/10 blur-[100px] pointer-events-none" />
 
@@ -227,7 +251,7 @@ function StackedCard({ pair, index, total, scrollYProgress, image }: StackedCard
           >
             {String(index + 1).padStart(2, "0")}
           </span>
-          <p className="text-xs md:text-sm uppercase tracking-[0.2em] text-dark-orange-primary font-semibold mt-3">
+          <p className="text-xs md:text-sm uppercase tracking-[0.2em] text-amber font-semibold mt-3">
             Plan de Estudios
           </p>
           <h3 className="text-2xl md:text-4xl font-black text-dark-text uppercase leading-tight mt-1">
@@ -280,16 +304,16 @@ const StudyPlanSection = memo(function StudyPlanSection({
       >
       <div className="sticky top-0 h-screen overflow-hidden">
         <div
-          className="absolute inset-0 opacity-[0.15] pointer-events-none"
+          className="absolute inset-0 opacity-[0.05] pointer-events-none"
           style={{
             backgroundImage:
-              "linear-gradient(to right, rgba(244,244,245,0.4) 1px, transparent 1px), linear-gradient(to bottom, rgba(244,244,245,0.4) 1px, transparent 1px)",
+              "linear-gradient(to right, rgba(244,244,245,0.3) 1px, transparent 1px), linear-gradient(to bottom, rgba(244,244,245,0.3) 1px, transparent 1px)",
             backgroundSize: "48px 48px",
           }}
         />
 
         {/* glows de fondo en verde */}
-        <div className="absolute -top-40 -left-40 w-[36rem] h-[36rem] rounded-full bg-dark-orange-primary/20 blur-[120px] pointer-events-none" />
+        <div className="absolute -top-40 -left-40 w-[36rem] h-[36rem] rounded-full bg-amber/20 blur-[120px] pointer-events-none" />
         <div className="absolute -bottom-40 -right-40 w-[36rem] h-[36rem] rounded-full bg-dark-green-primary/25 blur-[120px] pointer-events-none" />
 
         {pairs.map((pair, i) => (
@@ -307,7 +331,7 @@ const StudyPlanSection = memo(function StudyPlanSection({
         <div className="absolute bottom-4 left-10 right-10 h-1.5 rounded-full bg-dark-border overflow-hidden z-50">
           <motion.div
             style={{ width: progressWidth }}
-            className="h-full rounded-full bg-gradient-to-r from-dark-orange-primary via-dark-orange-secondary to-dark-green-primary"
+            className="h-full rounded-full bg-dark-green-secondary"
           />
         </div>
       </div>
