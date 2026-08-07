@@ -15,12 +15,16 @@ import heroImg from "../../assets/A-1.jpg";
 import paseDirectoImg from "../../assets/A-2.jpeg";
 import cbtisLogo from "../../assets/cbtis.png";
 import cobatLogo from "../../assets/cobat.png";
+import desarrollosIcon from "../../assets/icons/desarrollo.png";
+import entornosIcon from "../../assets/icons/entornos.png";
+import redesIcon from "../../assets/icons/redes.png";
 import { useConfirm } from "../ui/ConfirmDialog";
 
 interface KeyDate {
   id: string;
   title: string;
   description: string;
+  date: string;
 }
 
 interface Institution {
@@ -32,48 +36,56 @@ interface Institution {
 
 // Contenido semilla. Una vez que exista backend, esto puede pasar a ser
 // el "fallback" que se usa mientras carga la data real.
+// TODO: reemplaza el campo `date` de cada etapa con la fecha real cuando se confirme el calendario oficial.
 const dates: KeyDate[] = [
   {
     id: "convocatoria",
     title: "Publicación de convocatoria",
     description:
       "Se libera la convocatoria oficial con los requisitos y el calendario completo del proceso.",
+    date: "Fecha por definir",
   },
   {
     id: "registro-apertura",
     title: "Apertura de registro",
     description:
       "Comienza el registro en línea. Consulta los requisitos y prepara tu documentación.",
+    date: "Fecha por definir",
   },
   {
     id: "propedeutico",
     title: "Curso propedéutico",
     description:
       "Sesiones de preparación para el examen de admisión, dirigidas a los aspirantes registrados.",
+    date: "Fecha por definir",
   },
   {
     id: "registro-cierre",
     title: "Cierre de registro",
     description:
       "Última fecha para entregar tu documentación y confirmar tu lugar en el proceso.",
+    date: "Fecha por definir",
   },
   {
     id: "examen",
     title: "Examen de admisión",
     description:
       "Presenta tu examen en la fecha y sede asignadas durante tu proceso de registro.",
+    date: "Fecha por definir",
   },
   {
     id: "resultados",
     title: "Publicación de resultados",
     description:
       "Consulta el resultado de tu proceso de admisión con tu número de folio.",
+    date: "Fecha por definir",
   },
   {
     id: "inscripcion",
     title: "Inscripción",
     description:
       "Los aspirantes aceptados formalizan su inscripción y quedan listos para iniciar el semestre.",
+    date: "Fecha por definir",
   },
 ];
 
@@ -100,9 +112,48 @@ const institutions: Institution[] = [
   },
 ];
 
-// Los tres acentos de marca, en el mismo orden en que aparecen las
-// estadísticas: verde / naranja / teal.
-const ACCENTS = ["var(--green)", "var(--orange)", "var(--teal)"];
+// Las tres ingenierías, con su ícono personalizado, acento de marca
+// (verde / naranja / teal) y ruta destino (pendiente de conectar),
+// mostradas en la franja bajo el hero.
+const CAREERS = [
+  {
+    id: "software",
+    name: "Desarrollo y Gestión de Software Multiplataforma",
+    shortName: "Software Multiplataforma",
+    img: desarrollosIcon,
+    // Fondo sólido (no transparente) para que el dibujo negro del ícono resalte.
+    iconBg: "bg-[var(--green)]",
+    border: "border-[var(--green)]/25",
+    bg: "bg-[var(--green)]/[0.08]",
+    text: "text-[var(--green)]",
+    // TODO: CONEXIÓN PENDIENTE — ruta real de la página de la carrera
+    path: "/carreras/software-multiplataforma",
+  },
+  {
+    id: "negocios-digitales",
+    name: "Entornos Virtuales y Negocios Digitales",
+    shortName: "Negocios Digitales",
+    img: entornosIcon,
+    iconBg: "bg-[var(--orange)]",
+    border: "border-[var(--orange)]/25",
+    bg: "bg-[var(--orange)]/[0.08]",
+    text: "text-[var(--orange)]",
+    // TODO: CONEXIÓN PENDIENTE — ruta real de la página de la carrera
+    path: "/carreras/negocios-digitales",
+  },
+  {
+    id: "redes-ciberseguridad",
+    name: "Redes y Ciberseguridad",
+    shortName: "Redes y Ciberseguridad",
+    img: redesIcon,
+    iconBg: "bg-[var(--teal)]",
+    border: "border-[var(--teal)]/25",
+    bg: "bg-[var(--teal)]/[0.08]",
+    text: "text-[var(--teal)]",
+    // TODO: CONEXIÓN PENDIENTE — ruta real de la página de la carrera
+    path: "/carreras/redes-ciberseguridad",
+  },
+];
 
 const genId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -150,7 +201,7 @@ export const Aspirantes = () => {
 
   const updateDateField = (
     id: string,
-    field: "title" | "description",
+    field: "title" | "description" | "date",
     value: string
   ) => {
     setDateItems((prev) =>
@@ -167,6 +218,7 @@ export const Aspirantes = () => {
         id: genId(),
         title: "Nueva etapa",
         description: "Describe esta etapa del proceso.",
+        date: "Fecha por definir",
       },
     ]);
   };
@@ -240,12 +292,6 @@ export const Aspirantes = () => {
     if (!ok) return;
     setInstitutionItems((prev) => prev.filter((it) => it.id !== id));
   };
-
-  const stats = [
-    { value: "3", label: "Ingenierías" },
-    { value: pad(dateItems.length), label: "Eventos" },
-    { value: pad(institutionItems.length), label: "Convenios institucionales" },
-  ];
 
   return (
     <div className="bg-[var(--bg)] antialiased">
@@ -359,52 +405,46 @@ export const Aspirantes = () => {
             </p>
           )}
 
-          <div className="flex flex-wrap items-center gap-4">
-            <motion.button
-              type="button"
-              whileHover={{ scale: 1.04, y: -2 }}
-              whileTap={{ scale: 0.96 }}
-              transition={{ type: "spring", stiffness: 400, damping: 15 }}
-              className="group flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-to-b from-[var(--green)] to-[#25bb57] hover:to-[var(--green)] text-[var(--bg)] text-sm font-semibold shadow-lg shadow-[var(--green)]/25 ring-1 ring-inset ring-[var(--ink)]/20 transition-colors"
-            >
-              Ver oferta educativa
-              <FiArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </motion.button>
-
-            <motion.button
-              type="button"
-              whileHover={{ scale: 1.04, y: -2 }}
-              whileTap={{ scale: 0.96 }}
-              transition={{ type: "spring", stiffness: 400, damping: 15 }}
-              className="group flex items-center gap-2 px-7 py-3.5 rounded-full border border-[var(--ink)]/20 text-[var(--ink)]/80 hover:text-[var(--ink)] hover:border-[var(--ink)]/40 hover:bg-[var(--ink)]/[0.06] text-sm font-medium transition-colors"
-            >
-              <FiDownload className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" />
-              Descargar información
-            </motion.button>
-          </div>
-
-          <p className="mt-8 text-xs text-[var(--ink)]/40">
+          <p className="text-xs text-[var(--ink)]/40">
             Campus Universidad Tecnológica de Tlaxcala
           </p>
         </motion.div>
       </section>
 
-      {/* ---------- Franja de indicadores ---------- */}
+      {/* ---------- Franja de ingenierías ---------- */}
       <div className="relative bg-[var(--bg)] border-y border-[var(--line)]">
-        <div className="max-w-6xl mx-auto grid grid-cols-3 divide-x divide-[var(--line)]">
-          {stats.map((s, i) => (
-            <div key={s.label} className="py-8 px-3 text-center">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[var(--line)]">
+          {CAREERS.map(
+            ({ id, name, shortName, img, iconBg, border, bg, text, path }) => (
               <div
-                className="font-display text-2xl md:text-4xl font-bold"
-                style={{ color: ACCENTS[i % ACCENTS.length] }}
+                key={id}
+                className="flex flex-col items-center text-center gap-4 py-10 px-6 h-full"
               >
-                {s.value}
+                <div
+                  className={`shrink-0 w-36 aspect-[4/3] rounded-2xl flex items-center justify-center shadow-lg shadow-black/20 p-3 ${iconBg}`}
+                >
+                  <img src={img} alt={name} className="w-full h-full object-contain" />
+                </div>
+                <div className="flex items-center justify-center min-h-[3.5rem] md:min-h-[3.25rem]">
+                  <span className="font-display text-sm md:text-base font-medium text-[var(--ink)] leading-snug max-w-[240px]">
+                    {name}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // TODO: CONEXIÓN PENDIENTE — aún no hay routing/backend conectado.
+                    // Cuando exista, navegar a `path` (por ejemplo con react-router: navigate(path))
+                    console.log("Ir a carrera (pendiente de conectar):", path);
+                  }}
+                  className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full border text-xs font-data uppercase tracking-wider font-medium transition-opacity hover:opacity-80 ${border} ${bg} ${text}`}
+                >
+                  {shortName}
+                  <FiChevronRight className="w-3.5 h-3.5" />
+                </button>
               </div>
-              <div className="font-data text-[11px] md:text-sm text-[var(--muted)] mt-1 uppercase tracking-wide">
-                {s.label}
-              </div>
-            </div>
-          ))}
+            )
+          )}
         </div>
       </div>
 
@@ -475,14 +515,25 @@ export const Aspirantes = () => {
                           i + 1
                         )}
                       </span>
-                      <span
-                        className={`text-sm truncate whitespace-nowrap lg:whitespace-normal ${
-                          i === safeActiveDate
-                            ? "text-[var(--ink)] font-medium"
-                            : "text-[var(--muted)]"
-                        }`}
-                      >
-                        {d.title}
+                      <span className="flex flex-col min-w-0">
+                        <span
+                          className={`text-sm truncate whitespace-nowrap lg:whitespace-normal ${
+                            i === safeActiveDate
+                              ? "text-[var(--ink)] font-medium"
+                              : "text-[var(--muted)]"
+                          }`}
+                        >
+                          {d.title}
+                        </span>
+                        <span
+                          className={`font-data text-[10px] uppercase tracking-wide truncate ${
+                            i === safeActiveDate
+                              ? "text-[var(--orange)]"
+                              : "text-[var(--muted)]/70"
+                          }`}
+                        >
+                          {d.date}
+                        </span>
                       </span>
                       <FiChevronRight
                         className={`hidden lg:block ml-auto w-4 h-4 shrink-0 transition-opacity ${
@@ -542,6 +593,19 @@ export const Aspirantes = () => {
                       <div className="mt-3 space-y-3">
                         <input
                           type="text"
+                          value={dateItems[safeActiveDate].date}
+                          onChange={(e) =>
+                            updateDateField(
+                              dateItems[safeActiveDate].id,
+                              "date",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Fecha de la etapa (ej. 15 de agosto de 2026)"
+                          className="font-data text-xl md:text-2xl font-bold text-[var(--orange)] bg-transparent border-b border-dashed border-[var(--orange)]/50 focus:outline-none focus:border-[var(--orange)] w-full max-w-lg pb-1"
+                        />
+                        <input
+                          type="text"
                           value={dateItems[safeActiveDate].title}
                           onChange={(e) =>
                             updateDateField(
@@ -569,7 +633,12 @@ export const Aspirantes = () => {
                       </div>
                     ) : (
                       <>
-                        <h3 className="font-display text-2xl md:text-4xl font-semibold text-[var(--ink)] mt-3 mb-4 max-w-lg">
+                        <div className="mt-3 mb-1">
+                          <span className="font-data text-2xl md:text-3xl font-bold text-[var(--orange)] tracking-tight">
+                            {dateItems[safeActiveDate].date}
+                          </span>
+                        </div>
+                        <h3 className="font-display text-2xl md:text-4xl font-semibold text-[var(--ink)] mt-1 mb-4 max-w-lg">
                           {dateItems[safeActiveDate].title}
                         </h3>
                         <p className="text-[var(--muted)] leading-relaxed max-w-xl">

@@ -37,7 +37,15 @@ function RevealWord({
   const filter = useTransform(blur, (v) => `blur(${v}px)`);
 
   return (
-    <motion.span style={{ opacity, y, filter }} className="inline-block">
+    <motion.span
+      style={{
+        opacity,
+        y,
+        filter,
+        color: "var(--color-amber)",
+      }}
+      className="inline-block"
+    >
       {word}
     </motion.span>
   );
@@ -53,7 +61,7 @@ function ScrollRevealTitle({
   const words = text.split(" ");
 
   return (
-    <h2 className="font-serif text-4xl mb-4 flex flex-wrap gap-x-3">
+    <h2 className="mb-3 flex flex-wrap gap-x-2 font-serif text-3xl leading-tight tracking-[0.2em] sm:mb-4 sm:gap-x-3 sm:text-4xl">
       {words.map((word, i) => (
         <RevealWord
           key={i}
@@ -83,7 +91,7 @@ function ScrollRevealParagraph({
   const y = useTransform(progress, [start, end], [20, 0]);
 
   return (
-    <motion.p style={{ opacity, y }} className="text-neutral-400 max-w-2xl">
+    <motion.p style={{ opacity, y }} className="max-w-2xl text-sm leading-relaxed text-neutral-400 sm:text-base">
       {text}
     </motion.p>
   );
@@ -98,13 +106,20 @@ function ConnectorLine({ progress }: { progress: MotionValue<number> }) {
       viewBox="0 0 100 100"
       preserveAspectRatio="none"
     >
+      <defs>
+        <linearGradient id="connectorGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="var(--color-amber)" />
+          <stop offset="55%" stopColor="var(--color-amber)" />
+          <stop offset="100%" stopColor="var(--color-amber)" />
+        </linearGradient>
+      </defs>
       <motion.path
         d="M 2 4 
           C 25 2, 10 30, 32 30 
           S 90 50, 38 55 
           S 65 65, 55 72 
           S 85 82, 90 94"
-        stroke="var(--color-dark-green-primary)"
+        stroke="url(#connectorGradient)"
         strokeWidth="0.30"
         strokeDasharray="0.5 1.5"
         fill="none"
@@ -148,26 +163,47 @@ function StaircaseCard({
   const verticalPercent = total > 1 ? (index / (total - 1)) * 65 : 0;
 
   return (
-    <motion.div
+    <div
       style={{
-        y,
-        opacity,
-        rotate,
         position: "absolute",
         left: `${horizontalPercent}%`,
         top: `${verticalPercent}%`,
       }}
-      className="w-[80vw] sm:w-[38vw] md:w-[20vw] max-w-xs"
     >
-      <div
-        className="relative rounded-2xl p-5 backdrop-blur-md"
-        style={{
-          background: "var(--glass)",
-          border: "1px solid var(--line)",
-        }}
+      <motion.div
+        style={{ y, opacity, rotate }}
+        className="w-[38vw] md:w-[20vw] max-w-xs"
       >
-        <StatCard {...stat} />
-      </div>
+        <div
+          className="relative rounded-2xl p-5 backdrop-blur-md"
+          style={{
+            background: "var(--glass)",
+            border: "1px solid var(--color-dark-green-primary)",
+            boxShadow: "0 0 24px -8px var(--color-dark-green-primary)",
+          }}
+        >
+          <StatCard {...stat} />
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ── Version movil
+function MobileStatCard({ stat, index }: { stat: Stat; index: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.4, ease: "easeOut", delay: index * 0.05 }}
+      className="rounded-xl p-4 backdrop-blur-sm"
+      style={{
+        background: "var(--glass)",
+        border: "1px solid var(--color-dark-green-primary)",
+      }}
+    >
+      <StatCard {...stat} />
     </motion.div>
   );
 }
@@ -184,39 +220,62 @@ const WhyChooseSection = memo(function WhyChooseSection({ stats }: WhyChooseSect
   const totalSteps = stats.length + bufferSteps;
 
   return (
-    <div
-      ref={containerRef}
-      className="relative"
-      style={{ height: `${totalSteps * 60 + 100}vh` }}
-    >
-      <div className="sticky top-0 h-dvh flex flex-col px-6 md:px-16 py-16 overflow-hidden">
-        <div className="mb-8">
-          <ScrollRevealTitle
-            text="¿Por qué elegir esta carrera?"
-            progress={scrollYProgress}
-          />
-          <ScrollRevealParagraph
-            text="Formamos líderes técnicos capaces de transformar ideas complejas en soluciones digitales robustas y escalables."
-            progress={scrollYProgress}
-            startAt={0.15}
-          />
-        </div>
-
-        <div className="relative flex-1 min-h-0">
-          <ConnectorLine progress={scrollYProgress} />
-          {stats.map((stat, i) => (
-            <StaircaseCard
-              key={stat.label}
-              stat={stat}
-              index={i}
-              total={stats.length}
-              totalSteps={totalSteps}
+    <>
+      {/* Desktop / tablet grande (md+): staircase con scroll-pin y parallax */}
+      <div
+        ref={containerRef}
+        className="relative hidden md:block bg-dark-bg"
+        style={{ height: `${totalSteps * 60 + 100}vh` }}
+      >
+        <div className="sticky top-0 h-dvh flex flex-col px-6 md:px-16 py-16 overflow-hidden">
+          <div className="mb-8">
+            <ScrollRevealTitle
+              text="¿Por qué elegir esta carrera?"
               progress={scrollYProgress}
             />
+            <ScrollRevealParagraph
+              text="Formamos líderes técnicos capaces de transformar ideas complejas en soluciones digitales robustas y escalables."
+              progress={scrollYProgress}
+              startAt={0.15}
+            />
+          </div>
+
+          <div className="relative flex-1 min-h-0">
+            <ConnectorLine progress={scrollYProgress} />
+            {stats.map((stat, i) => (
+              <StaircaseCard
+                key={stat.label}
+                stat={stat}
+                index={i}
+                total={stats.length}
+                totalSteps={totalSteps}
+                progress={scrollYProgress}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Móvil (< md): lista apilada, sin pin ni parallax, solo fade-in */}
+      <div className="md:hidden px-6 py-16">
+        <h2
+          className="mb-3 font-serif text-3xl leading-tight tracking-[0.2em]"
+          style={{ color: "var(--color-amber)" }}
+        >
+          ¿Por qué elegir esta carrera?
+        </h2>
+        <p className="mb-8 text-sm leading-relaxed text-neutral-400">
+          Formamos líderes técnicos capaces de transformar ideas complejas en
+          soluciones digitales robustas y escalables.
+        </p>
+
+        <div className="flex flex-col gap-4">
+          {stats.map((stat, i) => (
+            <MobileStatCard key={stat.label} stat={stat} index={i} />
           ))}
         </div>
       </div>
-    </div>
+    </>
   );
 });
 

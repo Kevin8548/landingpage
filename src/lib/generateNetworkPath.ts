@@ -4,14 +4,17 @@ export interface NetworkAnchor {
 }
 
 export interface NetworkBranch {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
+  anchorX: number;
+  anchorY: number;
+  elbowX: number;
+  elbowY: number;
+  nodeX: number;
+  nodeY: number;
   r: number;
   filled: boolean;
-  depth: number;
+  major: boolean;
   colorIndex: number;
+  label: string;
 }
 
 export interface NetworkGraph {
@@ -23,87 +26,69 @@ export interface NetworkGraph {
 interface GenerateOptions {
   sections: number;
   sectionWidth?: number;
-  anchorsPerSection?: number;
-  maxDepth?: number;
-  maxBranches?: number;
+  branchLabels?: string[][];
 }
 
-function randomRadius(depth: number): number {
-  const rand = Math.random();
-  let base: number;
-  if (rand < 0.5) base = 2 + Math.random() * 2;
-  else if (rand < 0.85) base = 4 + Math.random() * 3;
-  else base = 8 + Math.random() * 6;
-  return base / (depth + 1);
-}
-
+/**
+ * Creates the timeline from a fixed layout. Keeping the geometry as data (and
+ * not using Math.random) makes the network calm, predictable and responsive.
+ */
 export function generateNetworkPath({
   sections,
   sectionWidth = 1200,
-  anchorsPerSection = 6,
-  maxDepth = 2,
-  maxBranches = 120,
+  branchLabels = [],
 }: GenerateOptions): NetworkGraph {
   const totalWidth = sectionWidth * sections;
-  const totalAnchors = anchorsPerSection * sections;
-  const step = totalWidth / (totalAnchors - 1);
-
-  const anchors: NetworkAnchor[] = Array.from({ length: totalAnchors }, (_, i) => ({
-    cx: i * step,
-    cy: 30 + Math.sin(i * 1.2) * 12,
-  }));
-
-  let pathD = `M${anchors[0].cx},${anchors[0].cy}`;
-  for (let i = 0; i < anchors.length - 1; i++) {
-    const p0 = anchors[i - 1] || anchors[i];
-    const p1 = anchors[i];
-    const p2 = anchors[i + 1];
-    const p3 = anchors[i + 2] || p2;
-    const cp1x = p1.cx + (p2.cx - p0.cx) / 6;
-    const cp1y = p1.cy + (p2.cy - p0.cy) / 6;
-    const cp2x = p2.cx - (p3.cx - p1.cx) / 6;
-    const cp2y = p2.cy - (p3.cy - p1.cy) / 6;
-    pathD += ` C${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.cx},${p2.cy}`;
-  }
-
+  const anchors: NetworkAnchor[] = [];
   const branches: NetworkBranch[] = [];
 
-  function spawnBranch(originX: number, originY: number, depth: number, colorIndex: number) {
-    if (depth > maxDepth || branches.length >= maxBranches) return;
+  const layout = [
+    { anchor: 0.1, elbow: 0.15, node: 0.50, y: -170, r: 8, filled: true, major: true, colorIndex: 0 },
+    { anchor: 0.40, elbow: 0.62, node: 0.70, y: 180, r: 5.5, filled: false, major: false, colorIndex: 1 },
+  ];
 
-    const angleUp = Math.random() > 0.5;
-    const spread = 120 / (depth + 1);
-    const dx = (Math.random() - 0.5) * spread;
-    const distance = (25 + Math.random() * 70) / (depth + 0.6);
-    const dy = angleUp ? -distance : distance;
-    const x2 = originX + dx;
-    const y2 = originY + dy;
+  // Cuánto "dobla" el tronco hacia cada rama al pasar por su anchor.
+  const WAVE = 29;
 
-    branches.push({
-      x1: originX,
-      y1: originY,
-      x2,
-      y2,
-      r: randomRadius(depth),
-      filled: Math.random() > 0.35,
-      depth,
-      colorIndex,
+  const trunkPoints: { x: number; y: number }[] = [{ x: 0, y: 0 }];
+
+  for (let section = 0; section < sections; section += 1) {
+    const offset = section * sectionWidth;
+
+    layout.forEach((item, branchIndex) => {
+      const anchorX = offset + sectionWidth * item.anchor;
+      const elbowX = offset + sectionWidth * item.elbow;
+      const nodeX = offset + sectionWidth * item.node;
+      const dip = item.y < 0 ? -WAVE : WAVE; // mismo lado que la rama
+
+      anchors.push({ cx: anchorX, cy: dip });
+      trunkPoints.push({ x: anchorX, y: dip });
+
+      branches.push({
+        anchorX,
+        anchorY: dip, // la rama nace justo donde el tronco se dobla
+        elbowX,
+        elbowY: item.y,
+        nodeX,
+        nodeY: item.y,
+        r: item.r,
+        filled: item.filled,
+        major: item.major,
+        colorIndex: item.colorIndex,
+        label: branchLabels[section]?.[branchIndex] ?? `HITO ${branchIndex + 1}`,
+      });
     });
-
-    if (depth < maxDepth && branches.length < maxBranches && Math.random() > 0.3 + depth * 0.25) {
-      const numChildren = 1 + Math.floor(Math.random() * 2);
-      for (let c = 0; c < numChildren && branches.length < maxBranches; c++) {
-        spawnBranch(x2, y2, depth + 1, colorIndex);
-      }
-    }
   }
 
-  for (const [ai, a] of anchors.entries()) {
-    if (branches.length >= maxBranches) break;
-    const numRootBranches = 1 + Math.floor(Math.random() * 3);
-    for (let b = 0; b < numRootBranches && branches.length < maxBranches; b++) {
-      spawnBranch(a.cx, a.cy, 0, (ai + b) % 2);
-    }
+  trunkPoints.push({ x: totalWidth, y: 0 });
+
+  // Curva suave (Q) que pasa por cada punto, dando el efecto de tronco "vivo".
+  let pathD = `M${trunkPoints[0].x},${trunkPoints[0].y}`;
+  for (let i = 0; i < trunkPoints.length - 1; i += 1) {
+    const p0 = trunkPoints[i];
+    const p1 = trunkPoints[i + 1];
+    const midX = (p0.x + p1.x) / 2;
+    pathD += ` Q${midX},${p0.y} ${p1.x},${p1.y}`;
   }
 
   return { pathD, anchors, branches };
