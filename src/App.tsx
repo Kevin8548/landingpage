@@ -8,6 +8,7 @@ import Navbar from "./components/layout/Navbar";
 import Hero from "./components/sections/Hero";
 import FuturoReveal from "./components/sections/Futuro_Reveal";
 import { ConfirmProvider } from "./components/ui/ConfirmDialog";
+import { Eventos } from "./components/sections/eventos";
 
 // La página de detalle no forma parte de la carga inicial de la landing.
 const CareerDetail = lazy(() => import("./pages/CareerDetail"));
@@ -41,7 +42,7 @@ export default function App() {
 
 
             <section id="eventos">
-              {/* sección de eventos */}
+                <Eventos />
             </section>
 
 
