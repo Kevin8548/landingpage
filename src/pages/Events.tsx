@@ -54,7 +54,7 @@ export default function Events() {
         setEditingEvent(null);
     };
     const deleteEvent = (event: DashboardEvent) => {
-        if (!window.confirm(`¿Eliminar “${event.title}”? Esta acción solo afecta a la demo local.`))
+        if (!window.confirm(`¿Eliminar “${event.title}”? `))
             return;
         setEvents((current) => current.filter((item) => item.id !== event.id));
         showNotice("Evento eliminado.");
@@ -97,7 +97,10 @@ export default function Events() {
                 <div className={`dashboard-event-row__stripe dashboard-event-row__stripe--${stripeColor}`} />
                 <div className="dashboard-event-row__date"><strong>{date.day}</strong><span>{date.month}</span></div>
                 <div className="dashboard-event-row__details"><span className={event.status === "Publicado" ? "dashboard-status" : "dashboard-status dashboard-status--draft"}><i />{event.status}</span><h3>{event.title}</h3><p>{event.location} · {event.time}</p></div>
-                <div className="dashboard-event-actions"><button onClick={() => setViewingEvent(event)}><Eye size={16} /><span>Ver</span></button><button onClick={() => openEditor(event)}><Pencil size={15} /><span>Editar</span></button><button className="is-danger" onClick={() => deleteEvent(event)}><Trash2 size={15} /><span>Eliminar</span></button></div>
+                <div className="dashboard-event-actions"><button onClick={() => setViewingEvent(event)}><Eye size={16} />
+                <span>Ver</span></button><button onClick={() => openEditor(event)}><Pencil size={15} />
+                <span>Editar</span></button><button className="is-danger" onClick={() => deleteEvent(event)}><Trash2 size={15} />
+                <span>Eliminar</span></button></div>
               </article>
             );
           })}
@@ -107,7 +110,30 @@ export default function Events() {
     onMouseDown={() => setFormOpen(false)}><section className="dashboard-modal"
     role="dialog" aria-modal="true" aria-labelledby="event-form-title" 
     onMouseDown={(event) => event.stopPropagation()}><div className="dashboard-modal__header">
-      <div><p className="dashboard-eyebrow">{editingEvent ? "EDITAR EVENTO" : "NUEVO EVENTO"}</p><h2 id="event-form-title">{editingEvent ? "Actualiza los detalles" : "Comparte algo importante"}</h2></div><button onClick={() => setFormOpen(false)} aria-label="Cerrar"><X size={20}/></button></div><form onSubmit={saveEvent} className="dashboard-event-form"><label>Nombre del evento<input name="title" defaultValue={editingEvent?.title} placeholder="Ej. Taller de innovación" autoFocus required/></label><div className="dashboard-form-grid"><label>Fecha<input name="date" type="date" min={today} defaultValue={editingEvent?.dateValue} required/></label><label>Hora<input name="time" defaultValue={editingEvent?.time} placeholder="10:00 — 12:00 h" required/></label></div><label>Lugar<input name="location" defaultValue={editingEvent?.location} placeholder="Ej. Auditorio principal" required/></label><label>Público al que va dirigido<input name="audience" defaultValue={editingEvent?.audience} placeholder="Ej. Comunidad UTT"/></label><div className="dashboard-modal__footer"><button type="button" onClick={() => setFormOpen(false)}>Cancelar</button><button className="dashboard-primary-button" type="submit">{editingEvent ? "Guardar cambios" : "Publicar evento"}<ArrowUpRight size={17}/></button></div></form></section></div>}
-    {viewingEvent && <div className="dashboard-modal-backdrop" role="presentation" onMouseDown={() => setViewingEvent(null)}><section className="dashboard-modal dashboard-view-modal" role="dialog" aria-modal="true" aria-labelledby="event-view-title" onMouseDown={(event) => event.stopPropagation()}><div className="dashboard-modal__header"><div><p className="dashboard-eyebrow">DETALLE DEL EVENTO</p><h2 id="event-view-title">{viewingEvent.title}</h2></div><button onClick={() => setViewingEvent(null)} aria-label="Cerrar"><X size={20}/></button></div><div className="dashboard-view-details"><p><CalendarDays size={18}/><span><strong>Fecha</strong>{viewingEvent.date}</span></p><p><Clock3 size={18}/><span><strong>Horario</strong>{viewingEvent.time}</span></p><p><MapPin size={18}/><span><strong>Lugar</strong>{viewingEvent.location}</span></p><p><Users size={18}/><span><strong>Dirigido a</strong>{viewingEvent.audience}</span></p></div><div className="dashboard-modal__footer"><button type="button" onClick={() => setViewingEvent(null)}>Cerrar</button><button className="dashboard-primary-button" onClick={() => { setViewingEvent(null); openEditor(viewingEvent); }}><Pencil size={16}/>Editar evento</button></div></section></div>}
+      <div><p className="dashboard-eyebrow">{editingEvent ? "EDITAR EVENTO" : "NUEVO EVENTO"}</p>
+      <h2 id="event-form-title">{editingEvent ? "Actualiza los detalles" : "Comparte algo importante"}</h2>
+      </div><button onClick={() => setFormOpen(false)} aria-label="Cerrar"><X size={20}/></button></div>
+      <form onSubmit={saveEvent} className="dashboard-event-form">
+        <label>Nombre del evento<input name="title" defaultValue={editingEvent?.title} autoFocus required/></label>
+        <div className="dashboard-form-grid"><label>Fecha<input name="date" type="date" min={today} defaultValue={editingEvent?.dateValue} required/></label>
+        <label>Hora<input name="time" defaultValue={editingEvent?.time} required/></label></div>
+        <label>Lugar<input name="location" defaultValue={editingEvent?.location} required/>
+        </label><label>Público al que va dirigido<input name="audience" defaultValue={editingEvent?.audience}/>
+        </label><div className="dashboard-modal__footer"><button type="button" onClick={() => setFormOpen(false)}>Cancelar</button>
+        <button className="dashboard-primary-button" type="submit">{editingEvent ? "Guardar cambios" : "Publicar evento"}
+          <ArrowUpRight size={17}/></button></div></form></section></div>}
+    {viewingEvent && <div className="dashboard-modal-backdrop" role="presentation" onMouseDown={() => setViewingEvent(null)}>
+      <section className="dashboard-modal dashboard-view-modal" role="dialog" aria-modal="true" aria-labelledby="event-view-title"
+      onMouseDown={(event) => event.stopPropagation()}><div className="dashboard-modal__header"><div>
+        <p className="dashboard-eyebrow">DETALLE DEL EVENTO</p><h2 id="event-view-title">{viewingEvent.title}</h2></div>
+        <button onClick={() => setViewingEvent(null)} aria-label="Cerrar"><X size={20}/>
+        </button></div><div className="dashboard-view-details"><p><CalendarDays size={18}/><span>
+          <strong>Fecha</strong>{viewingEvent.date}</span></p><p><Clock3 size={18}/><span>
+            <strong>Horario</strong>{viewingEvent.time}</span></p><p><MapPin size={18}/><span>
+              <strong>Lugar</strong>{viewingEvent.location}</span></p><p><Users size={18}/><span>
+                <strong>Dirigido a</strong>{viewingEvent.audience}</span></p></div><div className="dashboard-modal__footer">
+                  <button type="button" onClick={() => setViewingEvent(null)}>Cerrar</button>
+                  <button className="dashboard-primary-button" onClick={() => { setViewingEvent(null); openEditor(viewingEvent); }}>
+                    <Pencil size={16}/>Editar evento</button></div></section></div>}
   </main>;
 }
