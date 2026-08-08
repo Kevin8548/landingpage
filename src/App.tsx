@@ -14,6 +14,8 @@ import Auth from "./components/auth/Auth";
 import Hero from "./components/sections/Hero";
 import FuturoReveal from "./components/sections/Futuro_Reveal";
 import { ConfirmProvider } from "./components/ui/ConfirmDialog";
+import Dashboard from "./pages/Dashboard";
+import Events from "./pages/Events";
 
 const CareerDetail = lazy(() => import("./pages/CareerDetail"));
 
@@ -45,7 +47,7 @@ function ScrollManager() {
 function AppFooter() {
   const { pathname } = useLocation();
 
-  if (pathname === "/acceso") {
+  if (pathname === "/acceso" || pathname === "/dashboard" || pathname === "/dashboard/eventos") {
     return null;
   }
 
@@ -92,6 +94,10 @@ export default function App() {
 
           {/* Pantalla estática de acceso */}
           <Route path="/acceso" element={<Auth />} />
+
+          {/* Panel temporal para administrar eventos, sin backend */}
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/eventos" element={<Events />} />
 
           {/* Detalle de cada carrera */}
           <Route

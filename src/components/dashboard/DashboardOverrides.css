@@ -1,0 +1,104 @@
+/* La fecha se mantiene alineada, pero sin el recuadro verde. */
+.dashboard-date-tile {
+  border-radius: 0;
+  color: var(--dash-ink);
+  background: transparent;
+}
+
+/* Las franjas laterales se conservan como acento visual. */
+.dashboard-event-row__stripe--green {
+  background: #3c9961;
+}
+
+.dashboard-event-row__stripe--amber,
+.dashboard-event-row__stripe--blue {
+  background: #ef9b36;
+}
+
+/* Control de la barra lateral en escritorio. */
+.dashboard-sidebar {
+  position: relative;
+  transition: width 0.25s ease, flex-basis 0.25s ease, padding 0.25s ease;
+}
+
+.dashboard-sidebar-collapse {
+  display: grid;
+  position: absolute;
+  z-index: 2;
+  top: 28px;
+  right: -16px;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid var(--dash-line);
+  border-radius: 50%;
+  color: var(--dash-muted);
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(26, 48, 34, 0.1);
+  cursor: pointer;
+}
+
+.dashboard-sidebar-collapse:hover {
+  color: var(--dash-green);
+  border-color: #b9d8c1;
+}
+
+.dashboard-sidebar.is-collapsed {
+  width: 76px;
+  flex-basis: 76px;
+  padding-inline: 10px;
+}
+
+.dashboard-sidebar.is-collapsed .dashboard-brand > span:not(.dashboard-brand__mark),
+.dashboard-sidebar.is-collapsed .dashboard-nav a > :not(svg),
+.dashboard-sidebar.is-collapsed .dashboard-profile > div,
+.dashboard-sidebar.is-collapsed .dashboard-signout > :not(svg) {
+  display: none;
+}
+
+.dashboard-sidebar.is-collapsed .dashboard-brand,
+.dashboard-sidebar.is-collapsed .dashboard-nav a,
+.dashboard-sidebar.is-collapsed .dashboard-nav button,
+.dashboard-sidebar.is-collapsed .dashboard-profile,
+.dashboard-sidebar.is-collapsed .dashboard-signout {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.dashboard-sidebar.is-collapsed .dashboard-nav a,
+.dashboard-sidebar.is-collapsed .dashboard-nav button,
+.dashboard-sidebar.is-collapsed .dashboard-signout {
+  gap: 0;
+  font-size: 0;
+}
+
+.dashboard-sidebar.is-collapsed .dashboard-nav a span {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .dashboard-sidebar-collapse {
+    display: none;
+  }
+
+  .dashboard-sidebar.is-collapsed {
+    width: 270px;
+    flex-basis: 270px;
+    padding-inline: 16px;
+  }
+
+  .dashboard-sidebar.is-collapsed .dashboard-brand > span:not(.dashboard-brand__mark),
+  .dashboard-sidebar.is-collapsed .dashboard-nav a > :not(svg),
+  .dashboard-sidebar.is-collapsed .dashboard-profile > div,
+  .dashboard-sidebar.is-collapsed .dashboard-signout > :not(svg),
+  .dashboard-sidebar.is-collapsed .dashboard-nav a span {
+    display: initial;
+  }
+
+  .dashboard-sidebar.is-collapsed .dashboard-nav a,
+  .dashboard-sidebar.is-collapsed .dashboard-nav button,
+  .dashboard-sidebar.is-collapsed .dashboard-signout {
+    gap: 12px;
+    font-size: 13px;
+  }
+}
