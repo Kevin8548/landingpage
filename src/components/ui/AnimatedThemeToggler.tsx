@@ -23,10 +23,10 @@ export function AnimatedThemeToggler({
   );
 
   useEffect(() => {
-    // El panel siempre abre claro. El modo oscuro solo se activa al pulsar el botón.
-    document.documentElement.classList.remove("dark");
-    localStorage.removeItem("utt-dashboard-theme");
-    setIsDark(false);
+    // Primera visita: claro. Después conserva la última elección del usuario.
+    const dark = localStorage.getItem("utt-dashboard-theme") === "dark";
+    document.documentElement.classList.toggle("dark", dark);
+    setIsDark(dark);
   }, []);
 
   const toggleTheme = () => {
@@ -38,6 +38,7 @@ export function AnimatedThemeToggler({
     };
 
     const button = buttonRef.current;
+    // bind(document) es importante: sin él, Chrome rechaza la llamada al API.
     const startViewTransition = (document as ViewTransitionDocument).startViewTransition?.bind(document);
     if (!button || !startViewTransition) {
       applyTheme();

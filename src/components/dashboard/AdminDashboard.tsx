@@ -31,7 +31,8 @@ export default function AdminDashboard() {
       onClick={() => setSidebarOpen(false)} aria-label="Cerrar menú"><X size={19}/></button></div>
       <nav className="dashboard-nav" aria-label="Navegación del panel"><Link className="is-active"
       to="/dashboard"><LayoutDashboard size={18}/>Resumen</Link><Link to="/dashboard/eventos"><CalendarDays
-      size={18}/>Eventos <span>{events.length}</span></Link><Link to="/dashboard/eventos"><Plus size={18}/>Crear evento</Link></nav>
+      size={18}/>Eventos <span>{events.length}</span></Link><Link to="/dashboard/eventos"><Plus size={18}/>Crear evento</Link>
+      </nav>
       <div className="dashboard-sidebar__bottom"><div className="dashboard-profile"><span
       className="dashboard-avatar">AD</span><div><strong>Administrador</strong><small>Panel de eventos</small>
       </div></div><Link to="/" className="dashboard-signout"><LogOut size={17}/>Salir al sitio</Link></div>
@@ -47,7 +48,7 @@ export default function AdminDashboard() {
       <div className="dashboard-body" id="resumen"><div className="dashboard-welcome"><div><p
       className="dashboard-eyebrow"><Sparkles size={14}/> PANEL DE ADMINISTRACIÓN</p><h1>Hola, Administrador<span>.</span></h1>
       <p>Consulta lo importante y administra tus eventos desde un solo lugar.</p></div>
-      <Link className="dashboard-primary-button" to="/dashboard/eventos"><Plus size={18}/>Crear evento</Link></div>
+      <Link className="dashboard-primary-button" to="/dashboard/eventos">Ir a eventos</Link></div>
         <section className="dashboard-stats" aria-label="Resumen de actividad">{summary.map(({ label, value, icon: Icon, tone }) =>
           <article className="dashboard-stat" key={label}><span className={`dashboard-stat__icon dashboard-stat__icon--${tone}`}>
             <Icon size={20}/></span><div><small>{label}</small><strong>{value}</strong>
