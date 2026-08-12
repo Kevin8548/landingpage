@@ -187,8 +187,9 @@
 }
 
 .tid-nav-login__text {
-  color: #ffffff;
-  font-size: 14px;
+  display: flex;
+  color: #a1a1a1;
+  font-size: 13px;
   font-weight: 500;
   margin-left: -1px;
   white-space: nowrap;
