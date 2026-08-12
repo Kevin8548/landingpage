@@ -248,11 +248,11 @@ const Footer = () => {
             className="tid-nav-login"
             onClick={() => navigate("/acceso")}
           >
-            <span className="tid-nav-login__icon">
+            {/* <span className="tid-nav-login__icon">
               <CircleUserRound size={20} strokeWidth={2} />
-            </span>
+            </span> */}
 
-            <span className="tid-nav-login__text"></span>
+            <span className="tid-nav-login__text">Universidad Tecnológica de Tlaxcala</span>
           </button>
         </div>
       </div>
