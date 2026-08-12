@@ -5,6 +5,7 @@ import {
   Routes,
   useLocation,
 } from "react-router-dom";
+
 import { Aspirantes } from "./components/sections/Aspirantes";
 import { Careers } from "./components/sections/Careers";
 import { WhyChooseTI } from "./components/layout/View";
@@ -14,6 +15,9 @@ import Auth from "./components/auth/Auth";
 import Hero from "./components/sections/Hero";
 import FuturoReveal from "./components/sections/Futuro_Reveal";
 import { ConfirmProvider } from "./components/ui/ConfirmDialog";
+
+import Dashboard from "./pages/Dashboard";
+import Events from "./pages/Events";
 import { Eventos } from "./components/sections/eventos";
 
 const CareerDetail = lazy(() => import("./pages/CareerDetail"));
@@ -46,7 +50,11 @@ function ScrollManager() {
 function AppFooter() {
   const { pathname } = useLocation();
 
-  if (pathname === "/acceso") {
+  if (
+    pathname === "/acceso" ||
+    pathname === "/dashboard" ||
+    pathname === "/dashboard/eventos"
+  ) {
     return null;
   }
 
@@ -94,13 +102,20 @@ export default function App() {
           {/* Pantalla estática de acceso */}
           <Route path="/acceso" element={<Auth />} />
 
+          {/* Panel para administrar eventos */}
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/eventos" element={<Events />} />
+
           {/* Detalle de cada carrera */}
           <Route
             path="/carreras/:careerId"
             element={
               <Suspense
                 fallback={
-                  <main className="min-h-dvh bg-dark-bg" aria-busy="true" />
+                  <main
+                    className="min-h-dvh bg-dark-bg"
+                    aria-busy="true"
+                  />
                 }
               >
                 <CareerDetail />
