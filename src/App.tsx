@@ -17,6 +17,7 @@ import { ConfirmProvider } from "./components/ui/ConfirmDialog";
 import { Eventos } from "./components/sections/eventos";
 
 const CareerDetail = lazy(() => import("./pages/CareerDetail"));
+const AspirantesPage = lazy(() => import("./pages/Aspirantes"));
 
 function ScrollManager() {
   const { pathname } = useLocation();
@@ -98,12 +99,18 @@ export default function App() {
           <Route
             path="/carreras/:careerId"
             element={
-              <Suspense
-                fallback={
-                  <main className="min-h-dvh bg-dark-bg" aria-busy="true" />
-                }
-              >
+              <Suspense fallback={<main className="min-h-dvh bg-dark-bg" aria-busy="true" />}>
                 <CareerDetail />
+              </Suspense>
+            }
+          />
+
+          {/* Página completa de proceso de admisión */}
+          <Route
+            path="/aspirantes"
+            element={
+              <Suspense fallback={<main className="min-h-dvh bg-dark-bg" aria-busy="true" />}>
+                <AspirantesPage />
               </Suspense>
             }
           />
