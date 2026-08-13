@@ -242,19 +242,21 @@ const Footer = () => {
             Periodo de admisiones abierto
           </div>
 
+
           <button
             type="button"
             className="tid-nav-login"
             onClick={() => navigate("/acceso")}
           >
-            <span className="tid-nav-login__icon">
+            {/* <span className="tid-nav-login__icon">
               <CircleUserRound size={20} strokeWidth={2} />
-            </span>
+            </span> */}
 
-            <span className="tid-nav-login__text">Acceso</span>
+            <span className="tid-nav-login__text">Universidad Tecnológica de Tlaxcala</span>
           </button>
         </div>
       </div>
+
 
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 border-t border-light-border px-6 py-5 dark:border-dark-border sm:px-8">
         <p className="text-xs text-light-text-muted/70 dark:text-dark-text-muted/60">

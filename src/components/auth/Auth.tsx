@@ -1,10 +1,10 @@
 import { useState, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import {
     ArrowLeft,
     ChevronDown,
     GraduationCap,
     LockKeyhole,
-    UserRound,
 } from "lucide-react";
 import "./Auth.css";
 
@@ -12,9 +12,11 @@ type Mode = "login" | "register";
 
 export default function Auth() {
     const [mode, setMode] = useState<Mode>("login");
+    const navigate = useNavigate();
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        navigate("/dashboard");
     };
 
     const isLogin = mode === "login";
