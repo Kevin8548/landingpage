@@ -1,1 +1,91 @@
+@import url("https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
 @import "tailwindcss";
+
+:root {
+  --bg: #050b08;
+  --ink: #f7f5ee;
+  --green: #3ddc84;
+  --orange: #ff7a45;
+  --teal: #38e6c9;
+  --muted: #93a49b;
+  --line: rgba(247, 245, 238, 0.1);
+  --glass: rgba(9, 16, 12, 0.55);
+}
+
+body {
+  background: var(--bg);
+  font-family: "Inter", sans-serif;
+  color: var(--ink);
+  overflow-x: hidden;
+}
+
+@theme {
+  /* --- Light --- */
+  --color-light-orange-primary: #ed5e00;
+  --color-light-green-primary: #378a53;
+  --color-light-bg: #ffffff;
+  --color-light-text: #18181b;       /* texto principal, alto contraste sobre blanco */
+  --color-light-text-muted: #52525b; /* texto secundario, sigue siendo legible sobre blanco */
+  --color-light-border: #e4e4e7;
+
+  /* --- Dark --- */
+  --color-dark-green-primary: #1dd75b;
+  --color-dark-green-secondary: #25bb57;
+  --color-dark-orange-primary: #e96c00;
+  --color-dark-orange-secondary: #d36200;
+  --color-dark-bg: #000000;
+  --color-dark-text: #f4f4f5;        /* texto principal, alto contraste sobre negro */
+  --color-dark-text-muted: #a1a1aa;  /* texto secundario, gris real (no casi-blanco) */
+  --color-dark-border: #27272a;
+
+  --color-amber: #FFB703;
+  --color-green-light: #196700;
+  --color-green-dark: #1A4F01;
+
+
+
+  /* others  */
+  --color-dark-bg-alt: #0d0f0d;
+}
+
+
+/* Fuera del @theme, como CSS normal */
+@keyframes node-pulse {
+  0%, 100% { opacity: 0.12; transform: scale(1); }
+  50% { opacity: 0.02; transform: scale(1.5); }
+}
+
+.node-halo {
+  animation: node-pulse 2.4s ease-in-out infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+@keyframes marquee-up {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
+}
+
+@keyframes marquee-down {
+  from { transform: translateY(-50%); }
+  to { transform: translateY(0); }
+}
+
+.animate-marquee-up {
+  animation-name: marquee-up;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.animate-marquee-down {
+  animation-name: marquee-down;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee-up,
+  .animate-marquee-down {
+    animation: none;
+  }
+}

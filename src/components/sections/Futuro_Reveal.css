@@ -1,0 +1,67 @@
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap");
+
+.futuro-reveal {
+  --bg: #050505;
+  --cyan: #2ecc71;
+  --amber: #ffb703;
+  --ink: #f4f6fb;
+  --ink-dim: rgba(244, 246, 251, .66);
+  --progress: 0;
+  position: relative;
+  /* Más alto = el scroll avanza más despacio dentro de esta animación. */
+  height: 900vh;
+  background: var(--bg);
+}
+
+.futuro-reveal__pin { position: sticky; top: 0; display: grid; place-items: center; isolation: isolate; width: 100%; height: 100vh; overflow: hidden; }
+.futuro-reveal__bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: var(--bg); }
+.futuro-reveal__blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: calc(.22 + var(--progress) * .42); }
+/* .futuro-reveal__blob--a { top: -18%; left: -10%; width: min(65vw, 760px); height: min(65vw, 760px); background: rgba(46, 204, 113, .42); }
+.futuro-reveal__blob--b { right: -12%; bottom: -22%; width: min(60vw, 700px); height: min(60vw, 700px); background: rgba(255, 183, 3, .28); }
+.futuro-reveal__blob--c { top: 30%; left: 35%; width: min(42vw, 500px); height: min(42vw, 500px); background: rgba(249, 115, 22, .20); } */
+.futuro-reveal__vignette { position: absolute; inset: 0; background: radial-gradient(circle, transparent 15%, rgba(0,0,0,.7) 100%); }
+
+.futuro-reveal__content { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; padding: 0; color: var(--ink); font-family: Inter, system-ui, sans-serif; text-align: center; }
+.futuro-reveal__eyebrow { position: absolute; top: 18%; display: flex; justify-content: center; align-items: center; gap: 10px; margin: 0; color: var(--amber); font-size: .78rem; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; }
+.futuro-reveal__eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 10px var(--amber); }
+.futuro-reveal__sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); }
+
+.futuro-reveal__marquee { position: absolute; top: 50%; left: 0; width: 100vw; height: clamp(10rem, 26vw, 19rem); overflow: visible; transform: translateY(-50%); }
+.futuro-reveal__track { position: absolute; top: 50%; left: 0; display: flex; align-items: baseline; width: max-content; white-space: nowrap; font-family: Sora, sans-serif; font-size: clamp(3.4rem, 10vw, 9rem); font-weight: 800; line-height: 1; letter-spacing: -.045em; will-change: transform; transform: translate3d(100vw, -50%, 0); }
+.futuro-reveal__letter { display: inline-block; opacity: .65; filter: blur(3px); transform-origin: center center; will-change: transform, opacity, filter; background: aliceblue; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 14px 28px rgba(0, 0, 0, .32); }
+.futuro-reveal__letter--space { width: .29em; }
+.futuro-reveal__underline { position: absolute; top: calc(50% + clamp(5rem, 13vw, 10rem)); display: block; width: min(280px, 55vw); height: 3px; margin: 0; border-radius: 999px; background: linear-gradient(90deg, var(--cyan), var(--amber)); transform: scaleX(0); }
+.futuro-reveal__cta { position: absolute; top: calc(50% + clamp(5rem, 13vw, 10rem) + 36px); opacity: 0; will-change: transform, opacity; }
+.futuro-reveal__btn { display: inline-flex; gap: 10px; align-items: center; padding: 13px 26px; border: 1px solid rgba(244,246,251,.28); border-radius: 999px; color: var(--ink); font-size: .9rem; font-weight: 600; text-decoration: none; transition: .25s ease; }
+.futuro-reveal__btn:hover, .futuro-reveal__btn:focus-visible { color: var(--bg); background: var(--ink); transform: translateY(-2px); }
+
+/* ---------- NUEVO: velo de entrada tipo "iris" ----------
+   Arranca cubriendo TODA la sección (clip-path circle 150% = más grande
+   que la pantalla) y se cierra hacia el centro (0%) apenas la sección se
+   "fija" (pin) y el usuario sigue haciendo scroll. Revela primero las
+   orillas y al final el centro, como un diafragma de cámara cerrándose.
+   Se conecta con el velo de salida del Hero (hero__exit-veil) para que
+   el cambio de sección se sienta como una transición intencional y no
+   como un corte seco.
+   IMPORTANTE: el clip-path inicial en CSS (150%) debe coincidir con el
+   valor de arranque en JS, para que no haya un "flash" antes de que el
+   primer frame de JS se ejecute. */
+.futuro-reveal__entry-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: var(--bg);
+  clip-path: circle(150% at 50% 50%);
+  pointer-events: none;
+  will-change: clip-path;
+}
+
+@media (max-width: 720px) { .futuro-reveal { height: 980vh; } .futuro-reveal__track { gap: .22em; font-size: clamp(3rem, 14vw, 5rem); } .futuro-reveal__eyebrow { font-size: .62rem; } }
+@media (prefers-reduced-motion: reduce) {
+  .futuro-reveal { height: auto; min-height: 100vh; }
+  .futuro-reveal__pin { position: relative; min-height: 100vh; }
+  .futuro-reveal__marquee { height: auto; }
+  .futuro-reveal__track { position: relative; top: auto; left: auto; flex-wrap: wrap; justify-content: center; width: 100%; white-space: normal; transform: none !important; }
+  .futuro-reveal__letter, .futuro-reveal__cta { opacity: 1 !important; transform: none !important; }
+  .futuro-reveal__entry-veil { display: none; }
+}

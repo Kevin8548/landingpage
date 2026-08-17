@@ -1,0 +1,195 @@
+:root {
+  --nav-green-dark: rgb(26, 79, 1);
+  --nav-green: #196700;
+}
+
+.tid-nav {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: 1.7fr repeat(4, 1fr);
+  gap: 6px;
+  min-height: 66px;
+  padding: 8px 15px 0;
+  box-sizing: border-box;
+
+}
+
+.auth-field--full {
+  width: 100%;
+}
+
+@keyframes tidFadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.tid-nav-brand,
+.tid-nav-item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  min-width: 0;
+  height: 56px;
+  padding-top: 13px;
+  color: rgba(255, 255, 255, 0.86);
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.tid-nav-brand {
+  color: var(--ink, #fff);
+}
+
+.tid-nav-item {
+  gap: 16px;
+  font-family: "Inter", sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  transition: color 0.25s ease;
+}
+
+.tid-nav-item:hover,
+.tid-nav-item.active {
+  color: #fff;
+}
+
+.tid-logo-text {
+  display: flex;
+  flex-direction: column;
+  font-family: "Unbounded", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.30em;
+  
+}
+
+.tid-logo-text small {
+  margin-top: 5px;
+  color: var(--muted, rgba(255, 255, 255, 0.55));
+  font-family: "JetBrains Mono", monospace;
+  font-size: 8px;
+  font-weight: 400;
+  letter-spacing: 0.50em;
+}
+
+.tid-dot {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  flex: 0 0 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+}
+
+.tid-dot-fill {
+  position: absolute;
+  inset: auto 0 0;
+  background: linear-gradient(180deg, var(--nav-green-dark), var(--nav-green));
+  transition: height 0.12s linear;
+}
+
+.tid-nav-item.active .tid-dot {
+  border-color: rgba(88, 201, 78, 0.9);
+}
+
+.tid-nav-line {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.17);
+}
+
+.tid-nav-line-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg,  rgb(83, 246, 7),
+  #42f308);
+  transition: width 0.12s linear;
+}
+
+@media (max-width: 900px) {
+  .tid-nav {
+    gap: 3px;
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+
+  .tid-nav-item {
+    gap: 10px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 760px) {
+  .tid-nav {
+    display: block;
+    min-height: 64px;
+    padding: 16px 18px 0;
+  }
+
+  .tid-nav-brand {
+    height: 48px;
+  }
+
+  .tid-nav-item {
+    display: none;
+  }
+}
+
+
+
+
+
+
+
+/* .tid-nav-login {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  height: 38px;
+  padding: 4px 20px 4px 4px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  background: radial-gradient(circle at 22px center, rgba(26, 79, 1, 0.48) 10%, rgba(26, 79, 1, 0.48) 5%, #0c0c0c 25%);
+  transition: transform 0.15s ease, filter 0.15s ease;
+} */
+
+.tid-nav-login:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.tid-nav-login:active {
+  transform: translateY(0);
+  filter: brightness(0.95);
+}
+
+.tid-nav-login__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  min-width: 25px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, rgb(26, 79, 1),#196700 );
+  color: #fff;
+}
+
+.tid-nav-login__text {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  margin-left: -1px;
+  white-space: nowrap;
+}
