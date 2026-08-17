@@ -19,6 +19,9 @@ import { ConfirmProvider } from "./components/ui/ConfirmDialog";
 import Dashboard from "./pages/Dashboard";
 import Events from "./pages/Events";
 import { Eventos } from "./components/sections/eventos";
+import EventosAdmin from "./components/dashboard/EventosAdmin";
+import AspirantesAdmin from "./components/dashboard/AspirantesAdmin";
+import RequireAdmin from "./components/auth/RequireAdmin";
 
 const CareerDetail = lazy(() => import("./pages/CareerDetail"));
 
@@ -53,7 +56,9 @@ function AppFooter() {
   if (
     pathname === "/acceso" ||
     pathname === "/dashboard" ||
-    pathname === "/dashboard/eventos"
+    pathname === "/dashboard/eventos" ||
+    pathname === "/eventos" ||
+    pathname === "/aspirantes"
   ) {
     return null;
   }
@@ -99,12 +104,48 @@ export default function App() {
             }
           />
 
+          {/* Vista de previsualización de Eventos: interactiva, con botón de editar. Solo para el admin. */}
+          <Route
+            path="/eventos"
+            element={
+              <RequireAdmin>
+                <Navbar />
+                <EventosAdmin />
+              </RequireAdmin>
+            }
+          />
+
+          {/* Vista de previsualización de Aspirantes: interactiva, con botón de editar. Solo para el admin. */}
+          <Route
+            path="/aspirantes"
+            element={
+              <RequireAdmin>
+                <Navbar />
+                <AspirantesAdmin />
+              </RequireAdmin>
+            }
+          />
+
           {/* Pantalla estática de acceso */}
           <Route path="/acceso" element={<Auth />} />
 
           {/* Panel para administrar eventos */}
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/dashboard/eventos" element={<Events />} />
+          <Route
+            path="/dashboard"
+            element={
+              <RequireAdmin>
+                <Dashboard />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path="/dashboard/eventos"
+            element={
+              <RequireAdmin>
+                <Events />
+              </RequireAdmin>
+            }
+          />
 
           {/* Detalle de cada carrera */}
           <Route
