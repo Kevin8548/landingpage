@@ -69,8 +69,7 @@ export function useAspirantesStore() {
     });
   }, []);
 
-  // Sincroniza con cambios hechos desde otra pestaña (ej. previsualización
-  // abierta mientras editas en el dashboard), igual que en eventosStore.
+  // Sincroniza con cambios hechos desde otra pestaña.
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key !== STORAGE_KEY) return;

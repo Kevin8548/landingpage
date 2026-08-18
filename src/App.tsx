@@ -20,10 +20,10 @@ import Dashboard from "./pages/Dashboard";
 import Events from "./pages/Events";
 import { Eventos } from "./components/sections/eventos";
 import EventosAdmin from "./components/dashboard/EventosAdmin";
-import AspirantesAdmin from "./components/dashboard/AspirantesAdmin";
 import RequireAdmin from "./components/auth/RequireAdmin";
 
 const CareerDetail = lazy(() => import("./pages/CareerDetail"));
+const AspirantesPage = lazy(() => import("./pages/Aspirantes"));
 
 function ScrollManager() {
   const { pathname } = useLocation();
@@ -115,14 +115,15 @@ export default function App() {
             }
           />
 
-          {/* Vista de previsualización de Aspirantes: interactiva, con botón de editar. Solo para el admin. */}
+          {/* Página completa de proceso de admisión. Pública para todos;
+              el modo edición solo aparece si el usuario logueado es admin
+              (botón flotante dentro de pages/Aspirantes.tsx). */}
           <Route
             path="/aspirantes"
             element={
-              <RequireAdmin>
-                <Navbar />
-                <AspirantesAdmin />
-              </RequireAdmin>
+              <Suspense fallback={<main className="min-h-dvh bg-dark-bg" aria-busy="true" />}>
+                <AspirantesPage />
+              </Suspense>
             }
           />
 
@@ -151,14 +152,7 @@ export default function App() {
           <Route
             path="/carreras/:careerId"
             element={
-              <Suspense
-                fallback={
-                  <main
-                    className="min-h-dvh bg-dark-bg"
-                    aria-busy="true"
-                  />
-                }
-              >
+              <Suspense fallback={<main className="min-h-dvh bg-dark-bg" aria-busy="true" />}>
                 <CareerDetail />
               </Suspense>
             }

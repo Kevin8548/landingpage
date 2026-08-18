@@ -1,5 +1,3 @@
-import heroImg from "../assets/A-1.jpg";
-import paseDirectoImg from "../assets/A-2.jpeg";
 import cbtisLogo from "../assets/cbtis.png";
 import cobatLogo from "../assets/cobat.png";
 import desarrollosIcon from "../assets/icons/desarrollo.png";
@@ -20,7 +18,7 @@ export interface Institution {
   logo?: string;
 }
 
-export interface CareerStripItem {
+export interface Career {
   id: string;
   name: string;
   shortName: string;
@@ -31,8 +29,6 @@ export interface CareerStripItem {
   text: string;
   path: string;
 }
-
-export { heroImg, paseDirectoImg };
 
 export const DEFAULT_HERO_TITLE = "Inscríbete en tu mejor opción para tu futuro";
 export const DEFAULT_HERO_SUBTITLE =
@@ -119,12 +115,13 @@ export const institutions: Institution[] = [
 // Las tres ingenierías, con su ícono personalizado, acento de marca
 // (verde / naranja / teal) y ruta destino (pendiente de conectar). No es
 // editable desde el admin — es contenido fijo de la franja bajo el hero.
-export const CAREERS: CareerStripItem[] = [
+export const CAREERS: Career[] = [
   {
     id: "software",
     name: "Desarrollo y Gestión de Software Multiplataforma",
     shortName: "Software Multiplataforma",
     img: desarrollosIcon,
+    // Fondo sólido (no transparente) para que el dibujo negro del ícono resalte.
     iconBg: "bg-[var(--green)]",
     border: "border-[var(--green)]/25",
     bg: "bg-[var(--green)]/[0.08]",
