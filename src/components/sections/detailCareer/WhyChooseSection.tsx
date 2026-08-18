@@ -37,7 +37,15 @@ function RevealWord({
   const filter = useTransform(blur, (v) => `blur(${v}px)`);
 
   return (
-    <motion.span style={{ opacity, y, filter }} className="inline-block">
+    <motion.span
+      style={{
+        opacity,
+        y,
+        filter,
+        color: "var(--color-amber)",
+      }}
+      className="inline-block"
+    >
       {word}
     </motion.span>
   );
@@ -53,7 +61,7 @@ function ScrollRevealTitle({
   const words = text.split(" ");
 
   return (
-    <h2 className="mb-3 flex flex-wrap gap-x-2 font-serif text-3xl leading-tight sm:mb-4 sm:gap-x-3 sm:text-4xl">
+    <h2 className="mb-3 flex flex-wrap gap-x-2 font-serif text-3xl leading-tight tracking-[0.2em] sm:mb-4 sm:gap-x-3 sm:text-4xl">
       {words.map((word, i) => (
         <RevealWord
           key={i}
@@ -98,13 +106,20 @@ function ConnectorLine({ progress }: { progress: MotionValue<number> }) {
       viewBox="0 0 100 100"
       preserveAspectRatio="none"
     >
+      <defs>
+        <linearGradient id="connectorGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="var(--color-amber)" />
+          <stop offset="55%" stopColor="var(--color-amber)" />
+          <stop offset="100%" stopColor="var(--color-amber)" />
+        </linearGradient>
+      </defs>
       <motion.path
         d="M 2 4 
           C 25 2, 10 30, 32 30 
           S 90 50, 38 55 
           S 65 65, 55 72 
           S 85 82, 90 94"
-        stroke="var(--color-dark-green-primary)"
+        stroke="url(#connectorGradient)"
         strokeWidth="0.30"
         strokeDasharray="0.5 1.5"
         fill="none"
@@ -163,7 +178,8 @@ function StaircaseCard({
           className="relative rounded-2xl p-5 backdrop-blur-md"
           style={{
             background: "var(--glass)",
-            border: "1px solid var(--line)",
+            border: "1px solid var(--color-dark-green-primary)",
+            boxShadow: "0 0 24px -8px var(--color-dark-green-primary)",
           }}
         >
           <StatCard {...stat} />
@@ -173,7 +189,7 @@ function StaircaseCard({
   );
 }
 
-// ── Versión móvil: sin pin de scroll, sin parallax, lista apilada simple ──
+// ── Version movil
 function MobileStatCard({ stat, index }: { stat: Stat; index: number }) {
   return (
     <motion.div
@@ -184,7 +200,7 @@ function MobileStatCard({ stat, index }: { stat: Stat; index: number }) {
       className="rounded-xl p-4 backdrop-blur-sm"
       style={{
         background: "var(--glass)",
-        border: "1px solid var(--line)",
+        border: "1px solid var(--color-dark-green-primary)",
       }}
     >
       <StatCard {...stat} />
@@ -209,7 +225,6 @@ const WhyChooseSection = memo(function WhyChooseSection({ stats }: WhyChooseSect
       <div
         ref={containerRef}
         className="relative hidden md:block bg-dark-bg"
-        // className="relative hidden md:block"
         style={{ height: `${totalSteps * 60 + 100}vh` }}
       >
         <div className="sticky top-0 h-dvh flex flex-col px-6 md:px-16 py-16 overflow-hidden">
@@ -243,7 +258,10 @@ const WhyChooseSection = memo(function WhyChooseSection({ stats }: WhyChooseSect
 
       {/* Móvil (< md): lista apilada, sin pin ni parallax, solo fade-in */}
       <div className="md:hidden px-6 py-16">
-        <h2 className="mb-3 font-serif text-3xl leading-tight">
+        <h2
+          className="mb-3 font-serif text-3xl leading-tight tracking-[0.2em]"
+          style={{ color: "var(--color-amber)" }}
+        >
           ¿Por qué elegir esta carrera?
         </h2>
         <p className="mb-8 text-sm leading-relaxed text-neutral-400">

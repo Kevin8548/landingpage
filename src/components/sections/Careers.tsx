@@ -73,7 +73,7 @@ export function Careers() {
             className="absolute inset-0"
             style={{
               background:
-                "radial-gradient(circle at 100% 100%, rgba(249,115,22,0.09) 0%, transparent 65%)",
+                "radial-gradient(circle at 100% 100%, rgba(255, 183, 3,0.09) 0%, transparent 65%)",
             }}
           />
           {/* Grid técnico 56x56 con máscara radial */}

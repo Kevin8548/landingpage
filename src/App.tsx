@@ -1,21 +1,31 @@
 import { lazy, Suspense, useEffect } from "react";
 import {
   BrowserRouter,
-  Routes,
   Route,
+  Routes,
   useLocation,
 } from "react-router-dom";
-import { Careers } from "./components/sections/Careers";
+
 import { Aspirantes } from "./components/sections/Aspirantes";
+import { Careers } from "./components/sections/Careers";
 import { WhyChooseTI } from "./components/layout/View";
 import Footer from "./components/layout/Footer";
 import Navbar from "./components/layout/Navbar";
+import Auth from "./components/auth/Auth";
 import Hero from "./components/sections/Hero";
 import FuturoReveal from "./components/sections/Futuro_Reveal";
 import Proyectos from "./components/layout/Proyectos";
 import { ConfirmProvider } from "./components/ui/ConfirmDialog";
 
+import Dashboard from "./pages/Dashboard";
+import Events from "./pages/Events";
+import { Eventos } from "./components/sections/eventos";
+import EventosAdmin from "./components/dashboard/EventosAdmin";
+import AspirantesAdmin from "./components/dashboard/AspirantesAdmin";
+import RequireAdmin from "./components/auth/RequireAdmin";
+
 const CareerDetail = lazy(() => import("./pages/CareerDetail"));
+const AspirantesPage = lazy(() => import("./pages/Aspirantes"));
 
 function ScrollManager() {
   const { pathname } = useLocation();
@@ -42,6 +52,23 @@ function ScrollManager() {
   return null;
 }
 
+function AppFooter() {
+  const { pathname } = useLocation();
+
+  if (
+    pathname === "/acceso" ||
+    pathname === "/dashboard" ||
+    pathname === "/dashboard/eventos" ||
+    pathname === "/dashboard/aspirantes" ||
+    pathname === "/eventos" ||
+    pathname === "/aspirantes"
+  ) {
+    return null;
+  }
+
+  return <Footer />;
+}
+
 export default function App() {
   return (
     <ConfirmProvider>
@@ -49,6 +76,7 @@ export default function App() {
         <ScrollManager />
 
         <Routes>
+          {/* Landing principal */}
           <Route
             path="/"
             element={
@@ -71,7 +99,7 @@ export default function App() {
                 <Proyectos />
 
                 <section id="eventos">
-                  {/* Sección de eventos */}
+                  <Eventos />
                 </section>
 
                 <section id="aspirantes">
@@ -81,21 +109,74 @@ export default function App() {
             }
           />
 
+          {/* Vista de previsualización de Eventos: interactiva, con botón de editar. Solo para el admin. */}
+          <Route
+            path="/eventos"
+            element={
+              <RequireAdmin>
+                <Navbar />
+                <EventosAdmin />
+              </RequireAdmin>
+            }
+          />
+
+          {/* Página completa y 100% pública de proceso de admisión. No tiene
+              ninguna lógica de admin — cero riesgo de que se filtre el modo
+              edición aquí. */}
+          <Route
+            path="/aspirantes"
+            element={
+              <Suspense fallback={<main className="min-h-dvh bg-dark-bg" aria-busy="true" />}>
+                <AspirantesPage />
+              </Suspense>
+            }
+          />
+
+          {/* Pantalla estática de acceso */}
+          <Route path="/acceso" element={<Auth />} />
+
+          {/* Panel para administrar eventos */}
+          <Route
+            path="/dashboard"
+            element={
+              <RequireAdmin>
+                <Dashboard />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path="/dashboard/eventos"
+            element={
+              <RequireAdmin>
+                <Events />
+              </RequireAdmin>
+            }
+          />
+
+          {/* Edición de Aspirantes: exactamente el mismo patrón que /eventos.
+              Solo llega aquí quien está autenticado como admin. */}
+          <Route
+            path="/dashboard/aspirantes"
+            element={
+              <RequireAdmin>
+                <Navbar />
+                <AspirantesAdmin />
+              </RequireAdmin>
+            }
+          />
+
+          {/* Detalle de cada carrera */}
           <Route
             path="/carreras/:careerId"
             element={
-              <Suspense
-                fallback={
-                  <main className="min-h-dvh bg-dark-bg" aria-busy="true" />
-                }
-              >
+              <Suspense fallback={<main className="min-h-dvh bg-dark-bg" aria-busy="true" />}>
                 <CareerDetail />
               </Suspense>
             }
           />
         </Routes>
 
-        <Footer />
+        <AppFooter />
       </BrowserRouter>
     </ConfirmProvider>
   );

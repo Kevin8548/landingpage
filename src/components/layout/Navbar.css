@@ -15,6 +15,10 @@
   box-sizing: border-box;
 }
 
+.auth-field--full {
+  width: 100%;
+}
+
 @keyframes tidFadeIn {
   to {
     opacity: 1;
@@ -136,4 +140,54 @@
   .tid-nav-item {
     display: none;
   }
+}
+
+
+
+
+
+
+
+/* .tid-nav-login {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  height: 38px;
+  padding: 4px 20px 4px 4px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  background: radial-gradient(circle at 22px center, rgba(26, 79, 1, 0.48) 10%, rgba(26, 79, 1, 0.48) 5%, #0c0c0c 25%);
+  transition: transform 0.15s ease, filter 0.15s ease;
+} */
+
+.tid-nav-login:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.tid-nav-login:active {
+  transform: translateY(0);
+  filter: brightness(0.95);
+}
+
+.tid-nav-login__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  min-width: 25px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, rgb(26, 79, 1),#196700 );
+  color: #fff;
+}
+
+.tid-nav-login__text {
+  display: flex;
+  color: #a1a1a1;
+  font-size: 13px;
+  font-weight: 500;
+  margin-left: -1px;
+  white-space: nowrap;
 }
