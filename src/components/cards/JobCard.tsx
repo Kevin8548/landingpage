@@ -13,8 +13,8 @@ export default function JobCard({ icon, titulo, desc }: JobCardProps) {
 
   return (
     <div className="border border-neutral-700 rounded-lg p-5 flex gap-4">
-      <div className="w-9 h-9 rounded-md bg-dark-orange-primary/10 border border-dark-orange-primary flex items-center justify-center shrink-0">
-        <Icon size={16} className="text-dark-orange-primary" />
+      <div className="w-9 h-9 rounded-md bg-amber/10 border border-amber flex items-center justify-center shrink-0">
+        <Icon size={16} className="text-amber" />
       </div>
       <div>
         <p className="font-serif font-bold text-lg mb-1">{titulo}</p>

@@ -8,7 +8,8 @@ export function Careers() {
   const targetRef = useRef<HTMLDivElement>(null);
   const firstCardRef = useRef<HTMLDivElement>(null);
   const [sectionWidth, setSectionWidth] = useState(1200);
-  const totalSlides = careers.length;
+  const visibleCareers = careers.filter((c) => c.slug !== "ingenieria-ti");
+  const totalSlides = visibleCareers.length;
   const horizontalSteps = Math.max(totalSlides - 1, 0);
 
   const { scrollYProgress } = useScroll({
@@ -97,31 +98,30 @@ export function Careers() {
 
         <motion.div className="flex relative" style={{ x, willChange: "transform" }}>
           <TimelinePath
-              sections={totalSlides}
-              sectionWidth={sectionWidth}
-              sectionLabels={[...careers.map((c) => c.title)]}
-              branchLabels={[
-                ["Código", "Sistema"],
-                ["Infraestructura", "Seguridad"],
-                ["Experiencias XR", "Negocios digitales"],
-                ["Innovación", "Futuro"],
-              ]}
-              progress={smoothProgress}
-              className="left-4 top-[300px] z-0 pointer-events-none sm:left-10 sm:top-[380px] md:left-20 md:top-[400px]"
-            />
+            sections={totalSlides}
+            sectionWidth={sectionWidth}
+            sectionLabels={[...visibleCareers.map((c) => c.title)]}
+            branchLabels={[
+              ["Código", "Sistema"],
+              ["Infraestructura", "Seguridad"],
+              ["Experiencias XR", "Negocios digitales"],
+            ]}
+            progress={smoothProgress}
+            className="left-4 top-[300px] z-0 pointer-events-none sm:left-10 sm:top-[380px] md:left-20 md:top-[400px]"
+          />
 
-            {careers.map((career, index) => (
-              <div
-                key={career.slug}
-                ref={index === 0 ? firstCardRef : undefined}
-                className={`relative z-10 h-screen w-screen flex-shrink-0 px-4 pt-64 sm:px-6 md:px-8 md:pt-72 ${index === 0 ? "md:pl-28" : ""}`}
-              >
+          {visibleCareers.map((career, index) => (
+            <div
+              key={career.slug}
+              ref={index === 0 ? firstCardRef : undefined}
+              className={`relative z-10 h-screen w-screen flex-shrink-0 px-4 pt-64 sm:px-6 md:px-8 md:pt-72 ${index === 0 ? "md:pl-28" : ""}`}
+            >
               <CareerItem
                 career={career}
                 priority={index === 0}
                 progress={smoothProgress}
                 index={index}
-                total={careers.length}
+                total={visibleCareers.length}
               />
             </div>
           ))}

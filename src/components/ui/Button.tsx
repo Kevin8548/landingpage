@@ -17,7 +17,7 @@ const variantClasses: Record<Variant, string> = {
     "bg-light-green-primary/0 border border-light-green-primary text-white hover:bg-dark-green-secondary shadow-sm",
 
   secondary:
-    "bg-light-orange-primary border border-dark-orange-primary text-white hover:bg-dark-orange-primary shadow-sm",
+    "bg-amber border border-amber text-black hover:bg-amber hover:text-black shadow-sm",
   
   outline:
     "bg-transparent border border-white text-white hover:bg-white hover:text-black shadow-sm",
