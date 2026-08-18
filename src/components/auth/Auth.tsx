@@ -6,17 +6,42 @@ import {
     GraduationCap,
     LockKeyhole,
 } from "lucide-react";
+import { setAdminAuthenticated } from "../../lib/adminAuth";
 import "./Auth.css";
 
 type Mode = "login" | "register";
 
+const ADMIN_USERNAME = import.meta.env.VITE_ADMIN_USERNAME ?? "";
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD ?? "";
+
 export default function Auth() {
     const [mode, setMode] = useState<Mode>("login");
+    const [matricula, setMatricula] = useState("");
+    const [password, setPassword] = useState("");
+    const [message, setMessage] = useState<string | null>(null);
     const navigate = useNavigate();
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        navigate("/dashboard");
+        setMessage(null);
+
+        if (mode === "register") {
+            setMessage("El registro aún no está conectado a ningún backend. Vuelve pronto.");
+            return;
+        }
+
+        if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
+            setMessage("No hay credenciales configuradas. Revisa el archivo .env del proyecto.");
+            return;
+        }
+
+        if (matricula === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+            setAdminAuthenticated(true);
+            navigate("/dashboard");
+            return;
+        }
+
+        setMessage("Matrícula o contraseña incorrectos.");
     };
 
     const isLogin = mode === "login";
@@ -43,7 +68,6 @@ export default function Auth() {
             </div>
 
             <div className="auth-showcase__content">
-
                 <h1>
                 Tu futuro comienza
                 <br />
@@ -66,17 +90,23 @@ export default function Auth() {
                 <button
                 type="button"
                 className={isLogin ? "is-active" : ""}
-                onClick={() => setMode("login")}
+                onClick={() => {
+                    setMode("login");
+                    setMessage(null);
+                }}
                 >
-                {/* Iniciar sesión */}
+                Iniciar sesión
                 </button>
 
                 <button
                 type="button"
                 className={!isLogin ? "is-active" : ""}
-                onClick={() => setMode("register")}
+                onClick={() => {
+                    setMode("register");
+                    setMessage(null);
+                }}
                 >
-                {/* Registro */}
+                Registro
                 </button>
             </div>
 
@@ -85,7 +115,7 @@ export default function Auth() {
                 {isLogin ? "BIENVENIDO" : "ÚNETE A LA COMUNIDAD"}
                 </span>
 
-                <h2 >
+                <h2>
                 {isLogin ? "Inicia sesión" : "Crea tu cuenta"}
                 </h2>
 
@@ -118,20 +148,6 @@ export default function Auth() {
                     </>
                     )}
 
-                {/* <label className="auth-field">
-                <span>Usuario</span>
-
-                <div className="auth-input-icon">
-                    <UserRound size={17} />
-                    <input
-                    type="text"
-                    placeholder="Ingresa tu usuario"
-                    autoComplete="username"
-                    required
-                    />
-                </div>
-                </label> */}
-
                 <label className="auth-field">
                 <span>Matrícula</span>
 
@@ -141,6 +157,8 @@ export default function Auth() {
                     type="text"
                     placeholder="Ej. 202400123"
                     inputMode="numeric"
+                    value={matricula}
+                    onChange={(e) => setMatricula(e.target.value)}
                     required
                     />
                 </div>
@@ -164,7 +182,6 @@ export default function Auth() {
                         <ChevronDown size={17} />
                     </div>
                     </label>
-
                 </>
                 )}
 
@@ -179,6 +196,8 @@ export default function Auth() {
                     autoComplete={
                         isLogin ? "current-password" : "new-password"
                     }
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     required
                     />
                 </div>
@@ -198,6 +217,22 @@ export default function Auth() {
                 </label>
                 )}
 
+                {message && (
+                    <p
+                        role="alert"
+                        style={{
+                            fontSize: "0.8rem",
+                            color: "var(--orange)",
+                            border: "1px solid var(--line)",
+                            borderRadius: "0.5rem",
+                            padding: "0.6rem 0.8rem",
+                            background: "color-mix(in srgb, var(--orange) 10%, transparent)",
+                        }}
+                    >
+                        {message}
+                    </p>
+                )}
+
                 <button className="auth-submit" type="submit">
                 {isLogin ? "Iniciar sesión" : "Crear mi cuenta"}
                 <span></span>
@@ -209,7 +244,10 @@ export default function Auth() {
 
                 <button
                 type="button"
-                onClick={() => setMode(isLogin ? "register" : "login")}
+                onClick={() => {
+                    setMode(isLogin ? "register" : "login");
+                    setMessage(null);
+                }}
                 >
                 {isLogin ? "Regístrate" : "Inicia sesión"}
                 </button>
@@ -218,4 +256,4 @@ export default function Auth() {
         </section>
         </main>
     );
-    }
+}
