@@ -4,26 +4,6 @@ import type React from "react";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import "./Hero.css";
 
-/**
- * Hero — Tecnologías de la Información e Innovación Digital
- * Universidad Tecnológica de Tlaxcala
- *
- * El fondo (ruido + líneas + viñeta) se dibuja en un <canvas> tal cual ya
- * lo tenías. Se quitó el efecto de "mancha/trapo" que se destapaba con el
- * mouse y el video de fondo, y en su lugar se agregó una animación
- * decorativa tipo "constelación tecnológica": un núcleo tipo chip/circuito
- * con nodos (Software / Redes / Entornos Virtuales) orbitando alrededor,
- * más partículas flotantes. Todo puramente visual (pointer-events: none),
- * no requiere mouse para verse.
- *
- * NUEVO: efecto de "salida" al hacer scroll hacia la siguiente sección.
- * Se calcula --hero-exit (0 a 1) según qué tan cerca está el borde
- * inferior del hero de salir de la pantalla, y con eso se anima un
- * encogido + blur del contenido, más un velo negro que sube de opacidad
- * (ver .hero__exit-veil en Hero.css) para fundir hacia la siguiente
- * sección en vez de cortar en seco.
- */
-
 function SocialIcon({ children }: { children: ReactNode }) {
   return <svg viewBox="0 0 24 24" aria-hidden="true">{children}</svg>;
 }
@@ -48,157 +28,127 @@ function SocialOrb() {
 }
 
 /**
- * Constelación tecnológica: núcleo tipo chip/circuito con nodos orbitando
- * (Software / Redes / Entornos Virtuales, + un par extra de acentos) y
- * partículas. Es puramente decorativo (aria-hidden, pointer-events: none).
+ * Terminal que "compila" la carrera y rota sola entre tres especialidades.
+ * Vive en el mismo contenedor .hero__art. Es puramente decorativo
+ * (aria-hidden, pointer-events: none) y no necesita al usuario para
+ * avanzar: cada "build" se escribe solo, se sostiene un momento y pasa
+ * al siguiente, en loop infinito. Alrededor del dibujo activo flotan
+ * etiquetas con el nombre de cada especialidad.
  */
-function TechVisual() {
-  const orbitStyle = (dur: string, reverse?: boolean): CSSProperties =>
-    ({ "--dur": dur, animationDirection: reverse ? "reverse" : "normal" } as CSSProperties);
+type TerminalLine = ReactNode;
+
+type TerminalSlide = {
+  key: "software" | "redes" | "entornos";
+  label: string;
+  lines?: TerminalLine[];
+};
+
+const TERMINAL_SLIDES: TerminalSlide[] = [
+  {
+    key: "software",
+    label: "Software",
+    lines: [
+      <><span className="term-carousel__prompt">$</span> npm run build <span className="term-carousel__path">--software</span></>,
+      <><span className="term-carousel__muted">→</span> compilando módulos ... <span className="term-carousel__ok">OK</span></>,
+      <><span className="term-carousel__muted">→</span> optimizando bundle ... <span className="term-carousel__ok">OK</span></>,
+      <span className="term-carousel__success">✓ SOFTWARE LISTO</span>,
+    ],
+  },
+  { key: "redes", label: "Redes" },
+  { key: "entornos", label: "Entornos Virtuales" },
+];
+
+function SlideVisual({ kind }: { kind: TerminalSlide["key"] }) {
+  if (kind === "software") {
+    return (
+      <div className="term-carousel__window">
+        <div className="term-carousel__bar"><span className="term-carousel__dot term-carousel__dot--r" /><span className="term-carousel__dot term-carousel__dot--y" /><span className="term-carousel__dot term-carousel__dot--g" /><span className="term-carousel__title">tiid@utt — software</span></div>
+        <div className="term-carousel__body">
+          <div><span className="term-carousel__prompt">$</span> npm run build <span className="term-carousel__path">--software</span></div>
+          <div><span className="term-carousel__muted">→</span> compilando módulos ... <span className="term-carousel__ok">OK</span></div>
+          <div><span className="term-carousel__muted">→</span> optimizando bundle ... <span className="term-carousel__ok">OK</span></div>
+          <div className="term-carousel__success">✓ SOFTWARE LISTO</div>
+          <div><span className="term-carousel__prompt">$</span> <span className="term-carousel__cursor" /></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (kind === "entornos") {
+    return (
+      <div className="specialty-visual specialty-visual--virtual">
+        <span className="specialty-visual__eyebrow">LABORATORIO VIRTUAL</span>
+        <svg viewBox="0 0 360 290" role="img" aria-label="Cubos tridimensionales de un entorno virtual">
+          <defs>
+            <linearGradient id="cubeTop" x1="0" x2="1"><stop stopColor="#d9ffdf" stopOpacity=".9" /><stop offset="1" stopColor="#2ecc71" stopOpacity=".42" /></linearGradient>
+            <linearGradient id="cubeLeft" x1="0" x2="1"><stop stopColor="#1a823f" /><stop offset="1" stopColor="#0c3d20" /></linearGradient>
+            <linearGradient id="cubeRight" x1="0" x2="1"><stop stopColor="#2ecc71" /><stop offset="1" stopColor="#145c31" /></linearGradient>
+            <filter id="cubeGlow"><feGaussianBlur stdDeviation="5" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+          </defs>
+          <g className="virtual-grid"><path d="M35 224 180 146l145 78-145 50Z" /><path d="M65 232 180 169l115 63M105 246l75-42 75 42M180 146v128M115 181v86M245 181v86" /></g>
+          <g className="virtual-cube virtual-cube--back"><path d="m179 55 53 29-53 29-53-29Z" fill="url(#cubeTop)" /><path d="m126 84 53 29v61l-53-29Z" fill="url(#cubeLeft)" /><path d="m232 84-53 29v61l53-29Z" fill="url(#cubeRight)" /></g>
+          <g className="virtual-cube virtual-cube--front" filter="url(#cubeGlow)"><path d="m179 115 69 38-69 38-69-38Z" fill="url(#cubeTop)" /><path d="m110 153 69 38v76l-69-38Z" fill="url(#cubeLeft)" /><path d="m248 153-69 38v76l69-38Z" fill="url(#cubeRight)" /><path d="M179 209v35M145 172l34 19 34-19" fill="none" stroke="rgba(255,255,255,.48)" /></g>
+          <circle className="virtual-orbit" cx="179" cy="154" r="113" /><circle className="virtual-pulse" cx="285" cy="113" r="5" /><circle className="virtual-pulse virtual-pulse--two" cx="72" cy="196" r="4" />
+        </svg>
+        <div className="specialty-visual__caption"><span>VM</span><span>CONTENEDORES</span><span>CLOUD</span></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="tech-visual" aria-hidden="true">
-      <div className="tech-visual__outer-ring" />
-      <div className="tech-visual__glow" />
-
-      <svg className="tech-visual__core" viewBox="0 0 400 400">
-        <polygon
-          className="tech-visual__hex tech-visual__hex--outer"
-          points="200,40 340,120 340,280 200,360 60,280 60,120"
-        />
-        <polygon
-          className="tech-visual__hex tech-visual__hex--inner"
-          points="200,90 300,145 300,255 200,310 100,255 100,145"
-        />
-        <path
-          className="tech-visual__trace"
-          d="M200,40 L200,90 M340,120 L300,145 M340,280 L300,255 M200,360 L200,310 M60,280 L100,255 M60,120 L100,145"
-        />
-        <circle className="tech-visual__pulse" cx="200" cy="200" r="46" />
-        <circle className="tech-visual__pulse tech-visual__pulse--alt" cx="200" cy="200" r="46" />
-        <g className="tech-visual__circuit-dots">
-          <circle cx="200" cy="90" r="3" className="dot dot--g" />
-          <circle cx="300" cy="145" r="3" className="dot dot--o" />
-          <circle cx="300" cy="255" r="3" className="dot dot--g" />
-          <circle cx="200" cy="310" r="3" className="dot dot--o" />
-          <circle cx="100" cy="255" r="3" className="dot dot--g" />
-          <circle cx="100" cy="145" r="3" className="dot dot--o" />
-        </g>
-        <circle className="tech-visual__glyph-badge" cx="200" cy="200" r="36" />
-        <text x="200" y="209" className="tech-visual__glyph" textAnchor="middle">
-          {"</>"}
-        </text>
+    <div className="specialty-visual specialty-visual--network">
+      <span className="specialty-visual__eyebrow">RED SEGURA</span>
+      <svg viewBox="0 0 360 290" role="img" aria-label="Escudo de ciberseguridad conectado a una red">
+        <defs><linearGradient id="shieldFill" x1="0" x2="1"><stop stopColor="#2ecc71" stopOpacity=".52" /><stop offset="1" stopColor="#ffb703" stopOpacity=".3" /></linearGradient><filter id="networkGlow"><feGaussianBlur stdDeviation="4" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs>
+        <g className="network-lines"><path d="M45 74 124 119M42 210l86-38M311 74l-80 45M315 210l-85-38M70 143h61M230 143h61" /><path d="M45 74v136M315 74v136" /></g>
+        <g className="network-node"><circle cx="45" cy="74" r="9" /><circle cx="42" cy="210" r="9" /><circle cx="315" cy="74" r="9" /><circle cx="315" cy="210" r="9" /><circle cx="70" cy="143" r="7" /><circle cx="291" cy="143" r="7" /></g>
+        <g filter="url(#networkGlow)"><path className="shield" d="M180 52c28 24 60 27 60 27v60c0 48-30 76-60 93-30-17-60-45-60-93V79s32-3 60-27Z" fill="url(#shieldFill)" /><path className="shield-outline" d="M180 52c28 24 60 27 60 27v60c0 48-30 76-60 93-30-17-60-45-60-93V79s32-3 60-27Z" /><rect x="153" y="126" width="54" height="43" rx="8" className="lock" /><path className="lock" d="M164 126v-13c0-21 32-21 32 0v13M180 140v14" /></g>
+        <circle className="network-ring" cx="180" cy="143" r="116" />
       </svg>
-
-      <div className="tech-visual__orbit tech-visual__orbit--1" style={orbitStyle("16s")}>
-        <div className="tech-visual__node-inner" style={orbitStyle("16s", true)}>
-          <span className="tech-visual__node tech-visual__node--cyan">
-            <svg viewBox="0 0 24 24">
-              <rect x="4" y="4" width="16" height="16" rx="2" />
-              <path d="M9 9h6v6H9z" />
-              <path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2" />
-            </svg>
-          </span>
-        </div>
-      </div>
-
-      <div className="tech-visual__orbit tech-visual__orbit--2" style={orbitStyle("24s", true)}>
-        <div className="tech-visual__node-inner" style={orbitStyle("24s")}>
-          <span className="tech-visual__node tech-visual__node--violet">
-            <svg viewBox="0 0 24 24">
-              <circle cx="12" cy="5" r="2.4" />
-              <circle cx="5" cy="19" r="2.4" />
-              <circle cx="19" cy="19" r="2.4" />
-              <path d="M12 7.4V14M12 14 6.6 17.2M12 14l5.4 3.2" />
-            </svg>
-          </span>
-        </div>
-      </div>
-
-      <div className="tech-visual__orbit tech-visual__orbit--3" style={orbitStyle("32s")}>
-        <div className="tech-visual__node-inner" style={orbitStyle("32s", true)}>
-          <span className="tech-visual__node tech-visual__node--amber">
-            <svg viewBox="0 0 24 24">
-              <path d="M6 18a4 4 0 0 1-.6-7.95A5.5 5.5 0 0 1 16 8a4.5 4.5 0 0 1 1 8.9" />
-              <path d="M8 18v2M12 18v3M16 18v2" />
-            </svg>
-          </span>
-        </div>
-      </div>
-
-      <div className="tech-visual__orbit tech-visual__orbit--4" style={orbitStyle("13s", true)}>
-        <div className="tech-visual__node-inner" style={orbitStyle("13s")}>
-          <span className="tech-visual__node tech-visual__node--magenta">
-            <svg viewBox="0 0 24 24">
-              <ellipse cx="12" cy="6" rx="7" ry="2.6" />
-              <path d="M5 6v6c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6V6" />
-              <path d="M5 12v6c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6v-6" />
-            </svg>
-          </span>
-        </div>
-      </div>
-
-      <div className="tech-visual__orbit tech-visual__orbit--5" style={orbitStyle("28s")}>
-        <div className="tech-visual__node-inner" style={orbitStyle("28s", true)}>
-          <span className="tech-visual__node tech-visual__node--cyan">
-            <svg viewBox="0 0 24 24">
-              <path d="M12 3.3 19 6v5.2c0 4.3-2.9 7.4-7 8.5-4.1-1.1-7-4.2-7-8.5V6l7-2.7Z" />
-              <path d="m9.2 12 2 2 3.6-4" />
-            </svg>
-          </span>
-        </div>
-      </div>
-
-      <div className="tech-visual__orbit tech-visual__orbit--6" style={orbitStyle("10s")}>
-        <div className="tech-visual__node-inner" style={orbitStyle("10s", true)}>
-          <span className="tech-visual__node tech-visual__node--teal">
-            <svg viewBox="0 0 24 24">
-              <rect x="7" y="7" width="10" height="10" rx="1.5" />
-              <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.5 4.5l2 2M17.5 17.5l2 2M19.5 4.5l-2 2M6.5 17.5l-2 2" />
-            </svg>
-          </span>
-        </div>
-      </div>
-
-      <div className="tech-visual__orbit tech-visual__orbit--7" style={orbitStyle("38s", true)}>
-        <div className="tech-visual__node-inner" style={orbitStyle("38s")}>
-          <span className="tech-visual__node tech-visual__node--amber">
-            <svg viewBox="0 0 24 24">
-              <path d="M2 8.5a15.5 15.5 0 0 1 20 0" />
-              <path d="M5.5 12.5a10.5 10.5 0 0 1 13 0" />
-              <path d="M9 16.5a5.5 5.5 0 0 1 6 0" />
-              <circle cx="12" cy="20" r="1.1" fill="currentColor" stroke="none" />
-            </svg>
-          </span>
-        </div>
-      </div>
-
-      <div className="tech-visual__orbit tech-visual__orbit--8" style={orbitStyle("9s")}>
-        <div className="tech-visual__node-inner" style={orbitStyle("9s", true)}>
-          <span className="tech-visual__node tech-visual__node--sm tech-visual__node--amber">
-            <svg viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" />
-            </svg>
-          </span>
-        </div>
-      </div>
-
-      <span className="tech-visual__tag tech-visual__tag--software">Software</span>
-      <span className="tech-visual__tag tech-visual__tag--redes">Redes</span>
-      <span className="tech-visual__tag tech-visual__tag--entornos">Entornos Virtuales</span>
-
-      <div className="tech-visual__particles">
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
+      <div className="specialty-visual__caption"><span>ENLACES</span><span>DEFENSA</span><span>MONITOREO</span></div>
     </div>
   );
 }
+
+/**
+ * Etiquetas que flotan alrededor del dibujo, una por especialidad.
+ * Quedan siempre estáticas: iluminadas y flotando todo el tiempo, sin
+ * importar cuál dibujo esté activo en el carrusel — cada una lleva su
+ * propia viñeta naranja al lado.
+ */
+function FloatingLabels() {
+  return (
+    <div className="term-carousel__labels" aria-hidden="true">
+      {TERMINAL_SLIDES.map((slide) => (
+        <span key={slide.key} className={`term-carousel__label-wrap term-carousel__label-wrap--${slide.key}`}>
+          <span className="term-carousel__float-label">
+            <span className="term-carousel__float-label-glow" />
+            {slide.label}
+          </span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function TerminalCarousel() {
+  const [slideIndex, setSlideIndex] = useState(0);
+  const [fading, setFading] = useState(false);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const hold = window.setTimeout(() => setFading(true), 3600);
+    const change = window.setTimeout(() => { setSlideIndex((index) => (index + 1) % TERMINAL_SLIDES.length); setFading(false); }, 3920);
+    return () => { window.clearTimeout(hold); window.clearTimeout(change); };
+  }, [slideIndex]);
+
+  const active = TERMINAL_SLIDES[slideIndex];
+  return <div className="term-carousel" aria-hidden="true">
+    <FloatingLabels />
+    <div className={`term-carousel__visual${fading ? " term-carousel__visual--fading" : ""}`}><SlideVisual kind={active.key} /></div>
+  </div>;
+}
+
 
 /**
  * Red de conexiones tipo "constelación" sobre toda la sección: puntitos
@@ -400,17 +350,9 @@ function useConnectionsField(
 /**
  * NUEVO: efecto de "salida" del Hero al acercarse la siguiente sección.
  * Calcula un valor 0→1 (--hero-exit) según qué tan cerca está el borde
- * inferior de la sección de salir de la pantalla por arriba, y lo expone
- * como variable CSS para animar encogido + blur + un iris negro que se
+ * inferior de la sección de salir de la pantalla, y lo expone como
+ * variable CSS para animar encogido + blur + un iris negro que se
  * cierra (ver .hero__exit-veil en Hero.css).
- *
- * OJO: la fórmula anterior (con "startAt"/"endAt" ajustados a mano)
- * hacía que el oscurecido llegara solo a ~85% justo cuando la sección
- * ya había salido por completo de la pantalla — el 15% final nunca se
- * alcanzaba a ver. Esta versión amarra el 0→1 directamente a "cuánto
- * del borde inferior ya cruzó la parte de arriba del viewport", así que
- * --hero-exit llega a 1 exactamente en el instante en que el Hero
- * termina de desaparecer, ni antes ni después.
  */
 function useHeroExitEffect(sectionRef: React.RefObject<HTMLElement | null>) {
   useEffect(() => {
@@ -424,10 +366,7 @@ function useHeroExitEffect(sectionRef: React.RefObject<HTMLElement | null>) {
 
     const render = () => {
       const rect = section.getBoundingClientRect();
-      // rect.bottom == innerHeight  -> la sección todavía llena toda la
-      //                                pantalla, apenas va a empezar a salir.
-      // rect.bottom == 0            -> la sección acaba de terminar de
-      //                                salir por completo (ya no se ve nada).
+
       const raw = 1 - rect.bottom / window.innerHeight;
       const value = Math.min(1, Math.max(0, raw));
       section.style.setProperty("--hero-exit", value.toFixed(3));
@@ -445,7 +384,7 @@ export default function Hero() {
   const connectionsRef = useRef<HTMLCanvasElement | null>(null);
 
   useConnectionsField(sectionRef, connectionsRef);
-  useHeroExitEffect(sectionRef); // 👈 NUEVO
+  useHeroExitEffect(sectionRef);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -455,9 +394,7 @@ export default function Hero() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // =======================
-    // Textura de ruido (igual que ya la tenías)
-    // =======================
+
     const noiseCanvas = document.createElement("canvas");
     noiseCanvas.width = 180;
     noiseCanvas.height = 180;
@@ -562,7 +499,7 @@ export default function Hero() {
       <div className="hero__exit-veil" aria-hidden="true" />
 
       <div className="hero__art" aria-hidden="true">
-        <TechVisual />
+        <TerminalCarousel />
       </div>
 
       <div className="hero__content">
@@ -585,7 +522,7 @@ export default function Hero() {
 
           <h1 className="hero__title">
             <span className="hero__title-row">
-              <span className="thin-tech ">Tecnologías</span></span>
+              <span className="thin-tech  ">Tecnologías</span></span>
             <span className="hero__title-row row-1">
               <span className="fill size color">de la</span>
               <span className="fill size">Información</span>
@@ -595,7 +532,7 @@ export default function Hero() {
               <span className="fill accent underline diference hero__title-plus">
                 Innovación
               </span>
-              <span className="fill thin-2">Digital</span>
+              <span className="fill underline thin-2">Digital</span>
             </span>
           </h1>
 
