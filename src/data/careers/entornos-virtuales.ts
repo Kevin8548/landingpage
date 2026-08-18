@@ -1,7 +1,7 @@
 import type { CareerDetail } from "../careerDetails";
 
 import entornosBack from "../../assets/careers/entornos/entornosII.jpg";
-import entornosFront from "../../assets/careers/entornos/entornos.jpg";
+import entornosFront from "../../assets/careers/entornos/entornos.png";
 import studyPlan1 from "../../assets/careers/entornos/study-1.jpg";
 import studyPlan2 from "../../assets/careers/entornos/study-2.jpg";
 import studyPlan3 from "../../assets/careers/entornos/study-3.jpg";

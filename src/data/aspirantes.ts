@@ -1,5 +1,6 @@
 import cbtisLogo from "../assets/cbtis.png";
 import cobatLogo from "../assets/cobat.png";
+import cecyteLogo from "../assets/cecyte-logo.webp";
 import desarrollosIcon from "../assets/icons/desarrollo.png";
 import entornosIcon from "../assets/icons/entornos.png";
 import redesIcon from "../assets/icons/redes.png";
@@ -105,10 +106,11 @@ export const institutions: Institution[] = [
       "Estudiantes del Colegio de Bachilleres de Tlaxcala cuentan con convenio de ingreso directo a la institución.",
   },
   {
-    id: "el-valle",
-    name: "El Valle",
+    id: "cecyte",
+    name: "CECYTE",
+    logo: cecyteLogo,
     description:
-      "Egresados de preparatoria El Valle tienen acceso preferente mediante el convenio institucional vigente.",
+      "Egresados de preparatoria CECYTE tienen acceso preferente mediante el convenio institucional vigente.",
   },
 ];
 
@@ -126,8 +128,7 @@ export const CAREERS: Career[] = [
     border: "border-[var(--green)]/25",
     bg: "bg-[var(--green)]/[0.08]",
     text: "text-[var(--green)]",
-    // TODO: CONEXIÓN PENDIENTE — ruta real de la página de la carrera
-    path: "/carreras/ingenieria-ti",
+    path: "/carreras/desarrollo-software"
   },
   {
     id: "negocios-digitales",
@@ -138,7 +139,6 @@ export const CAREERS: Career[] = [
     border: "border-[var(--orange)]/25",
     bg: "bg-[var(--orange)]/[0.08]",
     text: "text-[var(--orange)]",
-    // TODO: CONEXIÓN PENDIENTE — ruta real de la página de la carrera
     path: "/carreras/entornos-virtuales",
   },
   {
@@ -150,7 +150,6 @@ export const CAREERS: Career[] = [
     border: "border-[var(--teal)]/25",
     bg: "bg-[var(--teal)]/[0.08]",
     text: "text-[var(--teal)]",
-    // TODO: CONEXIÓN PENDIENTE — ruta real de la página de la carrera
     path: "/carreras/redes",
   },
 ];

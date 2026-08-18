@@ -1,9 +1,9 @@
-import devBack from "../assets/careers/software/softwareII.jpg";
-import devFront from "../assets/careers/software/software.jpg";
-import redesBack from "../assets/careers/redes/redesII.jpg";
-import redesFront from "../assets/careers/redes/redes.jpg";
+import devBack from "../assets/careers/software/softwareII.png";
+import devFront from "../assets/careers/software/software.png";
+import redesBack from "../assets/careers/redes/redesII.png";
+import redesFront from "../assets/careers/redes/redes.png";
 import entornosBack from "../assets/careers/entornos/entornosII.jpg";
-import entornosFront from "../assets/careers/entornos/entornos.jpg";
+import entornosFront from "../assets/careers/entornos/entornos.png";
 import { ShieldCheck, Code2, Boxes } from "lucide-react";
 import {RectangleGoggles, SearchCodeIcon, Shapes, FileBracesCornerIcon, Pyramid, FileDigit, EarthLock } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -24,7 +24,7 @@ export interface Career {
 export const careers: Career[] = [
   {
     slug: "desarrollo-software",
-    tag: ShieldCheck,
+    tag: SearchCodeIcon,
     title: "Desarrollo y Gestión de Software",
     description:
       "Tu app favorita, tu videojuego, tu banco en línea, todo corre con software. Aprende a construirlo",
@@ -47,7 +47,7 @@ export const careers: Career[] = [
   },
   {
     slug: "entornos-virtuales",
-    tag: Boxes,
+    tag: RectangleGoggles,
     title: "Entornos Virtuales y Negocios Digitales",
     description: "Diseña mundos en Realidad Virtual y Aumentada.",
     imageBack: entornosBack,

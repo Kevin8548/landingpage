@@ -49,7 +49,7 @@ export function CareerItem({
       <div className="w-full">
         {/* Título y tag: libres, fuera del glass */}
         <div className="flex items-start gap-2 mb-3 md:mb-4">
-          <Tag className="mt-0.5 text-verde md:mt-1" size={18} strokeWidth={2} />
+          <Tag className="mt-0.5 text-green-700 md:mt-1" size={35} strokeWidth={2} />
           <h3 className="text-xl font-semibold italic text-verde sm:text-2xl lg:text-3xl">
             {career.title}
           </h3>
@@ -74,7 +74,7 @@ export function CareerItem({
           {/* Icono grande incrustado, esquina superior derecha */}
           {Icon && (
             <Icon
-              className="absolute -top-6 -right-6 text-white/[0.11] pointer-events-none select-none"
+              className="absolute -top-6 -right-6 text-amber/10 pointer-events-none select-none"
               size={150}
               strokeWidth={1}
             />
@@ -90,7 +90,7 @@ export function CareerItem({
                 variant="secondary"
                 size="sm"
                 icon={<ArrowUpRight size={16} />}
-                className="rounded-full bg-dark-orange-primary text-black hover:brightness-110"
+                className="rounded-full bg-amber text-black hover:brightness-110"
               >
                 Ver plan de estudios
               </Button>
