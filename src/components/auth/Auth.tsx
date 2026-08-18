@@ -95,7 +95,7 @@ export default function Auth() {
                     setMessage(null);
                 }}
                 >
-                Iniciar sesión
+                
                 </button>
 
                 <button
@@ -106,7 +106,7 @@ export default function Auth() {
                     setMessage(null);
                 }}
                 >
-                Registro
+                
                 </button>
             </div>
 
