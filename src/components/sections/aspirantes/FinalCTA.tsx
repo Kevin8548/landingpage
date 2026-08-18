@@ -16,7 +16,7 @@ export const FinalCTA = () => {
         </div>
 
         <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 shrink-0">
-          <motion.button
+          {/* <motion.button
             type="button"
             whileHover={{ scale: 1.04, y: -2 }}
             whileTap={{ scale: 0.96 }}
@@ -25,7 +25,7 @@ export const FinalCTA = () => {
           >
             Ver oferta educativa
             <FiArrowRight className="w-4 h-4" />
-          </motion.button>
+          </motion.button> */}
 
           <motion.button
             type="button"

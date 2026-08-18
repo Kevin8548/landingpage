@@ -161,19 +161,10 @@ const FinalCTA = memo(function FinalCTA({ whatsappNumber = "5217712345678" }: Fi
       <div className="sticky top-0 flex h-screen flex-col items-center justify-center overflow-hidden px-4 text-center sm:px-6 md:px-16">
         <div className="pointer-events-none select-none absolute inset-0 flex items-center justify-center whitespace-nowrap">
           <AnimatedWord
-            text="¿PREPARADO?"
+            text="VEN Y CONÓCENOS"
             scrollYProgress={scrollYProgress}
             rangeStart={phase1.start}
             rangeEnd={phase1.end}
-          />
-        </div>
-
-        <div className="pointer-events-none select-none absolute inset-0 flex items-center justify-center whitespace-nowrap">
-          <AnimatedWord
-            text="VEN Y CONÓCENOS"
-            scrollYProgress={scrollYProgress}
-            rangeStart={phase2.start}
-            rangeEnd={phase2.end}
           />
         </div>
 
