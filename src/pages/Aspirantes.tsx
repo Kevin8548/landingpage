@@ -1,5 +1,3 @@
-import { useState } from "react";
-import { FiEdit3, FiX } from "react-icons/fi";
 import AspirantesNavbar from "../components/layout/AspirantesNavbar";
 import { HeroSection } from "../components/sections/aspirantes/HeroSection";
 import { CareersStrip } from "../components/sections/aspirantes/CareersStrip";
@@ -8,55 +6,15 @@ import { DirectPassSection } from "../components/sections/aspirantes/DirectPassS
 import { FinalCTA } from "../components/sections/aspirantes/FinalCTA";
 import { SectionDivider } from "../components/ui/SectionDivider";
 import { useAspirantesStore } from "../data/aspirantesStore";
-import { useConfirm } from "../components/ui/ConfirmDialog";
-import { useIsAdmin } from "../components/auth/useIsAdmin";
 
+// Página 100% pública. A propósito NO importa nada relacionado con admin
+// (ni useIsAdmin, ni RequireAdmin, ni useConfirm): así, sin importar sesión,
+// ruta escrita a mano o lo que sea, este componente físicamente no tiene
+// forma de mostrar controles de edición. Solo lee del store (heroTitle,
+// dateItems, institutionItems) para reflejar lo que el admin haya
+// publicado desde /dashboard/aspirantes.
 export const Aspirantes = () => {
-  const isAdmin = useIsAdmin();
-  const confirm = useConfirm();
-  const [editMode, setEditMode] = useState(false);
-
-  const {
-    heroTitle,
-    heroSubtitle,
-    dateItems,
-    institutionItems,
-    setHeroTitle,
-    setHeroSubtitle,
-    updateDateField,
-    addDate,
-    deleteDate,
-    updateInstitutionField,
-    updateInstitutionLogo,
-    addInstitution,
-    deleteInstitution,
-  } = useAspirantesStore();
-
-  // Blindaje extra: aunque alguien manipule el estado local, el modo
-  // edición nunca queda activo si no es admin.
-  const activeEditMode = isAdmin && editMode;
-
-  const handleDeleteDate = async (id: string) => {
-    const ok = await confirm({
-      title: "¿Eliminar esta fecha?",
-      description: "Esta acción no se puede deshacer.",
-      confirmLabel: "Eliminar",
-      destructive: true,
-    });
-    if (!ok) return;
-    deleteDate(id);
-  };
-
-  const handleDeleteInstitution = async (id: string) => {
-    const ok = await confirm({
-      title: "¿Eliminar esta institución?",
-      description: "Esta acción no se puede deshacer.",
-      confirmLabel: "Eliminar",
-      destructive: true,
-    });
-    if (!ok) return;
-    deleteInstitution(id);
-  };
+  const { heroTitle, heroSubtitle, dateItems, institutionItems } = useAspirantesStore();
 
   return (
     <div className="bg-[var(--bg)] antialiased">
@@ -75,22 +33,10 @@ export const Aspirantes = () => {
         }
       `}</style>
 
-      {activeEditMode && (
-        <div className="sticky top-0 z-40 bg-[var(--orange)] text-[var(--bg)] text-center text-[11px] font-data uppercase tracking-wider py-2 px-4">
-          Modo edición activo — los cambios se guardan en este navegador
-        </div>
-      )}
-
       <AspirantesNavbar />
 
       <section id="aspirantes-inicio">
-        <HeroSection
-          title={heroTitle}
-          subtitle={heroSubtitle}
-          editMode={activeEditMode}
-          onTitleChange={setHeroTitle}
-          onSubtitleChange={setHeroSubtitle}
-        />
+        <HeroSection title={heroTitle} subtitle={heroSubtitle} />
       </section>
 
       <section id="aspirantes-carreras">
@@ -98,45 +44,15 @@ export const Aspirantes = () => {
       </section>
 
       <SectionDivider />
-      <KeyDatesSection
-        dateItems={dateItems}
-        editMode={activeEditMode}
-        onUpdateField={updateDateField}
-        onAddDate={addDate}
-        onDeleteDate={handleDeleteDate}
-      />
+      <KeyDatesSection dateItems={dateItems} />
 
       <SectionDivider />
-      <DirectPassSection
-        institutionItems={institutionItems}
-        editMode={activeEditMode}
-        onUpdateField={updateInstitutionField}
-        onUpdateLogo={updateInstitutionLogo}
-        onAddInstitution={addInstitution}
-        onDeleteInstitution={handleDeleteInstitution}
-      />
+      <DirectPassSection institutionItems={institutionItems} />
 
       <SectionDivider />
       <section id="aspirantes-descarga">
         <FinalCTA />
       </section>
-
-      {isAdmin && (
-        <div className="sticky bottom-6 z-50 flex justify-end px-6 pointer-events-none">
-          <button
-            type="button"
-            onClick={() => setEditMode((v) => !v)}
-            className={`pointer-events-auto flex items-center gap-2 px-5 py-3 rounded-full font-data text-xs uppercase tracking-wider font-medium shadow-lg transition-colors ${
-              editMode
-                ? "bg-[var(--orange)] text-[var(--bg)]"
-                : "bg-[var(--ink)] text-[var(--bg)] hover:bg-[var(--green)]"
-            }`}
-          >
-            {editMode ? <FiX className="w-4 h-4" /> : <FiEdit3 className="w-4 h-4" />}
-            {editMode ? "Salir de edición" : "Editar página"}
-          </button>
-        </div>
-      )}
     </div>
   );
 };
