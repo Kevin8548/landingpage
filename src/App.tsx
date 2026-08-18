@@ -30,22 +30,24 @@ function ScrollManager() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    const targetId = sessionStorage.getItem("landing-scroll-target");
-
-    if (pathname === "/" && targetId) {
+    // La página principal siempre inicia desde arriba.
+    if (pathname === "/") {
       sessionStorage.removeItem("landing-scroll-target");
 
-      requestAnimationFrame(() => {
-        document.getElementById(targetId)?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "instant",
       });
 
       return;
     }
 
-    window.scrollTo(0, 0);
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "instant",
+    });
   }, [pathname]);
 
   return null;
