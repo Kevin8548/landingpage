@@ -14,7 +14,6 @@ import Navbar from "./components/layout/Navbar";
 import Auth from "./components/auth/Auth";
 import Hero from "./components/sections/Hero";
 import FuturoReveal from "./components/sections/Futuro_Reveal";
-import Proyectos from "./components/layout/Proyectos";
 import { ConfirmProvider } from "./components/ui/ConfirmDialog";
 
 import Dashboard from "./pages/Dashboard";
@@ -95,8 +94,6 @@ export default function App() {
                 <section id="carreras">
                   <Careers />
                 </section>
-
-                <Proyectos />
 
                 <section id="eventos">
                   <Eventos />

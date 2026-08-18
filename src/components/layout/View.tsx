@@ -14,8 +14,8 @@ export const WhyChooseTI: React.FC = () => {
   const reasons: ReasonItem[] = [
     {
       id: 1,
-      title: 'Diseña app mobiles desde cero',
-      description: 'Crea apps nativas y multiplataforma con los frameworks más modernos. Domina el diseño de la interfaz, la lógica del negocio y lanza tus proyectos a las tiendas globales',
+      title: 'Desarrollo Full-Stack e Inteligencia Artificial',
+      description: 'diseña software escalable en la nube e integra algoritmos de IA para crear experiencias interactivas y automatizadas.',
     },
     {
       id: 2,
@@ -82,7 +82,7 @@ export const WhyChooseTI: React.FC = () => {
                       onClick={() => toggleExpand(item.id)}
                       className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-300 transform hover:scale-105 ${
                         isExpanded 
-                          ? 'border-orange-400 text-orange-400 bg-transparent' 
+                          ? 'border-[#FFB703] text-[#FFB703] bg-transparent' 
                           : 'border-emerald-400 text-emerald-400 bg-transparent' 
                       }`}
                     >

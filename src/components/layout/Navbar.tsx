@@ -4,7 +4,7 @@ import "./Navbar.css";
 const NAV_ITEMS = [
   { label: "¿Por qué TI?", href: "#por-que-ti" },
   { label: "Carreras", href: "#carreras" },
-  { label: "Proyectos", href: "#proyectos" },
+//  { label: "Proyectos", href: "#proyectos" },*//
   { label: "Eventos", href: "#eventos" },
   { label: "Aspirantes", href: "#aspirantes" },
 ];
@@ -13,7 +13,7 @@ const SECTION_IDS = [
   "hero",
   "por-que-ti",
   "carreras",
-  "proyectos",
+//  "proyectos",*//
   "eventos",
   "aspirantes",
 ];
