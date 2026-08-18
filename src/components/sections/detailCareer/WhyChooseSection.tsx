@@ -61,7 +61,7 @@ function ScrollRevealTitle({
   const words = text.split(" ");
 
   return (
-    <h2 className="mb-3 flex flex-wrap gap-x-2 font-serif text-3xl leading-tight tracking-[0.2em] sm:mb-4 sm:gap-x-3 sm:text-4xl">
+    <h2 className="mb-3 flex flex-wrap gap-x-2 font-serif font-light text-3xl leading-tight tracking-[0.2em] sm:mb-4 sm:gap-x-3 sm:text-4xl">
       {words.map((word, i) => (
         <RevealWord
           key={i}
@@ -179,7 +179,7 @@ function StaircaseCard({
           style={{
             background: "var(--glass)",
             border: "1px solid var(--color-dark-green-primary)",
-            boxShadow: "0 0 24px -8px var(--color-dark-green-primary)",
+            // boxShadow: "0 0 24px -3px var(--color-dark-green-primary)",
           }}
         >
           <StatCard {...stat} />

@@ -12,7 +12,7 @@ interface TimelinePathProps {
 }
 
 // The whole network deliberately uses only these two accent colors.
-const COLORS = ["#D85A30", "#3B6D11"];
+const COLORS = ["#FFB703", "#196700"];
 const NARANJA = COLORS[0];
 const FONDO = "#0c1422";
 

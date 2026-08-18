@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
 import { FiArrowRight } from "react-icons/fi";
-import heroImg from "../../assets/A-1.jpg";
+import heroImg from "../../assets/utt.jpg"
 
 // Antes esta sección era la página completa de Aspirantes (hero, fechas
 // clave, pase directo, CTA). Todo eso ahora vive en `src/pages/Aspirantes.tsx`
@@ -16,7 +16,7 @@ export const Aspirantes = () => {
           alt=" Universidad Tecnológica de Tlaxcala"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-[var(--bg)]/80 to-[var(--bg)]/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-[var(--bg)]/80 to-[var(--bg)]/90" />
       </div>
 
       <motion.div
