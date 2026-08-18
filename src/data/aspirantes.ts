@@ -30,6 +30,10 @@ export interface Career {
   path: string;
 }
 
+export const DEFAULT_HERO_TITLE = "Inscríbete en tu mejor opción para tu futuro";
+export const DEFAULT_HERO_SUBTITLE =
+  "Tres ingenierías con un gran impacto que el día de hoy manejan la industria.";
+
 // Contenido semilla. Una vez que exista backend, esto puede pasar a ser
 // el "fallback" que se usa mientras carga la data real.
 // TODO: reemplaza el campo `date` de cada etapa con la fecha real cuando se confirme el calendario oficial.
@@ -109,7 +113,8 @@ export const institutions: Institution[] = [
 ];
 
 // Las tres ingenierías, con su ícono personalizado, acento de marca
-// (verde / naranja / teal) y ruta destino (pendiente de conectar).
+// (verde / naranja / teal) y ruta destino (pendiente de conectar). No es
+// editable desde el admin — es contenido fijo de la franja bajo el hero.
 export const CAREERS: Career[] = [
   {
     id: "software",

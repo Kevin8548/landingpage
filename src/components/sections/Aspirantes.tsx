@@ -5,8 +5,8 @@ import heroImg from "../../assets/A-1.jpg";
 
 // Antes esta sección era la página completa de Aspirantes (hero, fechas
 // clave, pase directo, CTA). Todo eso ahora vive en `src/pages/Aspirantes.tsx`
-// como una página aparte. Esta sección solo funciona como teaser dentro del
-// Home, invitando a entrar a la página real.
+// como una página aparte (con modo edición para admins). Esta sección solo
+// funciona como teaser dentro del Home, invitando a entrar a la página real.
 export const Aspirantes = () => {
   return (
     <section className="relative py-28 px-6 overflow-hidden bg-[var(--bg)]">

@@ -1,34 +1,9 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import type { IconType } from "react-icons";
-import {
-  FiBookOpen,
-  FiMusic,
-  FiUsers,
-  FiClock,
-  FiMapPin,
-  FiFilter,
-  FiArrowRight,
-} from "react-icons/fi";
-
-type Category = "academico" | "cultural" | "comunidad";
-
-interface EventItem {
-  id: string;
-  title: string;
-  date: string; // ISO yyyy-mm-dd
-  time: string; // "09:00"
-  location: string;
-  category: Category;
-  description: string;
-  image?: string; // URL opcional. Sin imagen, se usa un fondo generado por categoría.
-}
-
-interface CategoryMeta {
-  label: string;
-  icon: IconType;
-  color: string; // referencia a variable CSS del tema (index.css)
-}
+import { FiClock, FiMapPin, FiFilter, FiArrowRight, FiCalendar } from "react-icons/fi";
+import { CATEGORY_META, CATEGORY_ORDER, type Category, type EventItem } from "../../data/eventos";
+import { useEventosStore } from "../../data/eventosStore";
 
 interface MonthGroup {
   key: string; // "2026-08"
@@ -36,111 +11,6 @@ interface MonthGroup {
   year: string; // "2026"
   events: EventItem[];
 }
-
-// Contenido semilla. Sustituye por datos reales / backend cuando exista.
-// No hace falta tocar nada más al agregar eventos: se agrupan solos por mes
-// y aparecen automáticamente en la navegación (lateral en desktop, en
-// pastillas arriba en móvil), así que la vista escala sin volverse tediosa.
-const events: EventItem[] = [
-  {
-    id: "hackathon-tic",
-    title: "Hackathon TIC 2026",
-    date: "2026-08-22",
-    time: "09:00",
-    location: "Explanada principal",
-    category: "academico",
-    description:
-      "24 horas para construir un proyecto desde cero. Equipos de hasta 4 integrantes, mentores en sitio y premios para los tres primeros lugares.",
-  },
-  {
-    id: "semana-ciencia",
-    title: "Semana de la Ciencia y la Tecnología",
-    date: "2026-09-08",
-    time: "10:00",
-    location: "Auditorio central",
-    category: "academico",
-    description:
-      "Cinco días de conferencias, talleres y demostraciones con investigadores invitados de distintas industrias.",
-  },
-  {
-    id: "torneo-voleibol",
-    title: "Torneo Intramuros de Voleibol",
-    date: "2026-09-16",
-    time: "12:00",
-    location: "Canchas deportivas",
-    category: "cultural",
-    description:
-      "Fase de grupos entre todas las carreras. Inscribe a tu equipo en Servicios Escolares antes del cierre de convocatoria.",
-  },
-  {
-    id: "noche-talentos",
-    title: "Noche de Talentos UTT",
-    date: "2026-09-25",
-    time: "18:00",
-    location: "Explanada principal",
-    category: "cultural",
-    description:
-      "Música, danza y stand-up hecho por estudiantes. Convocatoria para participar abierta dos semanas antes.",
-  },
-  {
-    id: "feria-ingenierias",
-    title: "Feria de Ingenierías y Vinculación Empresarial",
-    date: "2026-10-07",
-    time: "09:30",
-    location: "Domo institucional",
-    category: "academico",
-    description:
-      "Empresas del corredor industrial de Tlaxcala presentan vacantes, retos y proyectos de residencia profesional.",
-  },
-  {
-    id: "conferencia-ia",
-    title: "IA aplicada a la industria",
-    date: "2026-10-15",
-    time: "17:00",
-    location: "Sala audiovisual",
-    category: "academico",
-    description:
-      "Conferencia abierta sobre casos reales de automatización e inteligencia artificial en manufactura local.",
-  },
-  {
-    id: "brigada-comunitaria",
-    title: "Brigada de Servicio Social Comunitario",
-    date: "2026-10-24",
-    time: "08:00",
-    location: "Salida desde el campus",
-    category: "comunidad",
-    description:
-      "Jornada de apoyo con una comunidad vecina: talleres para niños y mantenimiento de espacios públicos.",
-  },
-  {
-    id: "dia-muertos",
-    title: "Festival de Día de Muertos",
-    date: "2026-11-02",
-    time: "11:00",
-    location: "Plaza central del campus",
-    category: "cultural",
-    description:
-      "Concurso de ofrendas por carrera, comida tradicional y proyección de cortometrajes al caer la tarde.",
-  },
-  {
-    id: "graduacion-2026",
-    title: "Ceremonia de Graduación — Generación 2026",
-    date: "2026-12-11",
-    time: "10:00",
-    location: "Auditorio central",
-    category: "comunidad",
-    description:
-      "Entrega de reconocimientos para egresados de las tres ingenierías. Cupo limitado por invitación.",
-  },
-];
-
-const CATEGORY_META: Record<Category, CategoryMeta> = {
-  academico: { label: "Académico", icon: FiBookOpen, color: "var(--green)" },
-  cultural: { label: "Cultural", icon: FiMusic, color: "var(--orange)" },
-  comunidad: { label: "Comunidad", icon: FiUsers, color: "var(--teal)" },
-};
-
-const CATEGORY_ORDER: Category[] = ["academico", "cultural", "comunidad"];
 
 // ---------- utilidades de fecha ----------
 
@@ -152,31 +22,49 @@ const startOfToday = () => {
 
 const parseISO = (iso: string) => new Date(`${iso}T00:00:00`);
 
+const isValidDate = (d: Date) => !Number.isNaN(d.getTime());
+
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-const fmtDateShort = (iso: string) =>
-  parseISO(iso)
-    .toLocaleDateString("es-MX", { day: "2-digit", month: "short" })
-    .replace(".", "");
+const fmtDateShort = (iso: string) => {
+  const d = parseISO(iso);
+  if (!isValidDate(d)) return "";
+  return d.toLocaleDateString("es-MX", { day: "2-digit", month: "short" }).replace(".", "");
+};
 
-const dayNumber = (iso: string) => parseISO(iso).getDate();
+const dayNumber = (iso: string) => {
+  const d = parseISO(iso);
+  return isValidDate(d) ? d.getDate() : 0;
+};
 
-const monthShort = (iso: string) =>
-  parseISO(iso)
+const monthShort = (iso: string) => {
+  const d = parseISO(iso);
+  if (!isValidDate(d)) return "";
+  return d
     .toLocaleDateString("es-MX", { month: "short" })
     .replace(".", "")
     .toUpperCase();
+};
 
-const monthKey = (iso: string) => iso.slice(0, 7);
+const monthKey = (iso: string) => (iso && iso.length >= 7 ? iso.slice(0, 7) : "sin-fecha");
 
-const monthLabel = (iso: string) =>
-  capitalize(parseISO(iso).toLocaleDateString("es-MX", { month: "long" }));
+const monthLabel = (iso: string) => {
+  const d = parseISO(iso);
+  if (!isValidDate(d)) return "Sin fecha";
+  return capitalize(d.toLocaleDateString("es-MX", { month: "long" }));
+};
 
-const weekdayLabel = (iso: string) =>
-  capitalize(parseISO(iso).toLocaleDateString("es-MX", { weekday: "long" }));
+const weekdayLabel = (iso: string) => {
+  const d = parseISO(iso);
+  if (!isValidDate(d)) return "";
+  return capitalize(d.toLocaleDateString("es-MX", { weekday: "long" }));
+};
 
-const daysUntil = (iso: string) =>
-  Math.round((parseISO(iso).getTime() - startOfToday().getTime()) / 86400000);
+const daysUntil = (iso: string) => {
+  const d = parseISO(iso);
+  if (!isValidDate(d)) return Number.POSITIVE_INFINITY;
+  return Math.round((d.getTime() - startOfToday().getTime()) / 86400000);
+};
 
 const daysLabel = (days: number) => {
   if (days === 0) return "Hoy";
@@ -185,6 +73,27 @@ const daysLabel = (days: number) => {
   if (days === -1) return "Ayer";
   return "Realizado";
 };
+
+// ---------- refs indexados por clave ----------
+
+function useKeyedRefs<T extends HTMLElement>() {
+  const elements = useRef<Map<string, T>>(new Map());
+  const callbacks = useRef<Map<string, (el: T | null) => void>>(new Map());
+
+  const getRef = (key: string) => {
+    let cb = callbacks.current.get(key);
+    if (!cb) {
+      cb = (el: T | null) => {
+        if (el) elements.current.set(key, el);
+        else elements.current.delete(key);
+      };
+      callbacks.current.set(key, cb);
+    }
+    return cb;
+  };
+
+  return { elements, getRef };
+}
 
 // ---------- animación ----------
 
@@ -204,7 +113,7 @@ interface FilterPillProps {
   active: boolean;
   color: string;
   onClick: () => void;
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 const FilterPill = ({ active, color, onClick, children }: FilterPillProps) => (
@@ -225,15 +134,37 @@ const FilterPill = ({ active, color, onClick, children }: FilterPillProps) => (
   </button>
 );
 
-interface EventCardProps {
-  event: EventItem;
+interface EmptyBoardProps {
+  title: string;
+  message: string;
 }
 
-// Tarjeta tipo "flyer": imagen/franja visual arriba con fecha y categoría
-// sobrepuestas, y el texto abajo con la fecha integrada al contenido.
-// El filo superior y el glow al hacer hover usan siempre los colores
-// institucionales (verde/naranja), independientes de la categoría.
-const EventCard = ({ event }: EventCardProps) => {
+const EmptyBoard = ({ title, message }: EmptyBoardProps) => (
+  <div className="relative mx-auto flex max-w-md flex-col items-center gap-3 rounded-2xl border border-dashed border-[var(--line)] bg-[var(--glass)] px-8 py-14 text-center">
+    <span
+      className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--line)]"
+      style={{
+        background:
+          "linear-gradient(135deg, color-mix(in srgb, var(--green) 22%, transparent), color-mix(in srgb, var(--orange) 22%, transparent))",
+      }}
+      aria-hidden="true"
+    >
+      <FiCalendar className="h-5 w-5 text-[var(--ink)]" />
+    </span>
+    <h3 className="font-display text-lg font-bold text-[var(--ink)]">{title}</h3>
+    <p className="max-w-xs text-sm leading-relaxed text-[var(--muted)]">{message}</p>
+  </div>
+);
+
+interface EventCardProps {
+  event: EventItem;
+  highlighted?: boolean;
+}
+
+// Tarjeta tipo "flyer", solo lectura: imagen/franja visual arriba con
+// fecha y categoría sobrepuestas, y el texto abajo con la fecha integrada
+// al contenido. Sin ningún control de edición.
+const EventCard = ({ event, highlighted = false }: EventCardProps) => {
   const meta = CATEGORY_META[event.category];
   const Icon = meta.icon;
   const days = daysUntil(event.date);
@@ -242,11 +173,10 @@ const EventCard = ({ event }: EventCardProps) => {
   return (
     <article
       id={`evento-${event.id}`}
-      className={`event-card-glow group relative flex h-full scroll-mt-28 flex-col overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--glass)] shadow-sm transition-transform duration-300 hover:-translate-y-1 ${
+      className={`event-card-glow group relative flex h-full scroll-mt-28 flex-col overflow-hidden rounded-2xl border bg-[var(--glass)] shadow-sm transition-transform duration-300 hover:-translate-y-1 ${
         isPast ? "opacity-55" : ""
-      }`}
+      } ${highlighted ? "event-card-highlight border-[var(--orange)]" : "border-[var(--line)]"}`}
     >
-      {/* Filo institucional (verde → naranja) + pin, guiño al mural de anuncios */}
       <span
         className="absolute inset-x-0 top-0 z-20 h-[3px]"
         style={{ background: "linear-gradient(90deg, var(--green), var(--orange))" }}
@@ -258,7 +188,6 @@ const EventCard = ({ event }: EventCardProps) => {
         aria-hidden="true"
       />
 
-      {/* Visual */}
       <div className="relative h-40 w-full shrink-0 overflow-hidden">
         {event.image ? (
           <img
@@ -289,7 +218,6 @@ const EventCard = ({ event }: EventCardProps) => {
           }}
         />
 
-        {/* Badge de fecha */}
         <div
           className="absolute left-3 top-3 flex items-baseline gap-1 rounded-lg px-2.5 py-1.5 backdrop-blur-md"
           style={{
@@ -305,7 +233,6 @@ const EventCard = ({ event }: EventCardProps) => {
           </span>
         </div>
 
-        {/* Categoría */}
         <div
           className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide backdrop-blur-md"
           style={{
@@ -319,7 +246,6 @@ const EventCard = ({ event }: EventCardProps) => {
         </div>
       </div>
 
-      {/* Texto */}
       <div className="flex min-w-0 flex-1 flex-col gap-2 p-5">
         <span
           className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold uppercase tracking-wide"
@@ -358,9 +284,6 @@ interface HeroSpotlightProps {
   reduceMotion: boolean;
 }
 
-// Bloque destacado del próximo evento: es el primer contacto visual de la
-// página (el "thesis" de la vista), separado del resto del mural. El glow
-// y el fondo radial usan los colores institucionales (verde/naranja).
 const HeroSpotlight = ({ event, onViewInBoard, reduceMotion }: HeroSpotlightProps) => {
   const meta = CATEGORY_META[event.category];
   const Icon = meta.icon;
@@ -387,7 +310,6 @@ const HeroSpotlight = ({ event, onViewInBoard, reduceMotion }: HeroSpotlightProp
       />
 
       <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center">
-        {/* Fecha grande */}
         <div className="flex shrink-0 items-center gap-4 sm:flex-col sm:items-start sm:gap-1">
           <span className="font-display text-6xl font-extrabold leading-none text-[var(--ink)] sm:text-7xl">
             {dayNumber(event.date)}
@@ -407,7 +329,6 @@ const HeroSpotlight = ({ event, onViewInBoard, reduceMotion }: HeroSpotlightProp
 
         <div className="h-px w-full bg-[var(--line)] sm:h-16 sm:w-px" aria-hidden="true" />
 
-        {/* Contenido */}
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <span className="relative flex h-2 w-2 shrink-0">
@@ -477,14 +398,22 @@ const HeroSpotlight = ({ event, onViewInBoard, reduceMotion }: HeroSpotlightProp
 
 export const Eventos = () => {
   const reduceMotion = !!useReducedMotion();
+
+  // Solo lectura: el store se alimenta de localStorage y se sincroniza
+  // solo cuando el admin edita en otra pestaña (evento "storage").
+  const { eventItems } = useEventosStore();
+
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const [pendingScroll, setPendingScroll] = useState<string | null>(null);
   const [activeMonth, setActiveMonth] = useState<string | null>(null);
-  const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
+
+  const { elements: sectionRefs, getRef: getSectionRef } = useKeyedRefs<HTMLElement>();
+  const { elements: mobileNavRefs, getRef: getMobileNavRef } = useKeyedRefs<HTMLButtonElement>();
+  const { elements: desktopNavRefs, getRef: getDesktopNavRef } = useKeyedRefs<HTMLButtonElement>();
 
   const sorted = useMemo(
-    () => [...events].sort((a, b) => a.date.localeCompare(b.date)),
-    []
+    () => [...eventItems].sort((a, b) => a.date.localeCompare(b.date)),
+    [eventItems]
   );
 
   const upcoming = useMemo(() => sorted.filter((e) => daysUntil(e.date) >= 0), [sorted]);
@@ -503,10 +432,6 @@ export const Eventos = () => {
     [sorted, activeCategory]
   );
 
-  // Agrupar por mes es lo que reemplaza el scroll horizontal infinito: en
-  // vez de arrastrar tarjeta por tarjeta, se navega por mes (rail en
-  // desktop, pastillas en móvil) y dentro de cada mes el scroll vertical es
-  // corto y predecible sin importar cuántos eventos se agreguen.
   const groups = useMemo<MonthGroup[]>(() => {
     const map = new Map<string, MonthGroup>();
     filtered.forEach((e) => {
@@ -516,10 +441,9 @@ export const Eventos = () => {
       }
       map.get(key)!.events.push(e);
     });
-    return Array.from(map.values());
+    return Array.from(map.values()).sort((a, b) => a.key.localeCompare(b.key));
   }, [filtered]);
 
-  // Mantiene un mes activo válido cuando cambia el filtro.
   useEffect(() => {
     setActiveMonth((prev) => {
       if (groups.length === 0) return null;
@@ -527,8 +451,17 @@ export const Eventos = () => {
     });
   }, [groups]);
 
-  // Resalta el mes visible mientras se hace scroll (scrollspy) para que la
-  // navegación lateral / de pastillas siga el contexto real de la pantalla.
+  useEffect(() => {
+    if (!activeMonth) return;
+    const opts: ScrollIntoViewOptions = {
+      behavior: reduceMotion ? "auto" : "smooth",
+      inline: "center",
+      block: "nearest",
+    };
+    mobileNavRefs.current.get(activeMonth)?.scrollIntoView(opts);
+    desktopNavRefs.current.get(activeMonth)?.scrollIntoView(opts);
+  }, [activeMonth, reduceMotion, mobileNavRefs, desktopNavRefs]);
+
   useEffect(() => {
     const targets = Array.from(sectionRefs.current.values());
     if (targets.length === 0) return;
@@ -547,21 +480,41 @@ export const Eventos = () => {
 
     targets.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, [groups]);
+  }, [groups, sectionRefs]);
 
   useEffect(() => {
     if (!pendingScroll) return;
-    const el = document.getElementById(`evento-${pendingScroll}`);
-    el?.scrollIntoView({
-      behavior: reduceMotion ? "auto" : "smooth",
-      block: "center",
-      inline: "nearest",
-    });
-    setPendingScroll(null);
+
+    let attempts = 0;
+    let rafId = 0;
+
+    const tryScroll = () => {
+      const el = document.getElementById(`evento-${pendingScroll}`);
+      if (el) {
+        el.scrollIntoView({
+          behavior: reduceMotion ? "auto" : "smooth",
+          block: "center",
+          inline: "nearest",
+        });
+        setPendingScroll(null);
+        return;
+      }
+      attempts += 1;
+      if (attempts < 30) {
+        rafId = requestAnimationFrame(tryScroll);
+      } else {
+        setPendingScroll(null);
+      }
+    };
+
+    rafId = requestAnimationFrame(tryScroll);
+    return () => cancelAnimationFrame(rafId);
   }, [pendingScroll, activeCategory, reduceMotion]);
 
-  const jumpToEvent = (id: string) => {
+  const jumpToEvent = (id: string, date?: string) => {
     setActiveCategory(null);
+    const resolvedDate = date ?? eventItems.find((e) => e.id === id)?.date;
+    if (resolvedDate) setActiveMonth(monthKey(resolvedDate));
     setPendingScroll(id);
   };
 
@@ -571,18 +524,12 @@ export const Eventos = () => {
       ?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
   };
 
-  const registerSectionRef = (key: string) => (el: HTMLElement | null) => {
-    if (el) sectionRefs.current.set(key, el);
-    else sectionRefs.current.delete(key);
-  };
-
   return (
     <div className="eventos-board relative min-h-screen bg-[var(--bg)]">
       <style>{`
         .font-display { font-family: "Unbounded", sans-serif; }
         .font-mono { font-family: "JetBrains Mono", monospace; }
 
-        /* Brillo institucional (verde/naranja) en el borde de las tarjetas */
         .event-card-glow {
           transition: box-shadow 0.35s ease, transform 0.35s ease;
           box-shadow: 0 1px 0 0 var(--line);
@@ -592,15 +539,29 @@ export const Eventos = () => {
             0 22px 48px -22px color-mix(in srgb, var(--green) 48%, transparent),
             0 12px 28px -16px color-mix(in srgb, var(--orange) 42%, transparent);
         }
+
+        @keyframes event-highlight-pulse {
+          0% {
+            box-shadow: 0 0 0 0 color-mix(in srgb, var(--orange) 55%, transparent);
+          }
+          100% {
+            box-shadow: 0 0 0 12px color-mix(in srgb, var(--orange) 0%, transparent);
+          }
+        }
+        .event-card-highlight {
+          animation: event-highlight-pulse 1s ease-out 2;
+        }
       `}</style>
 
       {sorted.length === 0 ? (
-        <div className="py-32 text-center font-mono text-sm text-[var(--muted)]">
-          Aún no hay eventos publicados en el calendario. Vuelve pronto.
+        <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-6 py-32 sm:px-8">
+          <EmptyBoard
+            title="El tablón está vacío"
+            message="Todavía no hay eventos publicados. Vuelve pronto — aquí aparecerá el próximo en cuanto se agregue."
+          />
         </div>
       ) : (
         <>
-          {/* ---------- Encabezado ---------- */}
           <section className="relative px-6 pt-16 pb-8 sm:px-8 sm:pt-20">
             <div className="mx-auto max-w-4xl">
               <div className="mb-4 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.25em] text-[var(--muted)]">
@@ -625,20 +586,18 @@ export const Eventos = () => {
             </div>
           </section>
 
-          {/* ---------- Spotlight: próximo evento ---------- */}
           {nextEvent && (
             <section className="relative px-6 pb-10 sm:px-8">
               <div className="mx-auto max-w-4xl">
                 <HeroSpotlight
                   event={nextEvent}
-                  onViewInBoard={() => jumpToEvent(nextEvent.id)}
+                  onViewInBoard={() => jumpToEvent(nextEvent.id, nextEvent.date)}
                   reduceMotion={reduceMotion}
                 />
               </div>
             </section>
           )}
 
-          {/* ---------- Tablón: próximos eventos en rotación ---------- */}
           {upcoming.length > 0 && (
             <section className="relative px-6 pb-10 sm:px-8">
               <div className="mx-auto max-w-4xl overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--glass)]">
@@ -674,7 +633,7 @@ export const Eventos = () => {
                         <button
                           key={`${e.id}-${i}`}
                           type="button"
-                          onClick={() => jumpToEvent(e.id)}
+                          onClick={() => jumpToEvent(e.id, e.date)}
                           className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[var(--ink)]/5 focus-visible:outline-none focus-visible:bg-[var(--ink)]/5"
                         >
                           <span
@@ -698,11 +657,12 @@ export const Eventos = () => {
             </section>
           )}
 
-          {/* ---------- Filtros por área ---------- */}
           <section className="relative px-6 pb-6 sm:px-8">
             <div className="mx-auto max-w-4xl">
-              <div className="mb-3 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--muted)]">
-                <FiFilter className="h-3 w-3" aria-hidden="true" /> Filtrar por área
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--muted)]">
+                  <FiFilter className="h-3 w-3" aria-hidden="true" /> Filtrar por área
+                </div>
               </div>
               <div className="flex flex-wrap gap-2">
                 <FilterPill
@@ -731,7 +691,6 @@ export const Eventos = () => {
             </div>
           </section>
 
-          {/* ---------- Navegación de meses (móvil) ---------- */}
           {groups.length > 1 && (
             <div className="mx-auto max-w-6xl px-6 sm:px-8 lg:hidden">
               <div className="-mx-1 mb-6 flex gap-2 overflow-x-auto px-1 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -741,6 +700,7 @@ export const Eventos = () => {
                     <button
                       key={g.key}
                       type="button"
+                      ref={getMobileNavRef(g.key)}
                       onClick={() => scrollToMonth(g.key)}
                       aria-current={isActive ? "true" : undefined}
                       className="shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] focus-visible:ring-[var(--teal)]"
@@ -760,24 +720,25 @@ export const Eventos = () => {
             </div>
           )}
 
-          {/* ---------- Calendario agrupado por mes + navegación lateral ---------- */}
           <section className="relative px-6 pb-24 sm:px-8">
             <div className="mx-auto flex max-w-6xl gap-10">
               <div className="min-w-0 flex-1">
                 {filtered.length === 0 ? (
-                  <p className="py-16 text-center font-mono text-sm text-[var(--muted)]">
-                    Ningún evento coincide con este filtro por ahora.
-                  </p>
+                  <div className="py-10">
+                    <EmptyBoard
+                      title="Nada pegado en esta categoría"
+                      message="Prueba con otro filtro o vuelve a “Todos” para ver el resto del calendario."
+                    />
+                  </div>
                 ) : (
                   groups.map((group) => (
                     <section
                       key={group.key}
                       id={`mes-${group.key}`}
-                      ref={registerSectionRef(group.key)}
+                      ref={getSectionRef(group.key)}
                       data-month-key={group.key}
                       className="relative scroll-mt-28 pb-14 last:pb-0"
                     >
-                      {/* Marca de agua tipográfica: firma visual de esta sección */}
                       <span
                         aria-hidden="true"
                         className="pointer-events-none absolute -top-3 left-0 select-none font-display text-[4.5rem] font-extrabold uppercase leading-none tracking-tight text-[var(--ink)] opacity-[0.05] sm:text-[6.5rem]"
@@ -827,6 +788,7 @@ export const Eventos = () => {
                         <button
                           key={g.key}
                           type="button"
+                          ref={getDesktopNavRef(g.key)}
                           onClick={() => scrollToMonth(g.key)}
                           aria-current={isActive ? "true" : undefined}
                           className="flex items-center gap-2 rounded-md px-2 py-1.5 text-left font-mono text-xs transition-colors hover:bg-[var(--ink)]/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] focus-visible:ring-[var(--teal)]"

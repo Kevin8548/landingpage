@@ -2,13 +2,19 @@ import { motion } from "motion/react";
 import heroImg from "../../../assets/A-1.jpg";
 
 interface HeroSectionProps {
-  title?: string;
-  subtitle?: string;
+  title: string;
+  subtitle: string;
+  editMode?: boolean;
+  onTitleChange?: (value: string) => void;
+  onSubtitleChange?: (value: string) => void;
 }
 
 export const HeroSection = ({
-  title = "Inscríbete en tu mejor opción para tu futuro",
-  subtitle = "Tres ingenierías con un gran impacto que el día de hoy manejan la industria.",
+  title,
+  subtitle,
+  editMode = false,
+  onTitleChange,
+  onSubtitleChange,
 }: HeroSectionProps) => {
   return (
     <section className="relative min-h-screen flex items-end lg:items-center overflow-hidden">
@@ -50,34 +56,54 @@ export const HeroSection = ({
           </span>
         </motion.div>
 
-        <motion.h1
-          className="font-display text-4xl md:text-6xl font-extrabold leading-[1.05] tracking-tight mb-7 text-[var(--ink)]"
-          initial="hidden"
-          animate="visible"
-          variants={{ visible: { transition: { staggerChildren: 0.06 } } }}
-        >
-          {title.split(" ").map((word, i) => (
-            <motion.span
-              key={i}
-              className="inline-block mr-[0.3ch]"
-              variants={{
-                hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
-                visible: {
-                  opacity: 1,
-                  y: 0,
-                  filter: "blur(0px)",
-                  transition: { duration: 0.5, ease: "easeOut" },
-                },
-              }}
-            >
-              {word}
-            </motion.span>
-          ))}
-        </motion.h1>
+        {editMode ? (
+          <textarea
+            value={title}
+            onChange={(e) => onTitleChange?.(e.target.value)}
+            rows={3}
+            placeholder="Título principal"
+            className="font-display text-4xl md:text-6xl font-extrabold leading-[1.05] tracking-tight mb-7 text-[var(--ink)] bg-transparent border border-dashed border-[var(--orange)]/50 rounded-xl px-3 py-2 w-full resize-y focus:outline-none focus:border-[var(--orange)]"
+          />
+        ) : (
+          <motion.h1
+            className="font-display text-4xl md:text-6xl font-extrabold leading-[1.05] tracking-tight mb-7 text-[var(--ink)]"
+            initial="hidden"
+            animate="visible"
+            variants={{ visible: { transition: { staggerChildren: 0.06 } } }}
+          >
+            {title.split(" ").map((word, i) => (
+              <motion.span
+                key={i}
+                className="inline-block mr-[0.3ch]"
+                variants={{
+                  hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
+                  visible: {
+                    opacity: 1,
+                    y: 0,
+                    filter: "blur(0px)",
+                    transition: { duration: 0.5, ease: "easeOut" },
+                  },
+                }}
+              >
+                {word}
+              </motion.span>
+            ))}
+          </motion.h1>
+        )}
 
-        <p className="text-[var(--ink)]/70 text-lg md:text-xl mb-10 max-w-lg leading-relaxed">
-          {subtitle}
-        </p>
+        {editMode ? (
+          <textarea
+            value={subtitle}
+            onChange={(e) => onSubtitleChange?.(e.target.value)}
+            rows={2}
+            placeholder="Subtítulo"
+            className="text-[var(--ink)]/70 text-lg md:text-xl mb-10 max-w-lg leading-relaxed bg-transparent border border-dashed border-[var(--ink)]/30 rounded-xl px-3 py-2 w-full resize-y focus:outline-none focus:border-[var(--ink)]/60"
+          />
+        ) : (
+          <p className="text-[var(--ink)]/70 text-lg md:text-xl mb-10 max-w-lg leading-relaxed">
+            {subtitle}
+          </p>
+        )}
 
         <p className="text-xs text-[var(--ink)]/40">
           Campus Universidad Tecnológica de Tlaxcala

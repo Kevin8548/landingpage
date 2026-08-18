@@ -5,6 +5,7 @@ import {
   Routes,
   useLocation,
 } from "react-router-dom";
+
 import { Aspirantes } from "./components/sections/Aspirantes";
 import { Careers } from "./components/sections/Careers";
 import { WhyChooseTI } from "./components/layout/View";
@@ -14,7 +15,12 @@ import Auth from "./components/auth/Auth";
 import Hero from "./components/sections/Hero";
 import FuturoReveal from "./components/sections/Futuro_Reveal";
 import { ConfirmProvider } from "./components/ui/ConfirmDialog";
+
+import Dashboard from "./pages/Dashboard";
+import Events from "./pages/Events";
 import { Eventos } from "./components/sections/eventos";
+import EventosAdmin from "./components/dashboard/EventosAdmin";
+import RequireAdmin from "./components/auth/RequireAdmin";
 
 const CareerDetail = lazy(() => import("./pages/CareerDetail"));
 const AspirantesPage = lazy(() => import("./pages/Aspirantes"));
@@ -47,7 +53,13 @@ function ScrollManager() {
 function AppFooter() {
   const { pathname } = useLocation();
 
-  if (pathname === "/acceso") {
+  if (
+    pathname === "/acceso" ||
+    pathname === "/dashboard" ||
+    pathname === "/dashboard/eventos" ||
+    pathname === "/eventos" ||
+    pathname === "/aspirantes"
+  ) {
     return null;
   }
 
@@ -92,8 +104,49 @@ export default function App() {
             }
           />
 
+          {/* Vista de previsualización de Eventos: interactiva, con botón de editar. Solo para el admin. */}
+          <Route
+            path="/eventos"
+            element={
+              <RequireAdmin>
+                <Navbar />
+                <EventosAdmin />
+              </RequireAdmin>
+            }
+          />
+
+          {/* Página completa de proceso de admisión. Pública para todos;
+              el modo edición solo aparece si el usuario logueado es admin
+              (botón flotante dentro de pages/Aspirantes.tsx). */}
+          <Route
+            path="/aspirantes"
+            element={
+              <Suspense fallback={<main className="min-h-dvh bg-dark-bg" aria-busy="true" />}>
+                <AspirantesPage />
+              </Suspense>
+            }
+          />
+
           {/* Pantalla estática de acceso */}
           <Route path="/acceso" element={<Auth />} />
+
+          {/* Panel para administrar eventos */}
+          <Route
+            path="/dashboard"
+            element={
+              <RequireAdmin>
+                <Dashboard />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path="/dashboard/eventos"
+            element={
+              <RequireAdmin>
+                <Events />
+              </RequireAdmin>
+            }
+          />
 
           {/* Detalle de cada carrera */}
           <Route
@@ -101,16 +154,6 @@ export default function App() {
             element={
               <Suspense fallback={<main className="min-h-dvh bg-dark-bg" aria-busy="true" />}>
                 <CareerDetail />
-              </Suspense>
-            }
-          />
-
-          {/* Página completa de proceso de admisión */}
-          <Route
-            path="/aspirantes"
-            element={
-              <Suspense fallback={<main className="min-h-dvh bg-dark-bg" aria-busy="true" />}>
-                <AspirantesPage />
               </Suspense>
             }
           />
