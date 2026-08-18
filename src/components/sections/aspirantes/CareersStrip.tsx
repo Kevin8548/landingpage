@@ -1,7 +1,10 @@
+import { useNavigate } from "react-router-dom";
 import { FiChevronRight } from "react-icons/fi";
 import { CAREERS } from "../../../data/aspirantes";
 
 export const CareersStrip = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="relative bg-[var(--bg)] border-y border-[var(--line)]">
       <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[var(--line)]">
@@ -23,11 +26,7 @@ export const CareersStrip = () => {
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  // TODO: CONEXIÓN PENDIENTE — aún no hay routing conectado.
-                  // Cuando exista, navegar a `path` (por ejemplo con react-router: navigate(path))
-                  console.log("Ir a carrera (pendiente de conectar):", path);
-                }}
+                onClick={() => navigate(path)}
                 className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full border text-xs font-data uppercase tracking-wider font-medium transition-opacity hover:opacity-80 ${border} ${bg} ${text}`}
               >
                 {shortName}

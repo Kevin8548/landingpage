@@ -127,7 +127,7 @@ export const CAREERS: Career[] = [
     bg: "bg-[var(--green)]/[0.08]",
     text: "text-[var(--green)]",
     // TODO: CONEXIÓN PENDIENTE — ruta real de la página de la carrera
-    path: "/carreras/software-multiplataforma",
+    path: "/carreras/ingenieria-ti",
   },
   {
     id: "negocios-digitales",
@@ -139,7 +139,7 @@ export const CAREERS: Career[] = [
     bg: "bg-[var(--orange)]/[0.08]",
     text: "text-[var(--orange)]",
     // TODO: CONEXIÓN PENDIENTE — ruta real de la página de la carrera
-    path: "/carreras/negocios-digitales",
+    path: "/carreras/entornos-virtuales",
   },
   {
     id: "redes-ciberseguridad",
@@ -151,6 +151,6 @@ export const CAREERS: Career[] = [
     bg: "bg-[var(--teal)]/[0.08]",
     text: "text-[var(--teal)]",
     // TODO: CONEXIÓN PENDIENTE — ruta real de la página de la carrera
-    path: "/carreras/redes-ciberseguridad",
+    path: "/carreras/redes",
   },
 ];
