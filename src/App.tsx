@@ -20,6 +20,7 @@ import Dashboard from "./pages/Dashboard";
 import Events from "./pages/Events";
 import { Eventos } from "./components/sections/eventos";
 import EventosAdmin from "./components/dashboard/EventosAdmin";
+import AspirantesAdmin from "./components/dashboard/AspirantesAdmin";
 import RequireAdmin from "./components/auth/RequireAdmin";
 
 const CareerDetail = lazy(() => import("./pages/CareerDetail"));
@@ -57,6 +58,7 @@ function AppFooter() {
     pathname === "/acceso" ||
     pathname === "/dashboard" ||
     pathname === "/dashboard/eventos" ||
+    pathname === "/dashboard/aspirantes" ||
     pathname === "/eventos" ||
     pathname === "/aspirantes"
   ) {
@@ -115,9 +117,9 @@ export default function App() {
             }
           />
 
-          {/* Página completa de proceso de admisión. Pública para todos;
-              el modo edición solo aparece si el usuario logueado es admin
-              (botón flotante dentro de pages/Aspirantes.tsx). */}
+          {/* Página completa y 100% pública de proceso de admisión. No tiene
+              ninguna lógica de admin — cero riesgo de que se filtre el modo
+              edición aquí. */}
           <Route
             path="/aspirantes"
             element={
@@ -144,6 +146,18 @@ export default function App() {
             element={
               <RequireAdmin>
                 <Events />
+              </RequireAdmin>
+            }
+          />
+
+          {/* Edición de Aspirantes: exactamente el mismo patrón que /eventos.
+              Solo llega aquí quien está autenticado como admin. */}
+          <Route
+            path="/dashboard/aspirantes"
+            element={
+              <RequireAdmin>
+                <Navbar />
+                <AspirantesAdmin />
               </RequireAdmin>
             }
           />
