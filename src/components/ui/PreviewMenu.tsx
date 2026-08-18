@@ -68,7 +68,7 @@ export default function PreviewMenu({ className }: PreviewMenuProps) {
           </button>
           <button
             type="button"
-            onClick={() => goTo("/aspirantes")}
+            onClick={() => goTo("/dashboard/aspirantes")}
             className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs uppercase tracking-wide text-[var(--ink)] transition-colors hover:bg-[var(--ink)]/5"
           >
             <FiUsers className="h-3.5 w-3.5" /> Aspirantes
