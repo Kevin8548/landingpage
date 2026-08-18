@@ -13,7 +13,7 @@ export const Aspirantes = () => {
       <div className="absolute inset-0">
         <img
           src={heroImg}
-          alt="Universidad Tecnológica de Tlaxcala"
+          alt=" Universidad Tecnológica de Tlaxcala"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-[var(--bg)]/80 to-[var(--bg)]/40" />
