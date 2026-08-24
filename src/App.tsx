@@ -22,6 +22,7 @@ import { Eventos } from "./components/sections/eventos";
 import EventosAdmin from "./components/dashboard/EventosAdmin";
 import AspirantesAdmin from "./components/dashboard/AspirantesAdmin";
 import RequireAdmin from "./components/auth/RequireAdmin";
+import RequirePreviewAccess from "./components/auth/RequirePreviewAccess";
 
 const CareerDetail = lazy(() => import("./pages/CareerDetail"));
 const AspirantesPage = lazy(() => import("./pages/Aspirantes"));
@@ -108,14 +109,18 @@ export default function App() {
             }
           />
 
-          {/* Vista de previsualización de Eventos: interactiva, con botón de editar. Solo para el admin. */}
+          {/* Vista de previsualización de Eventos: interactiva, con botón de
+              editar. Solo para el admin, Y SOLO si llega navegando desde
+              dentro del dashboard (RequirePreviewAccess exige el state
+              `fromDashboard`, que se pierde si escribes la URL a mano o si
+              recargas la página, forzando volver a pasar por /acceso). */}
           <Route
             path="/eventos"
             element={
-              <RequireAdmin>
+              <RequirePreviewAccess>
                 <Navbar />
                 <EventosAdmin />
-              </RequireAdmin>
+              </RequirePreviewAccess>
             }
           />
 
@@ -152,15 +157,16 @@ export default function App() {
             }
           />
 
-          {/* Edición de Aspirantes: exactamente el mismo patrón que /eventos.
-              Solo llega aquí quien está autenticado como admin. */}
+          {/* Edición de Aspirantes: mismo patrón que /eventos, pero
+              usando RequirePreviewAccess por el mismo motivo (solo
+              accesible navegando desde dentro del dashboard). */}
           <Route
             path="/dashboard/aspirantes"
             element={
-              <RequireAdmin>
+              <RequirePreviewAccess>
                 <Navbar />
                 <AspirantesAdmin />
-              </RequireAdmin>
+              </RequirePreviewAccess>
             }
           />
 

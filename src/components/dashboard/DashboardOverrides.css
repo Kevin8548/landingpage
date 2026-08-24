@@ -1,3 +1,7 @@
+/* =========================================================
+   AJUSTES GENERALES
+   ========================================================= */
+
 /* La fecha se mantiene alineada, pero sin el recuadro verde. */
 .dashboard-date-tile {
   border-radius: 0;
@@ -15,7 +19,11 @@
   background: #ef9b36;
 }
 
-/* Control de la barra lateral en escritorio. */
+
+/* =========================================================
+   BARRA LATERAL
+   ========================================================= */
+
 .dashboard-sidebar {
   position: relative;
   transition:
@@ -33,11 +41,15 @@
   width: 32px;
   height: 32px;
   place-items: center;
+
   border: 1px solid var(--dash-line);
   border-radius: 50%;
+
   color: var(--dash-muted);
   background: #fff;
+
   box-shadow: 0 4px 12px rgba(26, 48, 34, 0.1);
+
   cursor: pointer;
 }
 
@@ -53,18 +65,18 @@
 }
 
 .dashboard-sidebar.is-collapsed
-  .dashboard-brand
-  > span:not(.dashboard-brand__mark),
+.dashboard-brand
+> span:not(.dashboard-brand__mark),
 .dashboard-sidebar.is-collapsed
-  .dashboard-nav
-  a
-  > :not(svg),
+.dashboard-nav
+a
+> :not(svg),
 .dashboard-sidebar.is-collapsed
-  .dashboard-profile
-  > div,
+.dashboard-profile
+> div,
 .dashboard-sidebar.is-collapsed
-  .dashboard-signout
-  > :not(svg) {
+.dashboard-signout
+> :not(svg) {
   display: none;
 }
 
@@ -88,42 +100,84 @@
   display: none;
 }
 
+
 /* =========================================================
-   BOTONES SUPERIORES: PREVISUALIZAR + IR A EVENTOS
+   BOTONES SUPERIORES
+   PREVISUALIZAR + IR A EVENTOS
    ========================================================= */
 
-.dashboard-welcome__actions {
-  display: flex;
+/*
+   IMPORTANTE:
+   Este es el contenedor correcto.
+
+   Los dos botones se colocan horizontalmente:
+   
+   [ PREVISUALIZAR ▼ ] [ IR A EVENTOS ]
+
+   No usamos flex-direction: column.
+*/
+
+.dashboard-welcome__actions,
+.dashboard-welcome-actions {
+  display: flex !important;
+  flex-direction: row !important;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
+  width: auto;
+  flex-wrap: nowrap;
 }
 
-/* Botón Previsualizar */
+
+/* =========================================================
+   CONTENEDOR DEL MENÚ PREVISUALIZAR
+   ========================================================= */
+
 .preview-menu-container {
   position: relative;
-  display: inline-flex;
+  display: inline-flex !important;
+  flex: 0 0 auto;
+  width: auto;
 }
 
+
+/* =========================================================
+   BOTÓN PREVISUALIZAR
+   ========================================================= */
+
 .preview-menu-button {
-  display: inline-flex;
+  display: inline-flex !important;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 0;
+
+  min-width: max-content;
+  min-height: 31px;
   height: 31px;
+
   padding: 0 12px;
+
+  box-sizing: border-box;
+
   border: 1px solid var(--dash-line);
   border-radius: 999px;
+
   color: var(--dash-ink);
   background: transparent;
+
   font-family: "JetBrains Mono", monospace;
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.06em;
   line-height: 1;
+
   text-transform: uppercase;
+
+  white-space: nowrap;
+
   cursor: pointer;
+
   transition:
     color 0.2s ease,
     border-color 0.2s ease,
@@ -137,7 +191,7 @@
     var(--dash-ink) 40%,
     transparent
   );
-  background: transparent;
+  background: rgba(23, 35, 29, 0.03);
 }
 
 .preview-menu-button__icon {
@@ -146,35 +200,70 @@
   flex: 0 0 14px;
 }
 
-/* Botón Ir a eventos */
-.dashboard-events-link {
-  display: inline-flex;
+
+/* =========================================================
+   MENÚ DESPLEGABLE DE PREVISUALIZAR
+   ========================================================= */
+
+.preview-menu-container > div:last-child {
+  position: absolute;
+  z-index: 100;
+}
+
+
+/* =========================================================
+   BOTÓN IR A EVENTOS
+   MISMO ESTILO QUE PREVISUALIZAR
+   ========================================================= */
+
+.dashboard-events-link,
+.dashboard-preview-events-button {
+  display: inline-flex !important;
+  flex: 0 0 auto;
+
+  flex-direction: row;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 0;
+
+  min-width: max-content;
+  min-height: 31px;
   height: 31px;
+
   padding: 0 12px;
+
+  box-sizing: border-box;
+
   border: 1px solid var(--dash-line);
   border-radius: 999px;
+
   color: var(--dash-ink);
   background: transparent;
+
   box-shadow: none;
+
   font-family: "JetBrains Mono", monospace;
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.06em;
   line-height: 1;
+
   text-decoration: none;
   text-transform: uppercase;
+
+  white-space: nowrap;
+
   cursor: pointer;
+
   transition:
     color 0.2s ease,
     border-color 0.2s ease,
-    background-color 0.2s ease;
+    background-color 0.2s ease,
+    transform 0.2s ease;
 }
 
-.dashboard-events-link:hover {
+.dashboard-events-link:hover,
+.dashboard-preview-events-button:hover {
   color: var(--dash-ink);
   border-color: color-mix(
     in srgb,
@@ -182,13 +271,18 @@
     transparent
   );
   background: rgba(23, 35, 29, 0.03);
+
   transform: none;
   box-shadow: none;
 }
 
-.dashboard-events-link svg {
+.dashboard-events-link svg,
+.dashboard-preview-events-button svg {
+  width: 14px;
+  height: 14px;
   flex: 0 0 auto;
 }
+
 
 /* =========================================================
    MODO OSCURO
@@ -205,10 +299,13 @@
   width: 36px;
   height: 36px;
   place-items: center;
+
   border: 1px solid var(--dash-line);
   border-radius: 10px;
+
   color: var(--dash-muted);
   background: transparent;
+
   cursor: pointer;
 }
 
@@ -228,8 +325,14 @@ html.dark .dashboard-page {
   --dash-green: #72d08e;
   --dash-green-dark: #9ae7b0;
   --dash-amber: #f6c85f;
+
   background: #0b0d10;
 }
+
+
+/* =========================================================
+   COMPONENTES DARK
+   ========================================================= */
 
 html.dark .dashboard-sidebar,
 html.dark .dashboard-topbar,
@@ -349,7 +452,11 @@ html.dark .dashboard-notification i {
   border-color: #15181d;
 }
 
-/* Botón Previsualizar en modo oscuro */
+
+/* =========================================================
+   BOTONES SUPERIORES - DARK
+   ========================================================= */
+
 html.dark .preview-menu-button {
   color: var(--dash-ink);
   border-color: var(--dash-line);
@@ -362,20 +469,25 @@ html.dark .preview-menu-button:hover {
   background: rgba(255, 255, 255, 0.04);
 }
 
-/* Botón Ir a eventos en modo oscuro */
-html.dark .dashboard-events-link {
+html.dark .dashboard-events-link,
+html.dark .dashboard-preview-events-button {
   color: var(--dash-ink);
   border-color: var(--dash-line);
   background: transparent;
 }
 
-html.dark .dashboard-events-link:hover {
+html.dark .dashboard-events-link:hover,
+html.dark .dashboard-preview-events-button:hover {
   color: var(--dash-ink);
   border-color: rgba(241, 243, 245, 0.4);
   background: rgba(255, 255, 255, 0.04);
 }
 
-/* SweetAlert2 con la misma identidad visual del dashboard. */
+
+/* =========================================================
+   SWEETALERT2
+   ========================================================= */
+
 .dashboard-swal {
   border: 1px solid var(--dash-line);
   border-radius: 16px;
@@ -386,9 +498,12 @@ html.dark .dashboard-events-link:hover {
 .dashboard-swal__cancel {
   min-width: 105px;
   padding: 10px 14px;
+
   border: 0;
   border-radius: 9px;
+
   font: 700 13px "Inter", sans-serif;
+
   cursor: pointer;
 }
 
@@ -417,13 +532,17 @@ html.dark .dashboard-swal__cancel {
   background: #2a3038;
 }
 
-/* Tipografía del listado de eventos */
+
+/* =========================================================
+   TIPOGRAFÍA DEL LISTADO DE EVENTOS
+   ========================================================= */
+
 .dashboard-body--events .dashboard-welcome h1 {
   font-size: clamp(23px, 2.6vw, 32px);
 }
 
 .dashboard-events--standalone
-  .dashboard-section-heading h2 {
+.dashboard-section-heading h2 {
   font-size: 14px;
 }
 
@@ -448,7 +567,11 @@ html.dark .dashboard-swal__cancel {
   font-size: 10px;
 }
 
-/* Estilos del calendario */
+
+/* =========================================================
+   CALENDARIO
+   ========================================================= */
+
 .dashboard-date-picker {
   position: relative;
 }
@@ -457,27 +580,37 @@ html.dark .dashboard-swal__cancel {
 .dashboard-time-select {
   width: 100%;
   min-height: 43px;
+
   box-sizing: border-box;
+
   padding: 0 12px;
+
   border: 1px solid #dce5dd;
   border-radius: 9px;
+
   color: var(--dash-ink);
   background: #fbfcfb;
+
   font: inherit;
   font-size: 13px;
+
   text-align: left;
+
   cursor: pointer;
 }
 
 .dashboard-time-select {
   appearance: none;
   -webkit-appearance: none;
+
   padding-right: 42px;
-  color: var(--dash-ink);
+
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231f7950' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
   background-repeat: no-repeat;
   background-position: right 13px center;
   background-size: 16px;
+
   transition:
     border-color 0.2s,
     box-shadow 0.2s,
@@ -493,19 +626,27 @@ html.dark .dashboard-swal__cancel {
 .dashboard-picker-input:focus {
   outline: 0;
   border-color: #4c9d69;
-  box-shadow: 0 0 0 3px #e6f3e9;
+
+  box-shadow:
+    0 0 0 3px #e6f3e9;
 }
 
 .dashboard-calendar {
   position: absolute;
   z-index: 30;
+
   top: calc(100% + 7px);
   left: 0;
+
   width: 276px;
+
   padding: 12px;
+
   border: 1px solid var(--dash-line);
   border-radius: 14px;
+
   background: #fff;
+
   box-shadow:
     0 16px 42px rgba(23, 35, 29, 0.16);
 }
@@ -514,20 +655,28 @@ html.dark .dashboard-swal__cancel {
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   margin-bottom: 10px;
+
   text-transform: capitalize;
 }
 
 .dashboard-calendar__header button {
   display: grid;
+
   width: 28px;
   height: 28px;
+
   place-items: center;
+
   border: 0;
   border-radius: 8px;
+
   color: var(--dash-green);
   background: #edf5ef;
+
   font-size: 20px;
+
   cursor: pointer;
 }
 
@@ -538,25 +687,34 @@ html.dark .dashboard-swal__cancel {
 .dashboard-calendar__weekdays,
 .dashboard-calendar__days {
   display: grid;
+
   grid-template-columns: repeat(7, 1fr);
+
   gap: 3px;
+
   text-align: center;
 }
 
 .dashboard-calendar__weekdays {
   margin-bottom: 5px;
+
   color: var(--dash-muted);
+
   font-size: 10px;
 }
 
 .dashboard-calendar__days button {
   height: 31px;
+
   border: 0;
   border-radius: 8px;
+
   color: var(--dash-ink);
   background: transparent;
+
   font: inherit;
   font-size: 11px;
+
   cursor: pointer;
 }
 
@@ -574,6 +732,11 @@ html.dark .dashboard-swal__cancel {
   cursor: not-allowed;
 }
 
+
+/* =========================================================
+   CALENDARIO DARK
+   ========================================================= */
+
 html.dark .dashboard-picker-input,
 html.dark .dashboard-time-select {
   border-color: #3a424d;
@@ -583,6 +746,7 @@ html.dark .dashboard-time-select {
 
 html.dark .dashboard-time-select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2372d08e' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
   background-repeat: no-repeat;
   background-position: right 13px center;
 }
@@ -595,6 +759,7 @@ html.dark .dashboard-time-select:hover {
 html.dark .dashboard-time-select:focus,
 html.dark .dashboard-picker-input:focus {
   border-color: #72d08e;
+
   box-shadow:
     0 0 0 3px rgba(114, 208, 142, 0.18);
 }
@@ -602,6 +767,7 @@ html.dark .dashboard-picker-input:focus {
 html.dark .dashboard-calendar {
   border-color: #3a424d;
   background: #1b1f25;
+
   box-shadow:
     0 18px 45px rgba(0, 0, 0, 0.42);
 }
@@ -619,30 +785,49 @@ html.dark .dashboard-calendar__days button:hover {
   background: #303842;
 }
 
-/* Selector de horario personalizado */
+
+/* =========================================================
+   SELECTOR DE HORARIO
+   ========================================================= */
+
 .dashboard-time-picker {
   position: relative;
 }
 
 .dashboard-picker-input--time {
   padding-right: 42px;
+
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231f7950' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+  background-size: 16px;
 }
 
 .dashboard-time-picker__toggle {
   position: absolute;
+
   top: 50%;
   right: 7px;
+
   display: grid;
+
   width: 29px;
   height: 29px;
+
   place-items: center;
+
   border: 0;
   border-radius: 7px;
+
   color: var(--dash-muted);
   background: transparent;
+
   font-size: 22px;
   line-height: 1;
+
   cursor: pointer;
+
   transform: translateY(-50%);
 }
 
@@ -655,40 +840,46 @@ html.dark .dashboard-calendar__days button:hover {
   transform: translateY(-50%) rotate(180deg);
 }
 
-.dashboard-picker-input--time {
-  padding-right: 42px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231f7950' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 13px center;
-  background-size: 16px;
-}
-
 .dashboard-time-menu {
   position: absolute;
   z-index: 35;
+
   top: calc(100% + 7px);
   left: 0;
   right: 0;
+
   max-height: 238px;
+
   overflow-y: auto;
+
   padding: 6px;
+
   border: 1px solid var(--dash-line);
   border-radius: 12px;
+
   background: #fff;
+
   box-shadow:
     0 16px 42px rgba(23, 35, 29, 0.18);
 }
 
 .dashboard-time-menu button {
   display: block;
+
   width: 100%;
+
   padding: 9px 10px;
+
   border: 0;
   border-radius: 8px;
+
   color: var(--dash-ink);
   background: transparent;
+
   font: 600 12px "Inter", sans-serif;
+
   text-align: left;
+
   cursor: pointer;
 }
 
@@ -702,8 +893,14 @@ html.dark .dashboard-calendar__days button:hover {
   background: var(--dash-green);
 }
 
+
+/* =========================================================
+   HORARIO DARK
+   ========================================================= */
+
 html.dark .dashboard-picker-input--time {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2372d08e' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
   background-repeat: no-repeat;
   background-position: right 13px center;
 }
@@ -711,6 +908,7 @@ html.dark .dashboard-picker-input--time {
 html.dark .dashboard-time-menu {
   border-color: #3a424d;
   background: #1b1f25;
+
   box-shadow:
     0 18px 45px rgba(0, 0, 0, 0.42);
 }
@@ -733,27 +931,36 @@ html.dark .dashboard-time-picker__toggle:hover {
   background: #303842;
 }
 
+
+/* =========================================================
+   FLECHA DEL SELECTOR DE HORA
+   ========================================================= */
+
 .dashboard-time-picker
-  .dashboard-picker-input--time {
+.dashboard-picker-input--time {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2367736c' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
   background-repeat: no-repeat;
   background-position: right 13px center;
   background-size: 14px;
 }
 
 html.dark
-  .dashboard-time-picker
-  .dashboard-picker-input--time {
+.dashboard-time-picker
+.dashboard-picker-input--time {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a9b0ba' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
   background-repeat: no-repeat;
   background-position: right 13px center;
 }
+
 
 /* =========================================================
    RESPONSIVE
    ========================================================= */
 
 @media (max-width: 860px) {
+
   .dashboard-sidebar-collapse {
     display: none;
   }
@@ -765,57 +972,132 @@ html.dark
   }
 
   .dashboard-sidebar.is-collapsed
-    .dashboard-brand
-    > span:not(.dashboard-brand__mark),
+  .dashboard-brand
+  > span:not(.dashboard-brand__mark),
   .dashboard-sidebar.is-collapsed
-    .dashboard-nav
-    a
-    > :not(svg),
+  .dashboard-nav
+  a
+  > :not(svg),
   .dashboard-sidebar.is-collapsed
-    .dashboard-profile
-    > div,
+  .dashboard-profile
+  > div,
   .dashboard-sidebar.is-collapsed
-    .dashboard-signout
-    > :not(svg),
+  .dashboard-signout
+  > :not(svg),
   .dashboard-sidebar.is-collapsed
-    .dashboard-nav
-    a
-    span {
+  .dashboard-nav
+  a
+  span {
     display: initial;
   }
 
   .dashboard-sidebar.is-collapsed
-    .dashboard-nav
-    a,
+  .dashboard-nav
+  a,
   .dashboard-sidebar.is-collapsed
-    .dashboard-nav
-    button,
+  .dashboard-nav
+  button,
   .dashboard-sidebar.is-collapsed
-    .dashboard-signout {
+  .dashboard-signout {
     gap: 12px;
     font-size: 13px;
   }
 
-  .dashboard-welcome__actions {
-    width: 100%;
+  /*
+     LOS DOS BOTONES SIGUEN JUNTOS.
+  */
+  .dashboard-welcome__actions,
+  .dashboard-welcome-actions {
+    width: auto !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
     justify-content: flex-start;
-  }
-}
-
-@media (max-width: 560px) {
-  .dashboard-welcome__actions {
-    width: 100%;
-    flex-wrap: wrap;
     gap: 8px;
+    flex-wrap: nowrap;
   }
 
-  .preview-menu-container,
-  .dashboard-events-link {
-    flex: 1;
+  .preview-menu-container {
+    display: inline-flex !important;
+    flex: 0 0 auto;
   }
 
   .preview-menu-button,
-  .dashboard-events-link {
-    width: 100%;
+  .dashboard-events-link,
+  .dashboard-preview-events-button {
+    width: auto !important;
+    flex: 0 0 auto;
+  }
+}
+
+
+/* =========================================================
+   MÓVIL
+   ========================================================= */
+
+@media (max-width: 560px) {
+
+  /*
+     En móvil también permanecen uno al lado del otro
+     mientras haya espacio.
+  */
+  .dashboard-welcome__actions,
+  .dashboard-welcome-actions {
+    width: 100% !important;
+
+    display: flex !important;
+    flex-direction: row !important;
+
+    align-items: center;
+    justify-content: flex-start;
+
+    gap: 8px;
+
+    flex-wrap: nowrap;
+  }
+
+  .preview-menu-container {
+    position: relative;
+
+    display: inline-flex !important;
+
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .preview-menu-button,
+  .dashboard-events-link,
+  .dashboard-preview-events-button {
+    width: 100% !important;
+
+    min-width: 0;
+
+    flex: 1 1 0;
+  }
+
+  /*
+     Evita que el menú desplegable se meta
+     dentro del botón de eventos.
+  */
+  .preview-menu-container > div:last-child {
+    right: 0;
+    left: auto;
+
+    width: 176px;
+  }
+
+  /*
+     Si el título del dashboard se vuelve vertical,
+     solamente afecta al contenido del welcome,
+     NO a los dos botones.
+  */
+  .dashboard-welcome {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .dashboard-welcome__actions,
+  .dashboard-welcome-actions {
+    align-self: stretch;
   }
 }

@@ -407,6 +407,11 @@ export const Eventos = () => {
   const [pendingScroll, setPendingScroll] = useState<string | null>(null);
   const [activeMonth, setActiveMonth] = useState<string | null>(null);
 
+  // Bandera para distinguir el primer render (donde NO queremos que
+  // ningún scroll automático toque la ventana) de los cambios de mes
+  // que sí vienen de una interacción real del usuario.
+  const hasMountedRef = useRef(false);
+
   const { elements: sectionRefs, getRef: getSectionRef } = useKeyedRefs<HTMLElement>();
   const { elements: mobileNavRefs, getRef: getMobileNavRef } = useKeyedRefs<HTMLButtonElement>();
   const { elements: desktopNavRefs, getRef: getDesktopNavRef } = useKeyedRefs<HTMLButtonElement>();
@@ -451,15 +456,32 @@ export const Eventos = () => {
     });
   }, [groups]);
 
+  // FIX: antes usaba `scrollIntoView({ block: "nearest" })` sobre el pill
+  // del mes activo. Como el componente vive dentro de una sección de la
+  // landing que puede estar fuera del viewport, scrollIntoView arrastraba
+  // TODA la ventana hacia esa sección al montarse (aunque el objetivo real
+  // solo era centrar el pill dentro de su propio contenedor horizontal).
+  // Ahora movemos manualmente `scrollLeft` del contenedor padre, así el
+  // scroll nunca sale de ese contenedor ni toca `window`.
   useEffect(() => {
     if (!activeMonth) return;
-    const opts: ScrollIntoViewOptions = {
-      behavior: reduceMotion ? "auto" : "smooth",
-      inline: "center",
-      block: "nearest",
+
+    const scrollWithinParent = (btn: HTMLButtonElement | undefined) => {
+      if (!btn) return;
+      const container = btn.parentElement;
+      if (!container) return;
+
+      const targetLeft =
+        btn.offsetLeft - container.clientWidth / 2 + btn.clientWidth / 2;
+
+      container.scrollTo({
+        left: Math.max(0, targetLeft),
+        behavior: reduceMotion ? "auto" : "smooth",
+      });
     };
-    mobileNavRefs.current.get(activeMonth)?.scrollIntoView(opts);
-    desktopNavRefs.current.get(activeMonth)?.scrollIntoView(opts);
+
+    scrollWithinParent(mobileNavRefs.current.get(activeMonth));
+    scrollWithinParent(desktopNavRefs.current.get(activeMonth));
   }, [activeMonth, reduceMotion, mobileNavRefs, desktopNavRefs]);
 
   useEffect(() => {
@@ -510,6 +532,10 @@ export const Eventos = () => {
     rafId = requestAnimationFrame(tryScroll);
     return () => cancelAnimationFrame(rafId);
   }, [pendingScroll, activeCategory, reduceMotion]);
+
+  useEffect(() => {
+    hasMountedRef.current = true;
+  }, []);
 
   const jumpToEvent = (id: string, date?: string) => {
     setActiveCategory(null);
