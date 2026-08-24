@@ -9,6 +9,7 @@ import {
   LogOut,
   MapPin,
   Menu,
+  Plus,
   Sparkles,
   X,
 } from "lucide-react";
@@ -21,11 +22,9 @@ import PreviewMenu from "../ui/PreviewMenu";
 import "./Dashboard.css";
 import "./DashboardOverrides.css";
 
-const parseISO = (iso: string) =>
-  new Date(`${iso}T00:00:00`);
+const parseISO = (iso: string) => new Date(`${iso}T00:00:00`);
 
-const isValidDate = (d: Date) =>
-  !Number.isNaN(d.getTime());
+const isValidDate = (d: Date) => !Number.isNaN(d.getTime());
 
 const startOfToday = () => {
   const d = new Date();
@@ -68,11 +67,11 @@ const getEventDateParts = (iso: string) => {
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+
   const { eventItems } = useEventosStore();
 
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [isSidebarCollapsed, setSidebarCollapsed] =
-    useState(false);
+  const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const sorted = useMemo(
     () =>
@@ -83,10 +82,7 @@ export default function AdminDashboard() {
   );
 
   const upcoming = useMemo(
-    () =>
-      sorted.filter(
-        (event) => daysUntil(event.date) >= 0
-      ),
+    () => sorted.filter((e) => daysUntil(e.date) >= 0),
     [sorted]
   );
 
@@ -108,8 +104,7 @@ export default function AdminDashboard() {
       },
       {
         label: "Eventos pasados",
-        value:
-          eventItems.length - upcoming.length,
+        value: eventItems.length - upcoming.length,
         icon: Clock3,
         tone: "blue",
       },
@@ -127,9 +122,7 @@ export default function AdminDashboard() {
       <aside
         className={`dashboard-sidebar ${
           isSidebarOpen ? "is-open" : ""
-        } ${
-          isSidebarCollapsed ? "is-collapsed" : ""
-        }`}
+        } ${isSidebarCollapsed ? "is-collapsed" : ""}`}
       >
         <button
           className="dashboard-sidebar-collapse"
@@ -150,9 +143,7 @@ export default function AdminDashboard() {
         </button>
 
         <div className="dashboard-brand">
-          <span className="dashboard-brand__mark">
-            UTT
-          </span>
+          <span className="dashboard-brand__mark">UTT</span>
 
           <span>
             Universidad Tecnológica
@@ -173,10 +164,7 @@ export default function AdminDashboard() {
           className="dashboard-nav"
           aria-label="Navegación del panel"
         >
-          <Link
-            className="is-active"
-            to="/dashboard"
-          >
+          <Link className="is-active" to="/dashboard">
             <LayoutDashboard size={18} />
             Resumen
           </Link>
@@ -190,9 +178,7 @@ export default function AdminDashboard() {
 
         <div className="dashboard-sidebar__bottom">
           <div className="dashboard-profile">
-            <span className="dashboard-avatar">
-              AD
-            </span>
+            <span className="dashboard-avatar">AD</span>
 
             <div>
               <strong>Administrador</strong>
@@ -228,9 +214,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="dashboard-topbar__actions">
-            <AnimatedThemeToggler
-              className="dashboard-theme-toggle"
-            />
+            <AnimatedThemeToggler className="dashboard-theme-toggle" />
 
             <span className="dashboard-avatar dashboard-avatar--small">
               AD
@@ -238,10 +222,7 @@ export default function AdminDashboard() {
           </div>
         </header>
 
-        <div
-          className="dashboard-body"
-          id="resumen"
-        >
+        <div className="dashboard-body" id="resumen">
           <div className="dashboard-welcome">
             <div>
               <p className="dashboard-eyebrow">
@@ -250,25 +231,25 @@ export default function AdminDashboard() {
               </p>
 
               <h1>
-                Hola, Administrador
-                <span>.</span>
+                Hola, Administrador<span>.</span>
               </h1>
 
               <p>
-                Consulta lo importante y administra tus
-                eventos desde un solo lugar.
+                Consulta lo importante y administra tus eventos
+                desde un solo lugar.
               </p>
             </div>
 
-            <div className="dashboard-welcome__actions">
+            {/* BOTONES: PREVISUALIZAR + IR A EVENTOS */}
+            <div className="dashboard-welcome-actions">
               <PreviewMenu />
 
               <Link
-                className="dashboard-events-link"
+                className="dashboard-preview-events-button"
                 to="/dashboard/eventos"
               >
-                <CalendarDays size={14} />
-                <span>Ir a eventos</span>
+                <CalendarDays size={15} />
+                Ir a eventos
               </Link>
             </div>
           </div>
@@ -278,12 +259,7 @@ export default function AdminDashboard() {
             aria-label="Resumen de actividad"
           >
             {summary.map(
-              ({
-                label,
-                value,
-                icon: Icon,
-                tone,
-              }) => (
+              ({ label, value, icon: Icon, tone }) => (
                 <article
                   className="dashboard-stat"
                   key={label}
@@ -319,9 +295,7 @@ export default function AdminDashboard() {
               </div>
 
               {nextEvent ? (
-                <DashboardNextEvent
-                  event={nextEvent}
-                />
+                <DashboardNextEvent event={nextEvent} />
               ) : (
                 <div className="dashboard-empty-state">
                   <CalendarDays size={24} />
@@ -339,9 +313,7 @@ export default function AdminDashboard() {
               <div className="dashboard-section-heading">
                 <div>
                   <p>¿QUÉ SIGUE?</p>
-                  <h2>
-                    Gestiona sin complicarte
-                  </h2>
+                  <h2>Gestiona sin complicarte</h2>
                 </div>
               </div>
 
@@ -352,8 +324,7 @@ export default function AdminDashboard() {
                   <div>
                     <strong>Crea un evento</strong>
                     <p>
-                      Agrega fecha, hora, lugar y
-                      público.
+                      Agrega fecha, hora, lugar y público.
                     </p>
                   </div>
                 </li>
@@ -362,12 +333,9 @@ export default function AdminDashboard() {
                   <span>02</span>
 
                   <div>
-                    <strong>
-                      Revisa su información
-                    </strong>
+                    <strong>Revisa su información</strong>
                     <p>
-                      Consulta los detalles cuando
-                      quieras.
+                      Consulta los detalles cuando quieras.
                     </p>
                   </div>
                 </li>
@@ -376,12 +344,9 @@ export default function AdminDashboard() {
                   <span>03</span>
 
                   <div>
-                    <strong>
-                      Manténlo actualizado
-                    </strong>
+                    <strong>Manténlo actualizado</strong>
                     <p>
-                      Edita o elimina en la sección
-                      Eventos.
+                      Edita o elimina en la sección Eventos.
                     </p>
                   </div>
                 </li>
