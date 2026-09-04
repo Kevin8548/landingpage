@@ -1,7 +1,6 @@
 // components/sections/StudyPlanSection.tsx
 import { memo, useMemo, useRef } from "react";
-import { motion, useTransform, type MotionValue } from "motion/react";
-import { useScroll } from "motion/react";
+import { motion, useScroll, useTransform, type MotionValue } from "motion/react";
 import { ChevronDown } from "lucide-react";
 import type { Cuatrimestre, Materia } from "../../../data/careerDetails";
 
@@ -100,6 +99,20 @@ interface StackedCardProps {
   image?: string;
 }
 
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(Math.max(value, min), max);
+
+const mapRange = (
+  value: number,
+  inputStart: number,
+  inputEnd: number,
+  outputStart: number,
+  outputEnd: number,
+) => {
+  const progress = clamp((value - inputStart) / (inputEnd - inputStart), 0, 1);
+  return outputStart + (outputEnd - outputStart) * progress;
+};
+
 function MobileStudyPlan({
   pairs,
   studyPlanImages,
@@ -189,29 +202,20 @@ function StackedCard({ pair, index, total, scrollYProgress, image }: StackedCard
   const nextStart = isLast ? 0 : end;
   const nextEnd = isLast ? 1 : Math.min((index + 2) / total, 1);
 
-  const x = useTransform(
-    scrollYProgress,
-    index === 0 ? [0, 0.0001] : [start, end],
-    index === 0 ? ["0%", "0%"] : ["100%", "0%"]
-  );
+  // Una sola suscripción por tarjeta para las propiedades de composición. Antes
+  // x y scale se calculaban como MotionValues independientes en cada frame.
+  const transform = useTransform(scrollYProgress, (progress) => {
+    const x = index === 0 ? 0 : mapRange(progress, start, end, 100, 0);
+    const scale = isLast ? 1 : mapRange(progress, nextStart, nextEnd, 1, 0.93);
 
-  const scale = useTransform(
-    scrollYProgress,
-    [nextStart, nextEnd],
-    isLast ? [1, 1] : [1, 0.93]
-  );
-  const dim = useTransform(
-    scrollYProgress,
-    [nextStart, nextEnd],
-    isLast ? [0, 0] : [0, 0.55]
-  );
-
+    return `translateX(${x}%) scale(${scale})`;
+  });
   return (
     // Wrapper con gradiente naranja -> verde como "marco" (efecto glow-border)
     <motion.div
-      style={{ x, scale, zIndex: index + 1 }}
+      style={{ transform, zIndex: index + 1, willChange: "transform" }}
         className="absolute inset-6 md:inset-16 rounded-[2rem] md:rounded-[2.5rem]
-                  shadow-[0_20px_80px_-20px_rgba(0,0,0,0.1)]"
+                  shadow-[0_16px_40px_-20px_rgba(0,0,0,0.1)]"
       >
       <div
         className="absolute inset-0 rounded-[2rem] md:rounded-[2.5rem] bg-amber pointer-events-none"
@@ -224,13 +228,8 @@ function StackedCard({ pair, index, total, scrollYProgress, image }: StackedCard
         }}
       />
 
-      <div className="relative w-full h-full rounded-[2rem] md:rounded-[2.5rem] bg-dark-bg-alt/80 backdrop-blur-sm
+      <div className="relative w-full h-full rounded-[2rem] md:rounded-[2.5rem] bg-dark-bg-alt
                       flex flex-col p-8 md:p-12 overflow-hidden">
-        <motion.div
-          style={{ opacity: dim }}
-          className="absolute inset-0 bg-black pointer-events-none"
-        />
-
         {/* watermark de nivel (TSU / ING) */}
         <span
         className="absolute -top-4 -right-4 md:-top-8 md:-right-6 text-[8rem] md:text-[11rem]
@@ -240,9 +239,6 @@ function StackedCard({ pair, index, total, scrollYProgress, image }: StackedCard
         >
         {getPrograma(pair)}
         </span>
-
-        {/* glow interno sutil en verde, esquina opuesta al acento naranja */}
-        <div className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-dark-green-primary/10 blur-[100px] pointer-events-none" />
 
         <div className="mb-8 relative">
           <span
@@ -311,10 +307,6 @@ const StudyPlanSection = memo(function StudyPlanSection({
             backgroundSize: "48px 48px",
           }}
         />
-
-        {/* glows de fondo en verde */}
-        <div className="absolute -top-40 -left-40 w-[36rem] h-[36rem] rounded-full bg-amber/20 blur-[120px] pointer-events-none" />
-        <div className="absolute -bottom-40 -right-40 w-[36rem] h-[36rem] rounded-full bg-dark-green-primary/25 blur-[120px] pointer-events-none" />
 
         {pairs.map((pair, i) => (
           <StackedCard

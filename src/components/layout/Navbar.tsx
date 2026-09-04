@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { Menu, X } from "lucide-react";
 import "./Navbar.css";
+import logo from "../../assets/letrasDark.svg";
 
 const NAV_ITEMS = [
   { label: "¿Por qué TI?", href: "#por-que-ti" },
@@ -23,6 +25,7 @@ export default function Navbar() {
   const [sectionProgress, setSectionProgress] = useState(
     Array(SECTION_IDS.length).fill(0),
   );
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const updateNavigation = () => {
@@ -70,6 +73,7 @@ export default function Navbar() {
     href: string,
   ) => {
     event.preventDefault();
+    setMobileMenuOpen(false);
 
     document.querySelector(href)?.scrollIntoView({
       behavior: "smooth",
@@ -85,10 +89,11 @@ export default function Navbar() {
         onClick={(event) => scrollToSection(event, "#hero")}
         aria-label="Ir al inicio"
       >
-        <span className="tid-logo-text">
-          UTT
-          <small>TLAXCALA</small>
-        </span>
+        <div className="tid-brand-wrapper">
+          <img src={logo} alt="UTT" className="tid-logo-img" />
+          <span className="tid-brand-divider" aria-hidden="true" />
+          <span className="tid-brand-text">TLAXCALA</span>
+        </div>
 
         <span className="tid-nav-line" aria-hidden="true">
           <span
@@ -97,6 +102,16 @@ export default function Navbar() {
           />
         </span>
       </a>
+
+      <button
+        type="button"
+        className="tid-mobile-toggle"
+        onClick={() => setMobileMenuOpen((prev) => !prev)}
+        aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú de navegación"}
+        aria-expanded={mobileMenuOpen}
+      >
+        {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+      </button>
 
       {NAV_ITEMS.map((item, index) => {
         const sectionIndex = index + 1;
@@ -128,6 +143,34 @@ export default function Navbar() {
           </a>
         );
       })}
+
+      <div
+        className={`tid-mobile-menu ${mobileMenuOpen ? "is-open" : ""}`}
+        aria-hidden={!mobileMenuOpen}
+      >
+        {NAV_ITEMS.map((item, index) => {
+          const sectionIndex = index + 1;
+          const isActive = activeIndex === sectionIndex;
+
+          return (
+            <a
+              key={item.href}
+              className={`tid-mobile-nav-item ${isActive ? "active" : ""}`}
+              href={item.href}
+              onClick={(event) => scrollToSection(event, item.href)}
+              aria-current={isActive ? "page" : undefined}
+            >
+              <span className="tid-dot" aria-hidden="true">
+                <span
+                  className="tid-dot-fill"
+                  style={{ height: `${sectionProgress[sectionIndex]}%` }}
+                />
+              </span>
+              <span>{item.label}</span>
+            </a>
+          );
+        })}
+      </div>
     </nav>
   );
 }

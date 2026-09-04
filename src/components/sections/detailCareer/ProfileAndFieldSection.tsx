@@ -1,6 +1,6 @@
 // src/components/sections/detail/ProfileAndFieldSection.tsx
 import { memo, useRef, useState } from "react";
-import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent, MotionValue } from "motion/react";
+import { motion, useScroll, useTransform, useMotionValueEvent, MotionValue } from "motion/react";
 import { Check, Briefcase } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { iconMap } from "../../../lib/iconMap";
@@ -66,23 +66,31 @@ interface Panel {
   color?: "orange" | "green";
 }
 
+// Los paneles con listas necesitan una ventana de lectura más amplia que los
+// paneles visuales. Los pesos se normalizan al total del recorrido de scroll.
+const getPanelScrollWeight = (panel: Panel) => {
+  if (panel.type === "points") return 2;
+  return panel.type === "title" ? 0.75 : 0.625;
+};
+
 function SequentialPanel({
   panel,
-  index,
-  total,
+  start,
+  end,
+  isLast,
   scrollYProgress,
 }: {
   panel: Panel;
-  index: number;
-  total: number;
+  start: number;
+  end: number;
+  isLast: boolean;
   scrollYProgress: MotionValue<number>;
 }) {
-  const per = 1 / total;
-  const s0 = index * per;
-  const s1 = s0 + per * 0.3;
-  const s2 = (index + 1) * per - per * 0.35;
-  const s3 = (index + 1) * per;
-  const isLast = index === total - 1;
+  const duration = end - start;
+  const s0 = start;
+  const s1 = s0 + duration * 0.3;
+  const s2 = end - duration * 0.35;
+  const s3 = end;
 
   const flexGrow = useTransform(
     scrollYProgress,
@@ -98,8 +106,16 @@ function SequentialPanel({
 
   // estado discreto: ¿está "abierto" ahora? (mismo umbral que usa el flexGrow para terminar de expandirse)
   const [isOpen, setIsOpen] = useState(false);
+  const isOpenRef = useRef(false);
   useMotionValueEvent(scrollYProgress, "change", (v) => {
-    setIsOpen(v >= s1 && v < s3);
+    const nextIsOpen = v >= s1 && v < s3;
+
+    // El listener se ejecuta en cada frame de scroll, pero React solo necesita
+    // renderizar cuando el panel realmente cambia entre abierto y cerrado.
+    if (nextIsOpen !== isOpenRef.current) {
+      isOpenRef.current = nextIsOpen;
+      setIsOpen(nextIsOpen);
+    }
   });
 
   return (
@@ -125,60 +141,52 @@ function SequentialPanel({
         <div className="absolute inset-0 bg-black/70" />
       )}
 
-      <AnimatePresence initial={false} mode="wait">
-        {!isOpen ? (
-          <motion.div
-            key="label"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="pointer-events-none absolute inset-0 flex items-center justify-center"
-          >
-            <VerticalLabel text={panel.title} />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="content"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25, delay: 0.1 }}
-            className="relative flex h-full min-w-[260px] flex-col items-center justify-center p-6 text-center md:p-10"
-          >
-            {panel.type === "title" && (
-              <>
-                {panel.icon && (
-                  <panel.icon
-                    className="mb-6 h-12 w-12 md:h-16 md:w-16 text-amber"
-                    strokeWidth={1.9}
-                  />
-                )}
-                <h2 className="max-w-[14ch] text-center font-serif text-3xl md:text-5xl tracking-[0.1em] leading-tight md:max-w-[18ch]">
-                  {panel.title}
-                </h2>
-              </>
-            )}
+      <motion.div
+        animate={{ opacity: isOpen ? 0 : 1 }}
+        transition={{ duration: 0.25, delay: isOpen ? 0 : 0.25 }}
+        className="pointer-events-none absolute inset-0 flex items-center justify-center"
+      >
+        <VerticalLabel text={panel.title} />
+      </motion.div>
 
-            {panel.type === "points" && (
-              <div className="w-full text-left">
-                <h3 className="font-serif text-2xl md:text-5xl mb-6 whitespace-nowrap">{panel.title}</h3>
-                <ul className="flex flex-col gap-4">
-                  {panel.items?.map((item) => (
-                    <ChecklistItem key={item} item={item} color={panel.color ?? "orange"} />
-                  ))}
-                </ul>
-              </div>
+      <motion.div
+        animate={{ opacity: isOpen ? 1 : 0 }}
+        transition={{ duration: 0.25, delay: isOpen ? 0.35 : 0 }}
+        className={`absolute inset-0 flex min-w-[260px] flex-col items-center justify-center p-6 text-center md:p-10 ${
+          isOpen ? "" : "pointer-events-none"
+        }`}
+      >
+        {panel.type === "title" && (
+          <>
+            {panel.icon && (
+              <panel.icon
+                className="mb-6 h-12 w-12 md:h-16 md:w-16 text-amber"
+                strokeWidth={1.9}
+              />
             )}
-
-            {panel.type === "image" && (
-              <h3 className="font-serif text-2xl md:text-3xl text-white whitespace-nowrap self-start mt-auto">
-                {panel.title}
-              </h3>
-            )}
-          </motion.div>
+            <h2 className="max-w-[14ch] text-center font-serif text-3xl md:text-5xl tracking-[0.1em] leading-tight md:max-w-[18ch]">
+              {panel.title}
+            </h2>
+          </>
         )}
-      </AnimatePresence>
+
+        {panel.type === "points" && (
+          <div className="w-full text-left">
+            <h3 className="font-serif text-2xl md:text-5xl mb-6 whitespace-nowrap">{panel.title}</h3>
+            <ul className="flex flex-col gap-4">
+              {panel.items?.map((item) => (
+                <ChecklistItem key={item} item={item} color={panel.color ?? "orange"} />
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {panel.type === "image" && (
+          <h3 className="font-serif text-2xl md:text-3xl text-white whitespace-nowrap self-start mt-auto">
+            {panel.title}
+          </h3>
+        )}
+      </motion.div>
     </motion.div>
   );
 }
@@ -190,19 +198,30 @@ function SequentialProfileAccordion({ panels }: { panels: Panel[] }) {
     target: ref,
     offset: ["start start", "end end"],
   });
+  const totalWeight = panels.reduce(
+    (total, panel) => total + getPanelScrollWeight(panel),
+    0,
+  );
+  let cursor = 0;
 
   return (
     <div ref={ref} className="relative" style={{ height: `${panels.length * 100}vh` }}>
       <div className="sticky top-0 flex h-screen items-stretch gap-3 overflow-hidden px-6 py-24 md:px-16">
-        {panels.map((panel, i) => (
-          <SequentialPanel
-            key={panel.id}
-            panel={panel}
-            index={i}
-            total={panels.length}
-            scrollYProgress={scrollYProgress}
-          />
-        ))}
+        {panels.map((panel, index) => {
+          const start = cursor;
+          cursor += getPanelScrollWeight(panel) / totalWeight;
+
+          return (
+            <SequentialPanel
+              key={panel.id}
+              panel={panel}
+              start={start}
+              end={cursor}
+              isLast={index === panels.length - 1}
+              scrollYProgress={scrollYProgress}
+            />
+          );
+        })}
       </div>
     </div>
   );

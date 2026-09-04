@@ -12,11 +12,19 @@
   --glass: rgba(9, 16, 12, 0.55);
 }
 
+html {
+  overflow-x: clip;
+  max-width: 100vw;
+  width: 100%;
+}
+
 body {
   background: var(--bg);
   font-family: "Inter", sans-serif;
   color: var(--ink);
-  overflow-x: hidden;
+  overflow-x: clip;
+  max-width: 100vw;
+  width: 100%;
 }
 
 @theme {
