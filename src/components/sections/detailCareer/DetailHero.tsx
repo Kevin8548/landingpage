@@ -10,6 +10,9 @@ interface DetailHeroProps {
   career: {
     nombre: string;
     quote: string;
+    perfilImages?: string[];
+    studyPlanImages?: string[];
+    imageBack?: string;
   };
   videoSrc?: string;
   posterSrc?: string;
@@ -20,31 +23,44 @@ const DetailHero = memo(function DetailHero({
   videoSrc,
   posterSrc,
 }: DetailHeroProps) {
+  const poster =
+    posterSrc ||
+    career.perfilImages?.[0] ||
+    career.studyPlanImages?.[0] ||
+    career.imageBack;
+
+  const cleanVideoPath = videoSrc
+    ? `${baseUrl}${videoSrc.startsWith("/") ? videoSrc.slice(1) : videoSrc}`
+    : undefined;
+  const webmPath = cleanVideoPath?.replace(".mp4", ".webm");
+
   return (
     <section className="relative flex min-h-[100svh] items-center overflow-hidden px-4 py-24 sm:min-h-dvh sm:px-6 sm:py-16 md:px-12 lg:px-16">
+      {/* Imagen de respaldo si el video tarda en cargar, falla o el dispositivo desactiva autoplay */}
+      {poster && (
+        <img
+          src={poster}
+          alt=""
+          loading="eager"
+          decoding="async"
+          className="absolute inset-0 -z-20 h-full w-full object-cover object-[58%_center] sm:object-center"
+        />
+      )}
+
       {/* Video de fondo */}
-      {videoSrc && (
+      {cleanVideoPath && (
         <video
           className="absolute inset-0 -z-10 h-full w-full object-cover object-[58%_center] sm:object-center"
-          poster={posterSrc}
+          poster={poster}
           autoPlay
           muted
           loop
           playsInline
           aria-hidden="true"
         >
-          <source src={`${baseUrl}${videoSrc.replace(".mp4", ".webm")}`} type="video/webm" />
-          <source src={`${baseUrl}${videoSrc}`} type="video/mp4" />
+          {webmPath && <source src={webmPath} type="video/webm" />}
+          <source src={cleanVideoPath} type="video/mp4" />
         </video>
-      )}
-
-      {/* Imagen de respaldo si no hay video */}
-      {!videoSrc && posterSrc && (
-        <img
-          src={posterSrc}
-          alt=""
-          className="absolute inset-0 -z-10 h-full w-full object-cover object-[58%_center] sm:object-center"
-        />
       )}
 
       {/* Gradiente sutil para todo el fondo */}

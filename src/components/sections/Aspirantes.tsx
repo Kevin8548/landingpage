@@ -34,7 +34,7 @@ export const Aspirantes = () => {
         </h2>
         <p className="text-[var(--ink)]/70 text-lg mb-10 max-w-lg mx-auto leading-relaxed">
           Conoce las fechas clave del proceso de admisión y los convenios de
-          pase directo disponibles.
+          pase directo disponibles. 
         </p>
 
         <motion.div

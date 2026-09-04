@@ -92,7 +92,7 @@ export function Careers() {
         />
         </div>
 
-        <h2 className="absolute top-8 left-4 z-10 pb-8 text-3xl font-bold italic leading-tight text-naranja sm:top-12 sm:left-6 sm:text-4xl sm:pb-10 md:top-16 md:left-8 md:text-5xl md:pb-12">
+        <h2 className="absolute top-16 left-4 z-10 text-2xl font-bold italic leading-tight text-naranja sm:top-10 sm:left-6 sm:text-4xl md:top-16 md:left-8 md:text-5xl">
           Conoce nuestras <br /> carreras
         </h2>
 
@@ -114,7 +114,7 @@ export function Careers() {
             <div
               key={career.slug}
               ref={index === 0 ? firstCardRef : undefined}
-              className={`relative z-10 h-screen w-screen flex-shrink-0 px-4 pt-64 sm:px-6 md:px-8 md:pt-72 ${index === 0 ? "md:pl-28" : ""}`}
+              className="relative z-10 h-screen w-screen flex-shrink-0 px-4 sm:px-8 md:px-12 flex flex-col justify-center items-center pt-16 sm:pt-14 md:pt-0"
             >
               <CareerItem
                 career={career}

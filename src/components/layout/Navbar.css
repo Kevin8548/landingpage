@@ -10,10 +10,14 @@
   display: grid;
   grid-template-columns: 1.7fr repeat(4, 1fr);
   gap: 6px;
+  width: 100%;
+  max-width: 100vw;
   min-height: 66px;
   padding: 8px 15px 0;
   box-sizing: border-box;
-
+  background: rgba(5, 11, 8, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .auth-field--full {
@@ -24,6 +28,27 @@
   to {
     opacity: 1;
   }
+}
+
+.tid-mobile-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--ink, #fff);
+  cursor: pointer;
+  padding: 8px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.tid-mobile-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tid-mobile-menu {
+  display: none;
 }
 
 .tid-nav-brand,
@@ -131,17 +156,75 @@
 
 @media (max-width: 760px) {
   .tid-nav {
-    display: block;
-    min-height: 64px;
-    padding: 16px 18px 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 58px;
+    padding: 10px 16px;
+    background: rgba(5, 11, 8, 0.94);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
 
   .tid-nav-brand {
-    height: 48px;
+    height: auto;
+    padding-top: 0;
+  }
+
+  .tid-brand-wrapper {
+    padding: 0;
+  }
+
+  .tid-nav-brand .tid-nav-line {
+    display: none;
+  }
+
+  .tid-mobile-toggle {
+    display: flex;
+    margin-left: auto;
   }
 
   .tid-nav-item {
     display: none;
+  }
+
+  .tid-mobile-menu {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.3s ease, opacity 0.25s ease, padding 0.3s ease;
+    border-top: 1px solid transparent;
+  }
+
+  .tid-mobile-menu.is-open {
+    max-height: 360px;
+    opacity: 1;
+    padding: 12px 0 8px;
+    border-top-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .tid-mobile-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    color: rgba(255, 255, 255, 0.86);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  .tid-mobile-nav-item:hover,
+  .tid-mobile-nav-item.active {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.06);
   }
 }
 
@@ -193,4 +276,37 @@
   font-weight: 500;
   margin-left: -1px;
   white-space: nowrap;
+}
+
+/* Contenedor que alinea el logo, la barra y el texto */
+.tid-brand-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px; 
+  padding: 0 18px;
+}
+
+/* Tamaño controlado del logo */
+.tid-logo-img {
+  height: 28px; 
+  width: auto;
+  display: block;
+}
+
+/* Barra separadora vertical */
+.tid-brand-divider {
+  width: 1.5px;
+  height: 20px; 
+  background-color: currentColor; 
+  opacity: 0.35; 
+  border-radius: 1px;
+}
+
+/* Tipografía de TLAXCALA */
+.tid-brand-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.15em; 
+  text-transform: uppercase;
+  line-height: 1;
 }

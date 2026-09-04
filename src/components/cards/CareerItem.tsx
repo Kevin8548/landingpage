@@ -45,22 +45,22 @@ export function CareerItem({
   const Icon = career.icon;
   const Tag = career.tag;
   return (
-    <div className="grid justify-items-center gap-5 md:grid-cols-2 md:justify-items-stretch md:gap-10 lg:gap-20 max-w-[18rem] sm:max-w-md md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto">
-      <div className="w-full">
+    <div className="grid items-center justify-items-center gap-4 sm:gap-6 md:grid-cols-2 md:gap-10 lg:gap-16 w-full max-w-sm sm:max-w-md md:max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto">
+      <div className="w-full flex flex-col items-center md:items-start">
         {/* Título y tag: libres, fuera del glass */}
-        <div className="flex items-start gap-2 mb-3 md:mb-4">
-          <Tag className="mt-0.5 text-green-700 md:mt-1" size={35} strokeWidth={2} />
-          <h3 className="text-xl font-semibold italic text-verde sm:text-2xl lg:text-3xl">
+        <div className="flex items-center justify-center md:justify-start gap-2 mb-2 sm:mb-3 md:mb-4">
+          <Tag className="mt-0.5 text-green-700 md:mt-1 shrink-0" size={28} strokeWidth={2} />
+          <h3 className="text-lg font-semibold italic text-verde sm:text-2xl lg:text-3xl leading-snug text-center md:text-left">
             {career.title}
           </h3>
         </div>
 
-        <div className="h-4 sm:h-6 lg:h-12" />
+        <div className="hidden sm:block sm:h-4 lg:h-8" />
 
         {/* Glass box: solo descripción + botón */}
         <motion.div
           style={{ scale, opacity: focus, boxShadow: glow }}
-          className="relative max-w-[15rem] overflow-hidden rounded-xl p-4 sm:max-w-xs sm:p-5 lg:rounded-2xl lg:p-8"
+          className="relative w-full max-w-[19rem] sm:max-w-xs md:max-w-sm lg:max-w-md overflow-hidden rounded-xl p-3.5 sm:p-5 lg:rounded-2xl lg:p-8"
         >
           <div
             className="absolute inset-0 rounded-2xl bg-black/40"
@@ -81,7 +81,7 @@ export function CareerItem({
           )}
 
           <div className="relative">
-            <p className="mb-4 text-sm leading-relaxed text-gray-300/80 sm:text-base lg:mb-6 lg:text-lg">
+            <p className="mb-3 text-xs leading-relaxed text-gray-300/80 sm:mb-4 sm:text-base lg:mb-6 lg:text-lg">
               {career.description}
             </p>
 
@@ -90,7 +90,7 @@ export function CareerItem({
                 variant="secondary"
                 size="sm"
                 icon={<ArrowUpRight size={16} />}
-                className="rounded-full bg-amber text-black hover:brightness-110"
+                className="rounded-full bg-amber text-black hover:brightness-110 text-xs sm:text-sm py-1.5 px-3 sm:py-2 sm:px-4"
               >
                 Ver plan de estudios
               </Button>
