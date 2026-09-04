@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Menu, X } from "lucide-react";
 import "./Navbar.css";
 
 const NAV_ITEMS = [
@@ -23,6 +24,7 @@ export default function CareerNavbar() {
   const [progress, setProgress] = useState<number[]>(
     Array(SECTION_IDS.length).fill(0),
   );
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const updateNavbar = () => {
@@ -79,14 +81,11 @@ export default function CareerNavbar() {
     href: string,
   ) => {
     event.preventDefault();
+    setMobileMenuOpen(false);
 
-    const section = document.querySelector(href);
-
-    if (!section) return;
-
-    window.scrollTo({
-      top: section.getBoundingClientRect().top + window.scrollY - 76,
+    document.querySelector(href)?.scrollIntoView({
       behavior: "smooth",
+      block: "start",
     });
   };
 
@@ -112,6 +111,16 @@ export default function CareerNavbar() {
           />
         </span>
       </a>
+
+      <button
+        type="button"
+        className="tid-mobile-toggle"
+        onClick={() => setMobileMenuOpen((prev) => !prev)}
+        aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú de navegación"}
+        aria-expanded={mobileMenuOpen}
+      >
+        {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+      </button>
 
       {NAV_ITEMS.map((item, index) => {
         const sectionIndex = index + 1;
@@ -142,6 +151,33 @@ export default function CareerNavbar() {
           </a>
         );
       })}
+
+      <div
+        className={`tid-mobile-menu ${mobileMenuOpen ? "is-open" : ""}`}
+        aria-hidden={!mobileMenuOpen}
+      >
+        {NAV_ITEMS.map((item, index) => {
+          const sectionIndex = index + 1;
+          const isActive = activeIndex === sectionIndex;
+
+          return (
+            <a
+              key={item.href}
+              className={`tid-mobile-nav-item ${isActive ? "active" : ""}`}
+              href={item.href}
+              onClick={(event) => scrollToSection(event, item.href)}
+            >
+              <span className="tid-dot" aria-hidden="true">
+                <span
+                  className="tid-dot-fill"
+                  style={{ height: `${progress[sectionIndex]}%` }}
+                />
+              </span>
+              <span>{item.label}</span>
+            </a>
+          );
+        })}
+      </div>
     </nav>
   );
 }

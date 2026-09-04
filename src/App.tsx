@@ -8,7 +8,7 @@ import {
 
 import { Aspirantes } from "./components/sections/Aspirantes";
 import { Careers } from "./components/sections/Careers";
-import { WhyChooseTI } from "./components/layout/View";
+import { WhyChooseTI } from "./components/sections/View";
 import Footer from "./components/layout/Footer";
 import Navbar from "./components/layout/Navbar";
 import Auth from "./components/auth/Auth";

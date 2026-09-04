@@ -115,6 +115,7 @@ export default function CareerDetail() {
         <DetailHero
           career={career}
           videoSrc={career.videoSrc ?? "/videos/redes.mp4"}
+          posterSrc={career.perfilImages?.[0] || career.imageBack}
         />
       </section>
 

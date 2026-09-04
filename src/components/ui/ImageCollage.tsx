@@ -39,7 +39,7 @@ export function ImageCollage({
   const currentFront = useRotatingImage(imageFront, intervalMs + 1200);
 
   return (
-    <div className="relative aspect-square w-full max-w-[11rem] sm:max-w-[14rem] md:max-w-lg ml-[10px]" style={{ willChange: "transform" }}>
+    <div className="relative aspect-square w-full max-w-[10rem] sm:max-w-[13rem] md:max-w-sm lg:max-w-md mx-auto" style={{ willChange: "transform" }}>
       <AnimatePresence mode="wait">
         <motion.img
           key={currentBack}
