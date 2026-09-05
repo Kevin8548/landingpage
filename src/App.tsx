@@ -23,6 +23,7 @@ import EventosAdmin from "./components/dashboard/EventosAdmin";
 import AspirantesAdmin from "./components/dashboard/AspirantesAdmin";
 import RequireAdmin from "./components/auth/RequireAdmin";
 import RequirePreviewAccess from "./components/auth/RequirePreviewAccess";
+import NotFound from "./pages/NotFound";
 
 const CareerDetail = lazy(() => import("./pages/CareerDetail"));
 const AspirantesPage = lazy(() => import("./pages/Aspirantes"));
@@ -179,6 +180,8 @@ export default function App() {
               </Suspense>
             }
           />
+
+          <Route path="*" element={<NotFound />} />
         </Routes>
 
         <AppFooter />
