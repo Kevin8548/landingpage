@@ -60,14 +60,14 @@ export const KeyDatesSection = ({
   };
 
   return (
-    <section id="fechas" className="relative py-28 px-6 bg-[var(--bg)]">
+    <section id="fechas" className="relative py-16 sm:py-20 md:py-28 px-4 sm:px-6 bg-[var(--bg)]">
       <div className="pointer-events-none absolute inset-0 bg-noise opacity-25" />
       <div className="relative max-w-6xl mx-auto">
-        <div className="max-w-xl mb-14">
+        <div className="max-w-xl mb-10 md:mb-14">
           <span className="font-data text-xs font-medium uppercase tracking-[0.2em] text-[var(--orange)]">
             Proceso de admisión
           </span>
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-[var(--ink)] mt-3">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-[var(--ink)] mt-3">
             Fechas clave
           </h2>
           <p className="text-[var(--muted)] mt-3 leading-relaxed">
@@ -76,7 +76,7 @@ export const KeyDatesSection = ({
         </div>
 
         {dateItems.length === 0 ? (
-          <div className="rounded-2xl border-2 border-dashed border-[var(--line)] p-12 text-center">
+          <div className="rounded-2xl border-2 border-dashed border-[var(--line)] p-8 sm:p-12 text-center">
             <p className="text-[var(--muted)] mb-4">Todavía no hay fechas registradas.</p>
             {editMode && (
               <button
@@ -89,7 +89,7 @@ export const KeyDatesSection = ({
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6 lg:gap-8">
             {/* Navegador de pasos */}
             <div className="flex lg:flex-col gap-2 overflow-x-auto no-scrollbar pb-2 lg:pb-0 lg:overflow-visible">
               {dateItems.map((d, i) => (
@@ -166,8 +166,8 @@ export const KeyDatesSection = ({
             </div>
 
             {/* Panel de detalle */}
-            <div className="relative rounded-2xl border border-[var(--line)] bg-[var(--glass)] backdrop-blur-sm p-8 md:p-12 overflow-hidden min-h-[22rem] flex flex-col justify-center">
-              <span className="font-display pointer-events-none select-none absolute -right-4 -top-8 text-[8rem] md:text-[11rem] font-bold leading-none text-[var(--ink)]/[0.035]">
+            <div className="relative rounded-2xl border border-[var(--line)] bg-[var(--glass)] backdrop-blur-sm p-6 sm:p-8 md:p-12 overflow-hidden min-h-[22rem] flex flex-col justify-center">
+              <span className="font-display pointer-events-none select-none absolute -right-4 -top-8 text-[5rem] sm:text-[8rem] md:text-[11rem] font-bold leading-none text-[var(--ink)]/[0.035]">
                 {pad(safeActiveDate + 1)}
               </span>
 
@@ -193,14 +193,14 @@ export const KeyDatesSection = ({
                         value={dateItems[safeActiveDate].date}
                         onChange={(e) => onUpdateField?.(dateItems[safeActiveDate].id, "date", e.target.value)}
                         placeholder="Fecha de la etapa (ej. 15 de agosto de 2026)"
-                        className="font-data text-xl md:text-2xl font-bold text-[var(--orange)] bg-transparent border-b border-dashed border-[var(--orange)]/50 focus:outline-none focus:border-[var(--orange)] w-full max-w-lg pb-1"
+                        className="font-data text-lg sm:text-xl md:text-2xl font-bold text-[var(--orange)] bg-transparent border-b border-dashed border-[var(--orange)]/50 focus:outline-none focus:border-[var(--orange)] w-full max-w-lg pb-1"
                       />
                       <input
                         type="text"
                         value={dateItems[safeActiveDate].title}
                         onChange={(e) => onUpdateField?.(dateItems[safeActiveDate].id, "title", e.target.value)}
                         placeholder="Título de la etapa"
-                        className="font-display text-2xl md:text-4xl font-semibold text-[var(--ink)] bg-transparent border-b border-dashed border-[var(--orange)]/50 focus:outline-none focus:border-[var(--orange)] w-full max-w-lg pb-1"
+                        className="font-display text-xl sm:text-2xl md:text-4xl font-semibold text-[var(--ink)] bg-transparent border-b border-dashed border-[var(--orange)]/50 focus:outline-none focus:border-[var(--orange)] w-full max-w-lg pb-1"
                       />
                       <textarea
                         value={dateItems[safeActiveDate].description}
@@ -213,11 +213,11 @@ export const KeyDatesSection = ({
                   ) : (
                     <>
                       <div className="mt-3 mb-1">
-                        <span className="font-data text-2xl md:text-3xl font-bold text-[var(--orange)] tracking-tight">
+                        <span className="font-data text-xl sm:text-2xl md:text-3xl font-bold text-[var(--orange)] tracking-tight">
                           {dateItems[safeActiveDate].date}
                         </span>
                       </div>
-                      <h3 className="font-display text-2xl md:text-4xl font-semibold text-[var(--ink)] mt-1 mb-4 max-w-lg">
+                      <h3 className="font-display text-xl sm:text-2xl md:text-4xl font-semibold text-[var(--ink)] mt-1 mb-4 max-w-lg">
                         {dateItems[safeActiveDate].title}
                       </h3>
                       <p className="text-[var(--muted)] leading-relaxed max-w-xl">
@@ -228,7 +228,7 @@ export const KeyDatesSection = ({
                 </motion.div>
               </AnimatePresence>
 
-              <div className="relative mt-10 h-1 w-full max-w-md bg-[var(--ink)]/5 rounded-full overflow-hidden">
+              <div className="relative mt-8 md:mt-10 h-1 w-full max-w-md bg-[var(--ink)]/5 rounded-full overflow-hidden">
                 <motion.div
                   className="h-full bg-[var(--orange)] rounded-full"
                   animate={{ width: `${((safeActiveDate + 1) / dateItems.length) * 100}%` }}

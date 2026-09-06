@@ -121,7 +121,7 @@ const FilterPill = ({ active, color, onClick, children }: FilterPillProps) => (
     type="button"
     onClick={onClick}
     aria-pressed={active}
-    className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wide transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] focus-visible:ring-[var(--teal)]"
+    className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wide transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] focus-visible:ring-[var(--teal)]"
     style={{
       borderColor: active ? color : "var(--line)",
       color: active ? color : "var(--muted)",
@@ -140,9 +140,9 @@ interface EmptyBoardProps {
 }
 
 const EmptyBoard = ({ title, message }: EmptyBoardProps) => (
-  <div className="relative mx-auto flex max-w-md flex-col items-center gap-3 rounded-2xl border border-dashed border-[var(--line)] bg-[var(--glass)] px-8 py-14 text-center">
+  <div className="relative mx-auto flex w-full max-w-md flex-col items-center gap-3 rounded-2xl border border-dashed border-[var(--line)] bg-[var(--glass)] px-5 py-10 text-center sm:px-8 sm:py-14">
     <span
-      className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--line)]"
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[var(--line)]"
       style={{
         background:
           "linear-gradient(135deg, color-mix(in srgb, var(--green) 22%, transparent), color-mix(in srgb, var(--orange) 22%, transparent))",
@@ -188,7 +188,7 @@ const EventCard = ({ event, highlighted = false }: EventCardProps) => {
         aria-hidden="true"
       />
 
-      <div className="relative h-40 w-full shrink-0 overflow-hidden">
+      <div className="relative h-36 w-full shrink-0 overflow-hidden sm:h-40">
         {event.image ? (
           <img
             src={event.image}
@@ -234,21 +234,21 @@ const EventCard = ({ event, highlighted = false }: EventCardProps) => {
         </div>
 
         <div
-          className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide backdrop-blur-md"
+          className="absolute right-3 top-3 inline-flex max-w-[65%] items-center gap-1 truncate rounded-full px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide backdrop-blur-md"
           style={{
             color: meta.color,
             backgroundColor: `color-mix(in srgb, ${meta.color} 20%, var(--bg) 80%)`,
             border: `1px solid color-mix(in srgb, ${meta.color} 45%, transparent)`,
           }}
         >
-          <Icon className="h-2.5 w-2.5" aria-hidden="true" />
-          {meta.label}
+          <Icon className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
+          <span className="truncate">{meta.label}</span>
         </div>
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-2 p-5">
+      <div className="flex min-w-0 flex-1 flex-col gap-2 p-4 sm:p-5">
         <span
-          className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold uppercase tracking-wide"
+          className="inline-flex flex-wrap items-center gap-1.5 font-mono text-xs font-semibold uppercase tracking-wide"
           style={{ color: meta.color }}
         >
           <FiClock className="h-3 w-3 shrink-0" aria-hidden="true" />
@@ -294,7 +294,7 @@ const HeroSpotlight = ({ event, onViewInBoard, reduceMotion }: HeroSpotlightProp
       initial={reduceMotion ? false : { opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, delay: 0.1 }}
-      className="relative overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--glass)] p-6 sm:p-8"
+      className="relative overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--glass)] p-5 sm:p-8"
       style={{
         boxShadow:
           "0 30px 70px -30px color-mix(in srgb, var(--green) 35%, transparent), 0 22px 55px -28px color-mix(in srgb, var(--orange) 30%, transparent)",
@@ -311,7 +311,7 @@ const HeroSpotlight = ({ event, onViewInBoard, reduceMotion }: HeroSpotlightProp
 
       <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center">
         <div className="flex shrink-0 items-center gap-4 sm:flex-col sm:items-start sm:gap-1">
-          <span className="font-display text-6xl font-extrabold leading-none text-[var(--ink)] sm:text-7xl">
+          <span className="font-display text-5xl font-extrabold leading-none text-[var(--ink)] sm:text-6xl lg:text-7xl">
             {dayNumber(event.date)}
           </span>
           <div className="flex flex-col">
@@ -357,7 +357,7 @@ const HeroSpotlight = ({ event, onViewInBoard, reduceMotion }: HeroSpotlightProp
             </span>
           </div>
 
-          <h2 className="font-display text-2xl font-bold leading-snug text-[var(--ink)] sm:text-3xl">
+          <h2 className="font-display text-xl font-bold leading-snug text-[var(--ink)] sm:text-2xl lg:text-3xl">
             {event.title}
           </h2>
 
@@ -384,7 +384,7 @@ const HeroSpotlight = ({ event, onViewInBoard, reduceMotion }: HeroSpotlightProp
             <button
               type="button"
               onClick={onViewInBoard}
-              className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] px-4 py-2 font-mono text-xs uppercase tracking-wide text-[var(--ink)] transition-colors hover:border-[var(--ink)]/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] focus-visible:ring-[var(--teal)]"
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-[var(--line)] px-4 py-2 font-mono text-xs uppercase tracking-wide text-[var(--ink)] transition-colors hover:border-[var(--ink)]/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] focus-visible:ring-[var(--teal)] sm:ml-auto sm:w-auto"
             >
               Ver en el tablón
               <FiArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -551,7 +551,7 @@ export const Eventos = () => {
   };
 
   return (
-    <div className="eventos-board relative min-h-screen bg-[var(--bg)]">
+    <div className="eventos-board relative min-h-screen w-full bg-[var(--bg)]">
       <style>{`
         .font-display { font-family: "Unbounded", sans-serif; }
         .font-mono { font-family: "JetBrains Mono", monospace; }
@@ -580,7 +580,7 @@ export const Eventos = () => {
       `}</style>
 
       {sorted.length === 0 ? (
-        <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-6 py-32 sm:px-8">
+        <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 py-24 sm:px-8 sm:py-32">
           <EmptyBoard
             title="El tablón está vacío"
             message="Todavía no hay eventos publicados. Vuelve pronto — aquí aparecerá el próximo en cuanto se agregue."
@@ -588,7 +588,7 @@ export const Eventos = () => {
         </div>
       ) : (
         <>
-          <section className="relative px-6 pt-16 pb-8 sm:px-8 sm:pt-20">
+          <section className="relative px-4 pt-12 pb-8 sm:px-8 sm:pt-20">
             <div className="mx-auto max-w-4xl">
               <div className="mb-4 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.25em] text-[var(--muted)]">
                 <span className="h-px w-6 bg-[var(--line)]" />
@@ -600,7 +600,7 @@ export const Eventos = () => {
                   initial={reduceMotion ? false : { opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="font-display text-4xl font-extrabold tracking-tight text-[var(--ink)] sm:text-5xl"
+                  className="font-display text-3xl font-extrabold tracking-tight text-[var(--ink)] sm:text-4xl lg:text-5xl"
                 >
                   Eventos
                 </motion.h1>
@@ -613,7 +613,7 @@ export const Eventos = () => {
           </section>
 
           {nextEvent && (
-            <section className="relative px-6 pb-10 sm:px-8">
+            <section className="relative px-4 pb-10 sm:px-8">
               <div className="mx-auto max-w-4xl">
                 <HeroSpotlight
                   event={nextEvent}
@@ -625,7 +625,7 @@ export const Eventos = () => {
           )}
 
           {upcoming.length > 0 && (
-            <section className="relative px-6 pb-10 sm:px-8">
+            <section className="relative px-4 pb-10 sm:px-8">
               <div className="mx-auto max-w-4xl overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--glass)]">
                 <div className="flex items-center gap-2 border-b border-[var(--line)] px-4 py-2.5">
                   <span className="relative flex h-2 w-2 shrink-0">
@@ -635,7 +635,7 @@ export const Eventos = () => {
                   <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--muted)]">
                     En el tablón
                   </span>
-                  <span className="ml-auto font-mono text-[10px] text-[var(--muted)]/60">
+                  <span className="ml-auto shrink-0 font-mono text-[10px] text-[var(--muted)]/60">
                     {upcoming.length} próximo{upcoming.length !== 1 ? "s" : ""}
                   </span>
                 </div>
@@ -663,12 +663,12 @@ export const Eventos = () => {
                           className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[var(--ink)]/5 focus-visible:outline-none focus-visible:bg-[var(--ink)]/5"
                         >
                           <span
-                            className="w-14 shrink-0 font-mono text-[11px]"
+                            className="w-12 shrink-0 font-mono text-[11px] sm:w-14"
                             style={{ color: meta.color }}
                           >
                             {fmtDateShort(e.date)}
                           </span>
-                          <span className="flex-1 truncate text-sm text-[var(--ink)]">
+                          <span className="min-w-0 flex-1 truncate text-sm text-[var(--ink)]">
                             {e.title}
                           </span>
                           <span className="hidden shrink-0 font-mono text-[10px] text-[var(--muted)] sm:inline">
@@ -683,7 +683,7 @@ export const Eventos = () => {
             </section>
           )}
 
-          <section className="relative px-6 pb-6 sm:px-8">
+          <section className="relative px-4 pb-6 sm:px-8">
             <div className="mx-auto max-w-4xl">
               <div className="mb-3 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--muted)]">
@@ -718,7 +718,7 @@ export const Eventos = () => {
           </section>
 
           {groups.length > 1 && (
-            <div className="mx-auto max-w-6xl px-6 sm:px-8 lg:hidden">
+            <div className="mx-auto max-w-6xl px-4 sm:px-8 lg:hidden">
               <div className="-mx-1 mb-6 flex gap-2 overflow-x-auto px-1 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {groups.map((g) => {
                   const isActive = g.key === activeMonth;
@@ -746,7 +746,7 @@ export const Eventos = () => {
             </div>
           )}
 
-          <section className="relative px-6 pb-24 sm:px-8">
+          <section className="relative px-4 pb-24 sm:px-8">
             <div className="mx-auto flex max-w-6xl gap-10">
               <div className="min-w-0 flex-1">
                 {filtered.length === 0 ? (
@@ -763,23 +763,23 @@ export const Eventos = () => {
                       id={`mes-${group.key}`}
                       ref={getSectionRef(group.key)}
                       data-month-key={group.key}
-                      className="relative scroll-mt-28 pb-14 last:pb-0"
+                      className="relative scroll-mt-28 overflow-hidden pb-14 last:pb-0"
                     >
                       <span
                         aria-hidden="true"
-                        className="pointer-events-none absolute -top-3 left-0 select-none font-display text-[4.5rem] font-extrabold uppercase leading-none tracking-tight text-[var(--ink)] opacity-[0.05] sm:text-[6.5rem]"
+                        className="pointer-events-none absolute -top-3 left-0 select-none whitespace-nowrap font-display text-[2.5rem] font-extrabold uppercase leading-none tracking-tight text-[var(--ink)] opacity-[0.05] sm:text-[4.5rem] lg:text-[6.5rem]"
                       >
                         {group.label}
                       </span>
 
-                      <div className="relative mb-5 flex items-baseline gap-3 border-b border-[var(--line)] pb-3">
+                      <div className="relative mb-5 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-[var(--line)] pb-3">
                         <h2 className="font-display text-xl font-bold text-[var(--ink)] sm:text-2xl">
                           {group.label}
                         </h2>
                         <span className="font-mono text-xs text-[var(--muted)]">
                           {group.year}
                         </span>
-                        <span className="ml-auto font-mono text-[11px] uppercase tracking-wide text-[var(--muted)]">
+                        <span className="ml-auto shrink-0 font-mono text-[11px] uppercase tracking-wide text-[var(--muted)]">
                           {group.events.length} evento{group.events.length !== 1 ? "s" : ""}
                         </span>
                       </div>
@@ -789,7 +789,7 @@ export const Eventos = () => {
                         initial={reduceMotion ? false : "hidden"}
                         whileInView="show"
                         viewport={{ once: true, amount: 0.15 }}
-                        className="relative grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+                        className="relative grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3"
                       >
                         {group.events.map((e) => (
                           <motion.div key={e.id} variants={cardVariants}>
@@ -832,8 +832,8 @@ export const Eventos = () => {
                               style={{ backgroundColor: isActive ? "var(--teal)" : "var(--line)" }}
                             />
                           </span>
-                          <span className="truncate">{g.label}</span>
-                          <span className="ml-auto opacity-50">{g.events.length}</span>
+                          <span className="min-w-0 flex-1 truncate">{g.label}</span>
+                          <span className="ml-auto shrink-0 opacity-50">{g.events.length}</span>
                         </button>
                       );
                     })}
