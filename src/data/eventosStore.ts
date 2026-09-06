@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { getEventsFromSupabase } from "../services/queries";
 import { events as seedEvents, type Category, type EventItem } from "./eventos";
 
 const STORAGE_KEY = "utt_eventos_v1";
@@ -51,12 +52,16 @@ export function useEventosStore() {
   // distintas a la que hizo el cambio, nunca en la misma — por eso combinar
   // esto con `commit` cubre ambos casos.
   useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key !== STORAGE_KEY) return;
-      setEventItemsState(readStorage());
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    let mounted = true;
+    async function loadRealEvents() {
+      const realEvents = await getEventsFromSupabase();
+      if (mounted && realEvents.length > 0) {
+        setEventItemsState(realEvents);
+      }
+    }
+    loadRealEvents();
+    
+    return () => { mounted = false; };
   }, []);
 
   const updateEventField = useCallback(

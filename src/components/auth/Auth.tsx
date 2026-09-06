@@ -7,41 +7,67 @@ import {
     LockKeyhole,
 } from "lucide-react";
 import { setAdminAuthenticated } from "../../lib/adminAuth";
+import { supabase } from "../../lib/supabase";
 import "./Auth.css";
 
 type Mode = "login" | "register";
 
-const ADMIN_USERNAME = import.meta.env.VITE_ADMIN_USERNAME ?? "";
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD ?? "";
-
 export default function Auth() {
     const [mode, setMode] = useState<Mode>("login");
-    const [matricula, setMatricula] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
     const navigate = useNavigate();
 
-    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setMessage(null);
 
         if (mode === "register") {
-            setMessage("El registro aún no está conectado a ningún backend. Vuelve pronto.");
+            setMessage("El registro de nuevos usuarios está deshabilitado por seguridad.");
             return;
         }
 
-        if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
-            setMessage("No hay credenciales configuradas. Revisa el archivo .env del proyecto.");
-            return;
-        }
+        setLoading(true);
 
-        if (matricula === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+        try {
+            // 1. Iniciar sesión con Supabase Auth
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+
+            if (error || !data.user) {
+                setMessage("Correo o contraseña incorrectos.");
+                setLoading(false);
+                return;
+            }
+
+            // 2. Verificar que el usuario tenga rol de 'admin' en la tabla profiles
+            const { data: profile, error: profileError } = await supabase
+                .from("profiles")
+                .select("role")
+                .eq("id", data.user.id)
+                .single();
+
+            if (profileError || profile?.role !== "admin") {
+                console.error("Error al obtener perfil:", profileError);
+                console.log("Datos obtenidos:", profile);
+                setMessage(`Error de permisos: ${profileError?.message || 'Rol incorrecto'} (Rol actual: ${profile?.role || 'Ninguno'})`);
+                await supabase.auth.signOut();
+                setLoading(false);
+                return;
+            }
+
+            // 3. Login exitoso
             setAdminAuthenticated(true);
             navigate("/dashboard");
-            return;
+        } catch (err) {
+            setMessage("Ocurrió un error al intentar iniciar sesión.");
+        } finally {
+            setLoading(false);
         }
-
-        setMessage("Matrícula o contraseña incorrectos.");
     };
 
     const isLogin = mode === "login";
@@ -149,16 +175,15 @@ export default function Auth() {
                     )}
 
                 <label className="auth-field">
-                <span>Matrícula</span>
+                <span>Correo Institucional</span>
 
                 <div className="auth-input-icon">
                     <GraduationCap size={18} />
                     <input
-                    type="text"
-                    placeholder="Ej. 202400123"
-                    inputMode="numeric"
-                    value={matricula}
-                    onChange={(e) => setMatricula(e.target.value)}
+                    type="email"
+                    placeholder="ejemplo@utt.edu.mx"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                     />
                 </div>
@@ -233,8 +258,8 @@ export default function Auth() {
                     </p>
                 )}
 
-                <button className="auth-submit" type="submit">
-                {isLogin ? "Iniciar sesión" : "Crear mi cuenta"}
+                <button className="auth-submit" type="submit" disabled={loading}>
+                {loading ? "Verificando..." : isLogin ? "Iniciar sesión" : "Crear mi cuenta"}
                 <span></span>
                 </button>
             </form>

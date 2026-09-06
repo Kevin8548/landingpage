@@ -17,6 +17,10 @@ yarn-error.log*
 .env
 .env.*
 !.env.example
+.env
+.env.local
+.env.*.local
+
 
 # Archivos del sistema
 .DS_Store
@@ -44,3 +48,6 @@ vite.svg
 
 # TypeScript
 *.tsbuildinfo
+
+# supabase (solo se ignoran los temporales)
+supabase/.temp/
