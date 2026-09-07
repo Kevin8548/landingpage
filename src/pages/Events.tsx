@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
-import { ArrowUpRight, CalendarDays, ChevronLeft, ChevronRight, Clock3, Eye, LayoutDashboard, LogOut, MapPin, Menu, Pencil, Plus, Trash2, Users, X } from "lucide-react";
+import { useEffect, useRef, useState, type DragEvent, type FormEvent } from "react";
+import { ArrowUpRight, CalendarDays, ChevronLeft, ChevronRight, Clock3, Eye, ImagePlus, LayoutDashboard, LogOut, MapPin, Menu, Pencil, Plus, Trash2, Upload, Users, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { getDashboardEvents, getEventDateParts, makeDateLabel, saveDashboardEvents, type DashboardEvent } from "../data/dashboardEvents";
 import { AnimatedThemeToggler } from "../components/ui/AnimatedThemeToggler";
@@ -87,22 +87,59 @@ export default function Events() {
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState("");
+  const [selectedImage, setSelectedImage] = useState<string | undefined>();
+  const [isDraggingImage, setIsDraggingImage] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const today = getTodayInputValue();
 
   useEffect(() => saveDashboardEvents(events), [events]);
 
-  const openCreator = () => { setEditingEvent(null); setSelectedDate(null); setSelectedTime(""); setFormOpen(true); };
+  useEffect(() => {
+    if (!isFormOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isFormOpen]);
+
+  const openCreator = () => { setEditingEvent(null); setSelectedDate(null); setSelectedTime(""); setSelectedImage(undefined); setFormOpen(true); };
   const openEditor = (event: DashboardEvent) => {
     setEditingEvent(event);
     setSelectedDate(event.dateValue ? new Date(`${event.dateValue}T12:00:00`) : null);
     setSelectedTime(eventTimeToValue(event.time));
+    setSelectedImage(event.image);
     setFormOpen(true);
+  };
+
+  const loadImage = (file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      void showDashboardAlert({ icon: "warning", title: "Archivo no válido", text: "Selecciona una imagen PNG, JPG, WEBP o similar." });
+      return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      void showDashboardAlert({ icon: "warning", title: "Imagen demasiado pesada", text: "Elige una imagen de hasta 3 MB." });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setSelectedImage(String(reader.result));
+    reader.readAsDataURL(file);
+  };
+
+  const handleImageDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDraggingImage(false);
+    loadImage(event.dataTransfer.files[0]);
   };
 
   const saveEvent = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const title = String(data.get("title") || "").trim();
+    const description = String(data.get("description") || "").trim();
     const dateValue = selectedDate ? toDateValue(selectedDate) : "";
     const timeValue = selectedTime;
     const location = String(data.get("location") || "").trim();
@@ -118,7 +155,7 @@ export default function Events() {
       return;
     }
 
-    const details = { title, date: makeDateLabel(dateValue), dateValue, time: `${timeValue} h`, location, audience };
+    const details = { title, description, image: selectedImage, date: makeDateLabel(dateValue), dateValue, time: `${timeValue} h`, location, audience };
     if (editingEvent) {
       setEvents((current) => current.map((item) => item.id === editingEvent.id ? { ...item, ...details } : item));
       void showDashboardAlert({ icon: "success", title: "Cambios guardados", text: "El evento fue actualizado." });
@@ -164,7 +201,7 @@ export default function Events() {
           {events.map((event, index) => { const date = getEventDateParts(event.date); const stripeColor = index % 2 === 0 ? "amber" : "green"; return <article className="dashboard-event-row" key={event.id}><div className={`dashboard-event-row__stripe dashboard-event-row__stripe--${stripeColor}`} /><div className="dashboard-event-row__date"><strong>{date.day}</strong><span>{date.month}</span></div><div className="dashboard-event-row__details"><span className={event.status === "Publicado" ? "dashboard-status" : "dashboard-status dashboard-status--draft"}><i />{event.status}</span><h3>{event.title}</h3><p>{event.location} · {event.time}</p></div><div className="dashboard-event-actions"><button onClick={() => setViewingEvent(event)}><Eye size={16} /><span>Ver</span></button><button onClick={() => openEditor(event)}><Pencil size={15} /><span>Editar</span></button><button className="is-danger" onClick={() => void deleteEvent(event)}><Trash2 size={15} /><span>Eliminar</span></button></div></article>; })}
         </div></section>
       </div></section>
-    {isFormOpen && <div className="dashboard-modal-backdrop" role="presentation" onMouseDown={() => setFormOpen(false)}><section className="dashboard-modal" role="dialog" aria-modal="true" aria-labelledby="event-form-title" onMouseDown={(event) => event.stopPropagation()}><div className="dashboard-modal__header"><div><p className="dashboard-eyebrow">{editingEvent ? "EDITAR EVENTO" : "NUEVO EVENTO"}</p><h2 id="event-form-title">{editingEvent ? "Actualiza los detalles" : "Comparte algo importante"}</h2></div><button onClick={() => setFormOpen(false)} aria-label="Cerrar"><X size={20}/></button></div><form onSubmit={saveEvent} className="dashboard-event-form"><label>Nombre del evento<input name="title" defaultValue={editingEvent?.title} autoFocus required/></label><div className="dashboard-form-grid"><label>Fecha<DashboardDatePicker value={selectedDate} onChange={setSelectedDate} /></label><label>Horario<DashboardTimePicker value={selectedTime} onChange={setSelectedTime} /></label></div><label>Lugar<input name="location" defaultValue={editingEvent?.location} required/></label><label>Público al que va dirigido<input name="audience" defaultValue={editingEvent?.audience}/></label><div className="dashboard-modal__footer"><button type="button" onClick={() => setFormOpen(false)}>Cancelar</button><button className="dashboard-primary-button" type="submit">{editingEvent ? "Guardar cambios" : "Publicar evento"}<ArrowUpRight size={17}/></button></div></form></section></div>}
-    {viewingEvent && <div className="dashboard-modal-backdrop" role="presentation" onMouseDown={() => setViewingEvent(null)}><section className="dashboard-modal dashboard-view-modal" role="dialog" aria-modal="true" aria-labelledby="event-view-title" onMouseDown={(event) => event.stopPropagation()}><div className="dashboard-modal__header"><div><p className="dashboard-eyebrow">DETALLE DEL EVENTO</p><h2 id="event-view-title">{viewingEvent.title}</h2></div><button onClick={() => setViewingEvent(null)} aria-label="Cerrar"><X size={20}/></button></div><div className="dashboard-view-details"><p><CalendarDays size={18}/><span><strong>Fecha</strong>{viewingEvent.date}</span></p><p><Clock3 size={18}/><span><strong>Horario</strong>{viewingEvent.time}</span></p><p><MapPin size={18}/><span><strong>Lugar</strong>{viewingEvent.location}</span></p><p><Users size={18}/><span><strong>Dirigido a</strong>{viewingEvent.audience}</span></p></div><div className="dashboard-modal__footer"><button type="button" onClick={() => setViewingEvent(null)}>Cerrar</button><button className="dashboard-primary-button" onClick={() => { setViewingEvent(null); openEditor(viewingEvent); }}><Pencil size={16}/>Editar evento</button></div></section></div>}
+    {isFormOpen && <div className="dashboard-modal-backdrop" role="presentation" onMouseDown={() => setFormOpen(false)}><section className="dashboard-modal" role="dialog" aria-modal="true" aria-labelledby="event-form-title" onMouseDown={(event) => event.stopPropagation()}><div className="dashboard-modal__header"><div><p className="dashboard-eyebrow">{editingEvent ? "EDITAR EVENTO" : "NUEVO EVENTO"}</p><h2 id="event-form-title">{editingEvent ? "Actualiza los detalles" : "Comparte algo importante"}</h2></div><button onClick={() => setFormOpen(false)} aria-label="Cerrar"><X size={20}/></button></div><form onSubmit={saveEvent} className="dashboard-event-form"><div className={`dashboard-image-upload ${isDraggingImage ? "is-dragging" : ""}`} onClick={() => imageInputRef.current?.click()} onDragOver={(event) => { event.preventDefault(); setIsDraggingImage(true); }} onDragLeave={() => setIsDraggingImage(false)} onDrop={handleImageDrop} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") imageInputRef.current?.click(); }}><input ref={imageInputRef} type="file" accept="image/*" className="sr-only" onChange={(event) => loadImage(event.target.files?.[0])}/>{selectedImage ? <><img src={selectedImage} alt="Vista previa del evento"/><div className="dashboard-image-upload__overlay"><Upload size={18}/><span>Cambiar imagen</span></div><button type="button" className="dashboard-image-upload__remove" onClick={(event) => { event.stopPropagation(); setSelectedImage(undefined); if (imageInputRef.current) imageInputRef.current.value = ""; }} aria-label="Quitar imagen"><X size={16}/></button></> : <div className="dashboard-image-upload__empty"><ImagePlus size={25}/><strong>Sube la imagen del evento</strong><span>Haz clic o arrastra la imagen aquí</span><small>PNG O JPG · Máximo 3 MB</small></div>}</div><label>Nombre del evento<input name="title" defaultValue={editingEvent?.title} autoFocus required/></label><label>Descripción<textarea name="description" defaultValue={editingEvent?.description} placeholder="" rows={3}/></label><div className="dashboard-form-grid"><label>Fecha<DashboardDatePicker value={selectedDate} onChange={setSelectedDate} /></label><label>Horario<DashboardTimePicker value={selectedTime} onChange={setSelectedTime} /></label></div><label>Lugar<input name="location" defaultValue={editingEvent?.location} required/></label><label>Público al que va dirigido<input name="audience" defaultValue={editingEvent?.audience}/></label><div className="dashboard-modal__footer"><button type="button" onClick={() => setFormOpen(false)}>Cancelar</button><button className="dashboard-primary-button" type="submit">{editingEvent ? "Guardar cambios" : "Publicar evento"}<ArrowUpRight size={17}/></button></div></form></section></div>}
+    {viewingEvent && <div className="dashboard-modal-backdrop" role="presentation" onMouseDown={() => setViewingEvent(null)}><section className="dashboard-modal dashboard-view-modal" role="dialog" aria-modal="true" aria-labelledby="event-view-title" onMouseDown={(event) => event.stopPropagation()}><div className="dashboard-modal__header"><div><p className="dashboard-eyebrow">DETALLE DEL EVENTO</p><h2 id="event-view-title">{viewingEvent.title}</h2></div><button onClick={() => setViewingEvent(null)} aria-label="Cerrar"><X size={20}/></button></div><div className="dashboard-view-image">{viewingEvent.image ? <img src={viewingEvent.image} alt={`Imagen de ${viewingEvent.title}`}/> : <div className="dashboard-view-image__empty"><ImagePlus size={25}/><span>Este evento no tiene imagen</span></div>}</div>{viewingEvent.description && <div className="dashboard-view-description"><strong>Descripción</strong><p>{viewingEvent.description}</p></div>}<div className="dashboard-view-details"><p><CalendarDays size={18}/><span><strong>Fecha</strong>{viewingEvent.date}</span></p><p><Clock3 size={18}/><span><strong>Horario</strong>{viewingEvent.time}</span></p><p><MapPin size={18}/><span><strong>Lugar</strong>{viewingEvent.location}</span></p><p><Users size={18}/><span><strong>Dirigido a</strong>{viewingEvent.audience}</span></p></div><div className="dashboard-modal__footer"><button type="button" onClick={() => setViewingEvent(null)}>Cerrar</button><button className="dashboard-primary-button" onClick={() => { setViewingEvent(null); openEditor(viewingEvent); }}><Pencil size={16}/>Editar evento</button></div></section></div>}
   </main>;
 }

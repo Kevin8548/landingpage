@@ -2,6 +2,8 @@ export type EventStatus = "Publicado" | "Borrador";
 export type DashboardEvent = {
     id: string;
     title: string;
+    description?: string;
+    image?: string;
     date: string;
     dateValue?: string;
     time: string;

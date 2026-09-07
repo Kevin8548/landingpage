@@ -19,6 +19,207 @@
   background: #ef9b36;
 }
 
+/* Carga de imagen en el formulario de eventos. */
+.dashboard-image-upload {
+  position: relative;
+  display: grid;
+  min-height: 154px;
+  overflow: hidden;
+  place-items: center;
+  border: 1.5px dashed #b8cbbd;
+  border-radius: 12px;
+  color: var(--dash-green);
+  background: #f7fbf7;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.dashboard-image-upload:hover,
+.dashboard-image-upload.is-dragging {
+  border-color: var(--dash-green);
+  background: #eef8f0;
+}
+
+.dashboard-image-upload__empty {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 20px;
+  text-align: center;
+}
+
+.dashboard-image-upload__empty strong {
+  margin-top: 2px;
+  color: var(--dash-ink);
+  font-size: 13px;
+}
+
+.dashboard-image-upload__empty span,
+.dashboard-image-upload__empty small {
+  color: var(--dash-muted);
+  font-size: 11px;
+}
+
+.dashboard-image-upload__empty small {
+  font-size: 10px;
+}
+
+.dashboard-image-upload img {
+  width: 100%;
+  height: 154px;
+  object-fit: cover;
+}
+
+.dashboard-image-upload__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: #fff;
+  background: rgba(13, 38, 23, 0.56);
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.dashboard-image-upload:hover .dashboard-image-upload__overlay,
+.dashboard-image-upload:focus-within .dashboard-image-upload__overlay {
+  opacity: 1;
+}
+
+.dashboard-image-upload__remove {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  display: grid;
+  width: 29px;
+  height: 29px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(15, 30, 20, 0.72);
+  cursor: pointer;
+}
+
+/* El fondo del dashboard se bloquea; el formulario conserva su propio scroll. */
+.dashboard-modal-backdrop {
+  overflow-y: auto;
+}
+
+.dashboard-modal:has(.dashboard-event-form) {
+  display: flex;
+  max-height: calc(100dvh - 40px);
+  flex-direction: column;
+}
+
+.dashboard-event-form {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+  scrollbar-width: none;
+}
+
+.dashboard-event-form::-webkit-scrollbar {
+  display: none;
+}
+
+.dashboard-event-form textarea {
+  width: 100%;
+  min-height: 76px;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border: 1px solid #dce5dd;
+  border-radius: 9px;
+  outline: 0;
+  color: var(--dash-ink);
+  background: #fbfcfb;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.dashboard-event-form textarea:focus {
+  border-color: #4c9d69;
+  box-shadow: 0 0 0 3px #e6f3e9;
+}
+
+.dashboard-view-image {
+  min-height: 170px;
+  margin-top: 22px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #090b0a;
+}
+
+.dashboard-view-image img {
+  display: block;
+  width: 100%;
+  height: 210px;
+  object-fit: cover;
+}
+
+.dashboard-view-image__empty {
+  display: grid;
+  min-height: 170px;
+  place-content: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  text-align: center;
+}
+
+.dashboard-view-description {
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 10px;
+  background: #f5f8f5;
+}
+
+.dashboard-view-description strong {
+  color: var(--dash-ink);
+  font-size: 11px;
+}
+
+.dashboard-view-description p {
+  margin: 5px 0 0;
+  color: var(--dash-muted);
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+html.dark .dashboard-image-upload {
+  border-color: #46604e;
+  background: #1b241e;
+}
+
+html.dark .dashboard-image-upload:hover,
+html.dark .dashboard-image-upload.is-dragging {
+  border-color: #72d08e;
+  background: #203326;
+}
+
+html.dark .dashboard-image-upload__empty strong,
+html.dark .dashboard-event-form textarea {
+  color: var(--dash-ink);
+}
+
+html.dark .dashboard-view-description {
+  background: #1d2d23;
+}
+
+html.dark .dashboard-event-form textarea {
+  border-color: #3a424d;
+  background: #1b1f25;
+}
+
 
 /* =========================================================
    BARRA LATERAL
@@ -787,7 +988,7 @@ html.dark .dashboard-calendar__days button:hover {
 
 
 /* =========================================================
-   SELECTOR DE HORARIO
+  SELECTOR DE HORARIO
    ========================================================= */
 
 .dashboard-time-picker {
@@ -809,7 +1010,6 @@ html.dark .dashboard-calendar__days button:hover {
 
   top: 50%;
   right: 7px;
-
   display: grid;
 
   width: 29px;
