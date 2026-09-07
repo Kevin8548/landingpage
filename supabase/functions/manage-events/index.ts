@@ -3,63 +3,59 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
-  // 1. Manejar las peticiones de pre-vuelo (CORS) del navegador
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    // 2. Extraer el token de seguridad que enviará tu frontend
-    const authHeader = req.headers.get('Authorization')!;
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) throw new Error('ALERTA: El frontend no envió ningún token.');
     const token = authHeader.replace('Bearer ', '');
 
-    // 3. Crear un cliente de Supabase con permisos máximos (Service Role)
-    // Deno automáticamente tiene acceso a estas variables en la nube
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
-    );
+    // 1. Verificación de secretos (ESTO APARECERÁ EN TUS LOGS DE SUPABASE)
+    const url = Deno.env.get('SUPABASE_URL') ?? '';
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('ADMIN_SERVICE_KEY') ?? '';
+    
+    console.log("URL detectada:", url ? "SÍ" : "NO");
+    console.log("Service Key detectada:", serviceKey ? "SÍ" : "NO (¡Aquí está el error!)");
 
-    // 4. Validar que el token sea auténtico
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-    if (userError || !user) throw new Error('Token inválido o expirado');
+    if (!serviceKey) throw new Error("La función no encuentra la llave maestra en el servidor.");
 
-    // 5. Validar que el usuario sea ADMIN en la tabla profiles
-    const { data: profile } = await supabase
+    // 2. Cliente con poder absoluto (Service Role)
+    const supabaseAdmin = createClient(url, serviceKey);
+
+    // 3. Verificamos quién es el usuario usando su token
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+    if (userError || !user) throw new Error('Token inválido');
+
+    // 4. Verificamos si es admin en la BD (usando el cliente superpoderoso)
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single();
 
-    if (profile?.role !== 'admin') {
-      throw new Error('Permisos insuficientes. Solo los administradores pueden hacer esto.');
+    if (profileError) {
+      console.error("Error leyendo perfiles:", profileError);
+      throw new Error("No se pudo leer el perfil del usuario.");
     }
 
-    // 6. Procesar los datos enviados por el panel (Crear Evento)
+    if (profile?.role !== 'admin') throw new Error('Permisos insuficientes.');
+
+    // 5. Guardar evento
     if (req.method === 'POST') {
       const eventoData = await req.json();
-      
-      const { data, error } = await supabase
-        .from('events')
-        .insert([eventoData])
-        .select();
-
+      const { data, error } = await supabaseAdmin.from('events').insert([eventoData]).select();
       if (error) throw error;
       
       return new Response(JSON.stringify(data), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 201,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 201
       });
     }
 
-    return new Response("Método no soportado", { headers: corsHeaders, status: 405 });
-    
+    return new Response("OK", { headers: corsHeaders });
   } catch (error: any) {
-    // Si algo falla o detecta a un intruso, devuelve un error 400
+    console.error("Error fatal:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400
     });
   }
 });
