@@ -145,7 +145,27 @@
   resize: vertical;
 }
 
+.dashboard-event-form select {
+  width: 100%;
+  min-height: 43px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  border: 1px solid #dce5dd;
+  border-radius: 9px;
+  outline: 0;
+  color: var(--dash-ink);
+  background: #fbfcfb;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
 .dashboard-event-form textarea:focus {
+  border-color: #4c9d69;
+  box-shadow: 0 0 0 3px #e6f3e9;
+}
+
+.dashboard-event-form select:focus {
   border-color: #4c9d69;
   box-shadow: 0 0 0 3px #e6f3e9;
 }
@@ -209,6 +229,12 @@ html.dark .dashboard-image-upload.is-dragging {
 html.dark .dashboard-image-upload__empty strong,
 html.dark .dashboard-event-form textarea {
   color: var(--dash-ink);
+}
+
+html.dark .dashboard-event-form select {
+  border-color: #3a424d;
+  color: var(--dash-ink);
+  background: #1b1f25;
 }
 
 html.dark .dashboard-view-description {
@@ -1093,6 +1119,85 @@ html.dark .dashboard-calendar__days button:hover {
   background: var(--dash-green);
 }
 
+.dashboard-event-type-picker {
+  position: relative;
+}
+
+.dashboard-event-type-picker__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--dash-muted);
+  text-align: left;
+}
+
+.dashboard-event-type-picker__trigger.has-value {
+  color: var(--dash-ink);
+}
+
+.dashboard-event-type-picker__trigger svg {
+  flex: 0 0 auto;
+  color: var(--dash-green);
+  transition: transform 0.2s ease;
+}
+
+.dashboard-event-type-picker__trigger[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+.dashboard-event-type-menu {
+  position: absolute;
+  z-index: 35;
+  top: calc(100% + 7px);
+  right: 0;
+  left: 0;
+  display: grid;
+  gap: 3px;
+  padding: 6px;
+  border: 1px solid var(--dash-line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 16px 42px rgba(23, 35, 29, 0.18);
+}
+
+.dashboard-event-type-menu button {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--dash-ink);
+  background: transparent;
+  font-family: "Inter", sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dashboard-event-type-menu button strong {
+  font-size: 12px;
+}
+
+.dashboard-event-type-menu button small {
+  color: var(--dash-muted);
+  font-size: 11px;
+}
+
+.dashboard-event-type-menu button:hover {
+  color: var(--dash-green-dark);
+  background: #e8f3ea;
+}
+
+.dashboard-event-type-menu button.is-selected {
+  color: #fff;
+  background: var(--dash-green);
+}
+
+.dashboard-event-type-menu button.is-selected small {
+  color: rgba(255, 255, 255, 0.78);
+}
+
 
 /* =========================================================
    HORARIO DARK
@@ -1300,4 +1405,23 @@ html.dark
   .dashboard-welcome-actions {
     align-self: stretch;
   }
+}
+
+html.dark .dashboard-event-type-menu {
+  border-color: #3a424d;
+  background: #1b1f25;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.42);
+}
+
+html.dark .dashboard-event-type-menu button {
+  color: #edf1f5;
+}
+
+html.dark .dashboard-event-type-menu button small {
+  color: #a9b0ba;
+}
+
+html.dark .dashboard-event-type-menu button:hover {
+  color: #b7f0c7;
+  background: #303842;
 }

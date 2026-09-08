@@ -9,6 +9,7 @@ export type DashboardEvent = {
     time: string;
     location: string;
     audience: string;
+    type?: "academico" | "cultural" | "deportivo";
     status: EventStatus;
     accent: "amber" | "green" | "blue";
 };

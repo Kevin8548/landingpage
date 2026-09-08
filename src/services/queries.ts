@@ -36,10 +36,11 @@ export async function getEventsFromSupabase(): Promise<EventItem[]> {
       date: dateStr,
       time: timeStr,
       location: row.lugar,
-      // Mapeamos el 'tipo' de la DB a la 'categoría' de tu frontend
-      category: (row.tipo === "Hackathon" || row.tipo === "Taller" || row.tipo === "Conferencia" 
-        ? "academico" 
-        : "cultural") as Category,
+      category: (row.tipo === "academico"
+        ? "academico"
+        : row.tipo === "deportivo"
+          ? "comunidad"
+          : "cultural") as Category,
       image: row.imagen_url || undefined,
     };
   });
