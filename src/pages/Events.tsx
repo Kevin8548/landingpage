@@ -6,6 +6,8 @@ import { AnimatedThemeToggler } from "../components/ui/AnimatedThemeToggler";
 import { showDashboardAlert } from "../lib/dashboardAlerts";
 import "../components/dashboard/Dashboard.css";
 import "../components/dashboard/DashboardOverrides.css";
+import { supabase } from "../lib/supabase";
+import { getEventsFromSupabase } from "../services/queries";
 
 function getTodayInputValue() {
   const now = new Date();
@@ -79,7 +81,7 @@ function DashboardTimePicker({ value, onChange }: { value: string; onChange: (ti
 }
 
 export default function Events() {
-  const [events, setEvents] = useState<DashboardEvent[]>(getDashboardEvents);
+  const [events, setEvents] = useState<DashboardEvent[]>([]);
   const [editingEvent, setEditingEvent] = useState<DashboardEvent | null>(null);
   const [viewingEvent, setViewingEvent] = useState<DashboardEvent | null>(null);
   const [isFormOpen, setFormOpen] = useState(() => new URLSearchParams(window.location.search).get("crear") === "1");
@@ -92,7 +94,30 @@ export default function Events() {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const today = getTodayInputValue();
 
-  useEffect(() => saveDashboardEvents(events), [events]);
+  useEffect(() => {
+    const fetchEvents = async () => {
+      const dbEvents = await getEventsFromSupabase();
+      
+      const mappedEvents = dbEvents.map((dbEvent) => {
+        return {
+          id: dbEvent.id,
+          title: dbEvent.title,
+          date: makeDateLabel(dbEvent.date),
+          dateValue: dbEvent.date,
+          time: `${dbEvent.time} h`, 
+          location: dbEvent.location,
+          audience: dbEvent.description.replace('Dirigido a: ', ''),
+          status: "Publicado" as const,
+          accent: "green" as const
+        };
+      });
+      
+      setEvents(mappedEvents);
+    };
+    
+    fetchEvents();
+  }, []);
+
 
   useEffect(() => {
     if (!isFormOpen) return;
@@ -135,34 +160,114 @@ export default function Events() {
     loadImage(event.dataTransfer.files[0]);
   };
 
-  const saveEvent = (event: FormEvent<HTMLFormElement>) => {
+    const saveEvent = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
     const data = new FormData(event.currentTarget);
+
     const title = String(data.get("title") || "").trim();
     const description = String(data.get("description") || "").trim();
     const dateValue = selectedDate ? toDateValue(selectedDate) : "";
     const timeValue = selectedTime;
     const location = String(data.get("location") || "").trim();
-    const audience = String(data.get("audience") || "").trim() || "Comunidad UTT";
+    const audience =
+      String(data.get("audience") || "").trim() || "Comunidad UTT";
 
     if (!title || !dateValue || !timeValue || !location) return;
-    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(timeValue)) {
-      void showDashboardAlert({ icon: "warning", title: "Horario no válido", text: "Escribe una hora válida en formato" });
-      return;
-    }
-    if (dateValue < today) {
-      void showDashboardAlert({ icon: "warning", title: "Fecha no válida", text: "Selecciona una fecha igual o posterior a hoy." });
-      return;
+
+    // Datos que necesita el backend
+    const dbEventPayload = {
+      titulo: title,
+      descripcion: `Dirigido a: ${audience}`,
+      fecha_inicio: `${dateValue}T${timeValue}:00`,
+      fecha_fin: `${dateValue}T${timeValue}:00`,
+      lugar: location,
+      tipo: "Otro",
+      modalidad: "Presencial"
+    };
+
+    try {
+      if (editingEvent) {
+        // Por ahora conservamos la edición local
+        const details = {
+          title,
+          description,
+          image: selectedImage,
+          date: makeDateLabel(dateValue),
+          dateValue,
+          time: `${timeValue} h`,
+          location,
+          audience
+        };
+
+        setEvents((current) =>
+          current.map((item) =>
+            item.id === editingEvent.id
+              ? { ...item, ...details }
+              : item
+          )
+        );
+
+        void showDashboardAlert({
+          icon: "success",
+          title: "Cambios guardados",
+          text: "El evento fue actualizado."
+        });
+      } else {
+        // Conexión con el backend de tu compañera
+        const {
+          data: { session }
+        } = await supabase.auth.getSession();
+
+        if (!session) {
+          throw new Error(
+            "No hay sesión activa. Por favor, vuelve a iniciar sesión."
+          );
+        }
+
+        const { data: responseData, error } =
+          await supabase.functions.invoke("manage-events", {
+            body: dbEventPayload,
+            headers: {
+              Authorization: `Bearer ${session.access_token}`
+            }
+          });
+
+        if (error) throw error;
+
+        // Conservamos también tus datos nuevos en la interfaz
+        const newEventUI = {
+          id: responseData[0].id,
+          title,
+          description,
+          image: selectedImage,
+          date: makeDateLabel(dateValue),
+          dateValue,
+          time: `${timeValue} h`,
+          location,
+          audience,
+          status: "Publicado" as const,
+          accent: "green" as const
+        };
+
+        setEvents((current) => [newEventUI, ...current]);
+
+        void showDashboardAlert({
+          icon: "success",
+          title: "Evento publicado",
+          text: "Guardado de forma segura en Supabase."
+        });
+      }
+    } catch (err: any) {
+      console.error(err);
+
+      void showDashboardAlert({
+        icon: "error",
+        title: "Error de seguridad",
+        text: "No tienes permisos para crear eventos."
+      });
     }
 
-    const details = { title, description, image: selectedImage, date: makeDateLabel(dateValue), dateValue, time: `${timeValue} h`, location, audience };
-    if (editingEvent) {
-      setEvents((current) => current.map((item) => item.id === editingEvent.id ? { ...item, ...details } : item));
-      void showDashboardAlert({ icon: "success", title: "Cambios guardados", text: "El evento fue actualizado." });
-    } else {
-      setEvents((current) => [{ id: crypto.randomUUID(), ...details, status: "Publicado", accent: "green" }, ...current]);
-      void showDashboardAlert({ icon: "success", title: "Evento publicado", text: "Tu evento ya es visible en el listado." });
-    }
     setFormOpen(false);
     setEditingEvent(null);
   };
