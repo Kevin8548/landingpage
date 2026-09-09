@@ -44,6 +44,10 @@ function mapManagedEvent(event: ManagedEvent): DashboardEvent {
   };
 }
 
+// Conserva la última consulta mientras la aplicación siga abierta para que,
+// al volver a esta ruta, no se muestre un contador vacío durante la recarga.
+let eventsCache: DashboardEvent[] | null = null;
+
 function DashboardDatePicker({ value, onChange }: { value: Date | null; onChange: (date: Date) => void }) {
   const [isOpen, setIsOpen] = useState(false);
   const [viewDate, setViewDate] = useState(value ?? new Date());
@@ -131,7 +135,8 @@ function DashboardEventTypePicker({ value, onChange }: { value: EventType | ""; 
 }
 
 export default function Events() {
-  const [events, setEvents] = useState<DashboardEvent[]>([]);
+  const [events, setEvents] = useState<DashboardEvent[]>(() => eventsCache ?? []);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(() => eventsCache === null);
   const [editingEvent, setEditingEvent] = useState<DashboardEvent | null>(null);
   const [viewingEvent, setViewingEvent] = useState<DashboardEvent | null>(null);
   const [isFormOpen, setFormOpen] = useState(() => new URLSearchParams(window.location.search).get("crear") === "1");
@@ -146,10 +151,14 @@ export default function Events() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        setEvents((await listManagedEvents()).map(mapManagedEvent));
+        const loadedEvents = (await listManagedEvents()).map(mapManagedEvent);
+        eventsCache = loadedEvents;
+        setEvents(loadedEvents);
       } catch (error) {
         console.error("No fue posible cargar los eventos:", error);
         void showDashboardAlert({ icon: "error", title: "No se pudieron cargar los eventos", text: "Inténtalo nuevamente en unos momentos." });
+      } finally {
+        setIsLoadingEvents(false);
       }
     };
     
@@ -235,9 +244,13 @@ export default function Events() {
         : await createManagedEvent(payload);
       const mappedEvent = mapManagedEvent(savedEvent);
 
-      setEvents((current) => editingEvent
-        ? current.map((item) => item.id === mappedEvent.id ? mappedEvent : item)
-        : [mappedEvent, ...current]);
+      setEvents((current) => {
+        const nextEvents = editingEvent
+          ? current.map((item) => item.id === mappedEvent.id ? mappedEvent : item)
+          : [mappedEvent, ...current];
+        eventsCache = nextEvents;
+        return nextEvents;
+      });
       setFormOpen(false);
       setEditingEvent(null);
       void showDashboardAlert({
@@ -267,7 +280,11 @@ export default function Events() {
     if (!result.isConfirmed) return;
     try {
       await deleteManagedEvent(event.id);
-      setEvents((current) => current.filter((item) => item.id !== event.id));
+      setEvents((current) => {
+        const nextEvents = current.filter((item) => item.id !== event.id);
+        eventsCache = nextEvents;
+        return nextEvents;
+      });
       void showDashboardAlert({ icon: "success", title: "Evento eliminado", timer: 1600, showConfirmButton: false });
     } catch (error) {
       console.error(error);
@@ -281,7 +298,7 @@ export default function Events() {
         {isSidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
       </button>
       <div className="dashboard-brand"><span className="dashboard-brand__mark">UTT</span><span>Universidad Tecnológica<br />de Tlaxcala</span><button className="dashboard-sidebar__close" onClick={() => setSidebarOpen(false)} aria-label="Cerrar menú"><X size={19}/></button></div>
-      <nav className="dashboard-nav" aria-label="Navegación del panel"><Link to="/dashboard"><LayoutDashboard size={18}/>Resumen</Link><Link className="is-active" to="/dashboard/eventos"><CalendarDays size={18}/>Eventos <span>{events.length}</span></Link><button type="button" onClick={openCreator}><Plus size={18}/>Crear evento</button></nav>
+      <nav className="dashboard-nav" aria-label="Navegación del panel"><Link to="/dashboard"><LayoutDashboard size={18}/>Resumen</Link><Link className="is-active" to="/dashboard/eventos"><CalendarDays size={18}/>Eventos <span className={isLoadingEvents ? "dashboard-count-placeholder placeholder-glow" : ""}>{isLoadingEvents ? "" : events.length}</span></Link><button type="button" onClick={openCreator}><Plus size={18}/>Crear evento</button></nav>
       <div className="dashboard-sidebar__bottom"><div className="dashboard-profile"><span className="dashboard-avatar">AD</span><div><strong>Administrador</strong><small>Panel de eventos</small></div></div><Link to="/" className="dashboard-signout"><LogOut size={17}/>Salir al sitio</Link></div>
     </aside>
 
@@ -291,8 +308,8 @@ export default function Events() {
       <div className="dashboard-topbar__actions"><AnimatedThemeToggler className="dashboard-theme-toggle" /><span className="dashboard-avatar dashboard-avatar--small">AD</span></div>
     </header>
       <div className="dashboard-body dashboard-body--events"><div className="dashboard-welcome"><div><p className="dashboard-eyebrow"><CalendarDays size={14}/> ADMINISTRACIÓN</p><h1>Tus eventos<span>.</span></h1><p>Crea los eventos.</p></div><button className="dashboard-primary-button" onClick={openCreator}><Plus size={18}/>Crear evento</button></div>
-        <section className="dashboard-events dashboard-events--standalone"><div className="dashboard-section-heading"><div><p>LISTADO DE EVENTOS</p><h2>{events.length} {events.length === 1 ? "evento" : "eventos"}</h2></div></div><div className="dashboard-event-list">
-          {events.map((event, index) => { const date = getEventDateParts(event.date); const stripeColor = index % 2 === 0 ? "amber" : "green"; return <article className="dashboard-event-row" key={event.id}><div className={`dashboard-event-row__stripe dashboard-event-row__stripe--${stripeColor}`} /><div className="dashboard-event-row__date"><strong>{date.day}</strong><span>{date.month}</span></div><div className="dashboard-event-row__details"><span className={event.status === "Publicado" ? "dashboard-status" : "dashboard-status dashboard-status--draft"}><i />{event.status}</span><h3>{event.title}</h3><p>{event.location} · {event.time}</p></div><div className="dashboard-event-actions"><button onClick={() => setViewingEvent(event)}><Eye size={16} /><span>Ver</span></button><button onClick={() => openEditor(event)}><Pencil size={15} /><span>Editar</span></button><button className="is-danger" onClick={() => void deleteEvent(event)}><Trash2 size={15} /><span>Eliminar</span></button></div></article>; })}
+        <section className="dashboard-events dashboard-events--standalone"><div className="dashboard-section-heading"><div><p>LISTADO DE EVENTOS</p><h2>{isLoadingEvents ? <span className="dashboard-heading-placeholder placeholder-glow" aria-label="Cargando eventos" /> : `${events.length} ${events.length === 1 ? "evento" : "eventos"}`}</h2></div></div><div className="dashboard-event-list" aria-busy={isLoadingEvents}>
+          {isLoadingEvents ? Array.from({ length: 4 }, (_, index) => <article className="dashboard-event-row dashboard-event-row--placeholder placeholder-glow" key={`event-placeholder-${index}`} aria-hidden="true"><div className="dashboard-event-row__stripe" /><div className="dashboard-event-row__date"><i /><small /></div><div className="dashboard-event-row__details"><i /><h3 /><p /></div><div className="dashboard-event-actions"><i /><i /><i /></div></article>) : events.map((event, index) => { const date = getEventDateParts(event.date); const stripeColor = index % 2 === 0 ? "amber" : "green"; return <article className="dashboard-event-row" key={event.id}><div className={`dashboard-event-row__stripe dashboard-event-row__stripe--${stripeColor}`} /><div className="dashboard-event-row__date"><strong>{date.day}</strong><span>{date.month}</span></div><div className="dashboard-event-row__details"><span className={event.status === "Publicado" ? "dashboard-status" : "dashboard-status dashboard-status--draft"}><i />{event.status}</span><h3>{event.title}</h3><p>{event.location} · {event.time}</p></div><div className="dashboard-event-actions"><button onClick={() => setViewingEvent(event)}><Eye size={16} /><span>Ver</span></button><button onClick={() => openEditor(event)}><Pencil size={15} /><span>Editar</span></button><button className="is-danger" onClick={() => void deleteEvent(event)}><Trash2 size={15} /><span>Eliminar</span></button></div></article>; })}
         </div></section>
       </div></section>
     {isFormOpen && (
