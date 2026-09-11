@@ -167,8 +167,10 @@ interface EventCardProps {
   onUpdateField: (id: string, field: EventTextField, value: string) => void;
   onConfirmDate: (id: string, value: string) => void;
   onUpdateCategory: (id: string, category: Category) => void;
-  onUpdateImage: (id: string, image: string | undefined) => void;
+  onImageUpload: (id: string, file: File) => void;
+  onImageRemove: (id: string) => void;
   onDelete: (id: string) => void;
+  onSaveField: (id: string) => void;
   highlighted?: boolean;
 }
 
@@ -178,8 +180,10 @@ const EventCard = ({
   onUpdateField,
   onConfirmDate,
   onUpdateCategory,
-  onUpdateImage,
+  onImageUpload,
+  onImageRemove,
   onDelete,
+  onSaveField,
   highlighted = false,
 }: EventCardProps) => {
   const meta = CATEGORY_META[event.category];
@@ -286,14 +290,14 @@ const EventCard = ({
                 className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
-                  if (file) onUpdateImage(event.id, URL.createObjectURL(file));
+                  if (file) onImageUpload(event.id, file);
                 }}
               />
             </label>
             {event.image && (
               <button
                 type="button"
-                onClick={() => onUpdateImage(event.id, undefined)}
+                onClick={() => onImageRemove(event.id)}
                 className="font-mono text-[10px] text-[var(--muted)] hover:text-red-400"
               >
                 Quitar imagen
@@ -345,6 +349,7 @@ const EventCard = ({
                   type="time"
                   value={event.time}
                   onChange={(e) => onUpdateField(event.id, "time", e.target.value)}
+                  onBlur={() => onSaveField(event.id)}
                   onClick={(e) => e.stopPropagation()}
                   className="date-time-input w-[4.4rem] bg-transparent font-mono text-[11px] text-[var(--ink)] focus:outline-none"
                 />
@@ -375,6 +380,7 @@ const EventCard = ({
               type="text"
               value={event.title}
               onChange={(e) => onUpdateField(event.id, "title", e.target.value)}
+              onBlur={() => onSaveField(event.id)}
               placeholder="Título del evento"
               className="font-display text-lg font-bold leading-snug text-[var(--ink)] bg-transparent border-b border-dashed border-[var(--line)] pb-1 focus:outline-none focus:border-[var(--orange)]"
             />
@@ -382,6 +388,7 @@ const EventCard = ({
             <textarea
               value={event.description}
               onChange={(e) => onUpdateField(event.id, "description", e.target.value)}
+              onBlur={() => onSaveField(event.id)}
               rows={2}
               placeholder="Descripción"
               className="resize-y rounded-lg border border-dashed border-[var(--line)] bg-transparent p-2 text-sm leading-relaxed text-[var(--muted)] focus:outline-none focus:border-[var(--orange)]/50"
@@ -391,6 +398,7 @@ const EventCard = ({
               type="text"
               value={event.location}
               onChange={(e) => onUpdateField(event.id, "location", e.target.value)}
+              onBlur={() => onSaveField(event.id)}
               placeholder="Ubicación"
               className="font-mono text-[11px] text-[var(--muted)] bg-transparent border-b border-dashed border-[var(--line)] pb-1 focus:outline-none focus:border-[var(--orange)]"
             />
@@ -541,6 +549,8 @@ export default function EventosAdmin() {
     updateEventCategory,
     updateEventImage,
     deleteEvent: storeDeleteEvent,
+    saveEvent,
+    saveEventImage,
   } = useEventosStore();
 
   const [editMode, setEditMode] = useState(false);
@@ -658,10 +668,15 @@ export default function EventosAdmin() {
     sectionRefs.current.get(key)?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
   };
 
-  const handleAddEvent = () => {
-    const created = storeAddEvent();
-    jumpToEvent(created.id, created.date);
-    setHighlightedId(created.id);
+  const handleAddEvent = async () => {
+    try {
+      const created = await storeAddEvent();
+      jumpToEvent(created.id, created.date);
+      setHighlightedId(created.id);
+    } catch (err) {
+      console.error("No se pudo crear el evento:", err);
+      // aquí igual entraría un toast de error si tienen uno
+    }
   };
 
   const handleDeleteEvent = async (id: string) => {
@@ -682,6 +697,31 @@ export default function EventosAdmin() {
     setActiveMonth(monthKey(value));
     setPendingScroll(id);
     setHighlightedId(id);
+    saveEvent(id);
+  };
+
+  const handleCategoryChange = (id: string, category: Category) => {
+    updateEventCategory(id, category);
+    saveEvent(id);
+  };
+
+  const fileToDataUrl = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+  const handleImageUpload = async (id: string, file: File) => {
+    const dataUrl = await fileToDataUrl(file);
+    updateEventImage(id, dataUrl); // preview inmediato mientras sube
+    await saveEventImage(id, dataUrl);
+  };
+
+  const handleImageRemove = async (id: string) => {
+    updateEventImage(id, undefined);
+    await saveEventImage(id, undefined, true);
   };
 
   return (
@@ -720,7 +760,7 @@ export default function EventosAdmin() {
 
       {editMode && (
         <div className="sticky top-0 z-40 bg-[var(--orange)] text-[var(--bg)] text-center text-[11px] font-mono uppercase tracking-wider py-2 px-4">
-          Modo edición activo — los cambios se guardan en este navegador
+          Modo edición activo — los cambios se guardan directo en la base de datos
         </div>
       )}
 
@@ -949,9 +989,11 @@ export default function EventosAdmin() {
                               editMode={editMode}
                               onUpdateField={updateEventField}
                               onConfirmDate={handleConfirmDate}
-                              onUpdateCategory={updateEventCategory}
-                              onUpdateImage={updateEventImage}
+                              onUpdateCategory={handleCategoryChange}
+                              onImageUpload={handleImageUpload}
+                              onImageRemove={handleImageRemove}
                               onDelete={handleDeleteEvent}
+                              onSaveField={saveEvent}
                               highlighted={e.id === highlightedId}
                             />
                           </motion.div>
