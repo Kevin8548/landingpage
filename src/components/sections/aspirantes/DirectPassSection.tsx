@@ -9,7 +9,9 @@ interface DirectPassSectionProps {
   institutionItems: Institution[];
   editMode?: boolean;
   onUpdateField?: (id: string, field: InstitutionTextField, value: string) => void;
-  onUpdateLogo?: (id: string, logo: string | undefined) => void;
+  onSaveField?: (id: string) => void;
+  onImageUpload?: (id: string, file: File) => void;
+  onImageRemove?: (id: string) => void;
   onAddInstitution?: () => void;
   onDeleteInstitution?: (id: string) => void;
 }
@@ -18,7 +20,9 @@ export const DirectPassSection = ({
   institutionItems,
   editMode = false,
   onUpdateField,
-  onUpdateLogo,
+  onSaveField,
+  onImageUpload,
+  onImageRemove,
   onAddInstitution,
   onDeleteInstitution,
 }: DirectPassSectionProps) => {
@@ -105,14 +109,14 @@ export const DirectPassSection = ({
                         className="hidden"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
-                          if (file) onUpdateLogo?.(id, URL.createObjectURL(file));
+                          if (file) onImageUpload?.(id, file);
                         }}
                       />
                     </label>
                     {logo && (
                       <button
                         type="button"
-                        onClick={() => onUpdateLogo?.(id, undefined)}
+                        onClick={() => onImageRemove?.(id)}
                         className="font-data text-[11px] text-[var(--muted)] hover:text-red-400 text-left"
                       >
                         Quitar logo
@@ -141,12 +145,14 @@ export const DirectPassSection = ({
                       type="text"
                       value={name}
                       onChange={(e) => onUpdateField?.(id, "name", e.target.value)}
+                      onBlur={() => onSaveField?.(id)}
                       placeholder="Nombre de la institución"
                       className="font-display text-xl font-semibold text-[var(--ink)] bg-transparent border-b border-dashed border-[var(--green)]/50 focus:outline-none focus:border-[var(--green)] w-full mb-2 pb-1"
                     />
                     <textarea
                       value={description}
                       onChange={(e) => onUpdateField?.(id, "description", e.target.value)}
+                      onBlur={() => onSaveField?.(id)}
                       placeholder="Descripción del convenio"
                       rows={3}
                       className="text-sm text-[var(--muted)] leading-relaxed w-full bg-transparent border border-dashed border-[var(--line)] rounded-lg p-2 focus:outline-none focus:border-[var(--green)]/50 resize-y"

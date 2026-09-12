@@ -7,6 +7,7 @@ interface HeroSectionProps {
   editMode?: boolean;
   onTitleChange?: (value: string) => void;
   onSubtitleChange?: (value: string) => void;
+  onSaveHero?: () => void;
 }
 
 export const HeroSection = ({
@@ -15,6 +16,7 @@ export const HeroSection = ({
   editMode = false,
   onTitleChange,
   onSubtitleChange,
+  onSaveHero,
 }: HeroSectionProps) => {
   return (
     <section className="relative min-h-screen flex items-center justify-center lg:justify-end overflow-hidden px-4 sm:px-6 md:px-16 py-28 lg:py-0">
@@ -60,6 +62,7 @@ export const HeroSection = ({
           <textarea
             value={title}
             onChange={(e) => onTitleChange?.(e.target.value)}
+            onBlur={() => onSaveHero?.()}
             className="font-display text-4xl sm:text-5xl md:text-7xl font-extrabold leading-tight tracking-tighter mb-6 text-[var(--ink)] bg-white/5 border-2 border-dashed border-[var(--orange)]/50 rounded-2xl p-4 w-full focus:outline-none"
           />
         ) : (
@@ -78,6 +81,7 @@ export const HeroSection = ({
           <textarea
             value={subtitle}
             onChange={(e) => onSubtitleChange?.(e.target.value)}
+            onBlur={() => onSaveHero?.()}
             className="text-[var(--ink)]/80 text-lg sm:text-xl mb-6 sm:mb-8 bg-white/5 border border-dashed border-[var(--ink)]/30 rounded-xl p-4 w-full"
           />
         ) : (
