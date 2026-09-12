@@ -24,11 +24,15 @@ export default function AspirantesAdmin() {
     institutionItems,
     setHeroTitle,
     setHeroSubtitle,
+    saveHero,
     updateDateField,
+    saveDate,
     addDate,
     deleteDate,
     updateInstitutionField,
+    saveInstitution,
     updateInstitutionLogo,
+    saveInstitutionLogo,
     addInstitution,
     deleteInstitution,
   } = useAspirantesStore();
@@ -55,6 +59,41 @@ export default function AspirantesAdmin() {
     deleteInstitution(id);
   };
 
+  const handleAddDate = async () => {
+    try {
+      await addDate();
+    } catch (err) {
+      console.error("No se pudo crear la fecha:", err);
+    }
+  };
+
+  const handleAddInstitution = async () => {
+    try {
+      await addInstitution();
+    } catch (err) {
+      console.error("No se pudo crear la institución:", err);
+    }
+  };
+
+  const fileToDataUrl = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+  const handleInstitutionImageUpload = async (id: string, file: File) => {
+    const dataUrl = await fileToDataUrl(file);
+    updateInstitutionLogo(id, dataUrl); // preview inmediato mientras sube
+    await saveInstitutionLogo(id, dataUrl);
+  };
+
+  const handleInstitutionImageRemove = async (id: string) => {
+    updateInstitutionLogo(id, undefined);
+    await saveInstitutionLogo(id, undefined, true);
+  };
+
   return (
     <div className="bg-[var(--bg)] antialiased">
       <style>{`
@@ -74,7 +113,7 @@ export default function AspirantesAdmin() {
 
       {editMode && (
         <div className="sticky top-0 z-40 bg-[var(--orange)] text-[var(--bg)] text-center text-[11px] font-data uppercase tracking-wider py-2 px-4">
-          Modo edición activo — los cambios se guardan en este navegador
+          Modo edición activo — los cambios se guardan directo en la base de datos
         </div>
       )}
 
@@ -85,6 +124,7 @@ export default function AspirantesAdmin() {
           editMode={editMode}
           onTitleChange={setHeroTitle}
           onSubtitleChange={setHeroSubtitle}
+          onSaveHero={saveHero}
         />
       </section>
 
@@ -97,7 +137,8 @@ export default function AspirantesAdmin() {
         dateItems={dateItems}
         editMode={editMode}
         onUpdateField={updateDateField}
-        onAddDate={addDate}
+        onSaveDate={saveDate}
+        onAddDate={handleAddDate}
         onDeleteDate={handleDeleteDate}
       />
 
@@ -106,8 +147,10 @@ export default function AspirantesAdmin() {
         institutionItems={institutionItems}
         editMode={editMode}
         onUpdateField={updateInstitutionField}
-        onUpdateLogo={updateInstitutionLogo}
-        onAddInstitution={addInstitution}
+        onSaveField={saveInstitution}
+        onImageUpload={handleInstitutionImageUpload}
+        onImageRemove={handleInstitutionImageRemove}
+        onAddInstitution={handleAddInstitution}
         onDeleteInstitution={handleDeleteInstitution}
       />
 

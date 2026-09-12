@@ -17,6 +17,7 @@ interface KeyDatesSectionProps {
   dateItems: KeyDate[];
   editMode?: boolean;
   onUpdateField?: (id: string, field: DateTextField, value: string) => void;
+  onSaveDate?: (id: string) => void;
   onAddDate?: () => void;
   onDeleteDate?: (id: string) => void;
 }
@@ -25,6 +26,7 @@ export const KeyDatesSection = ({
   dateItems,
   editMode = false,
   onUpdateField,
+  onSaveDate,
   onAddDate,
   onDeleteDate,
 }: KeyDatesSectionProps) => {
@@ -192,6 +194,7 @@ export const KeyDatesSection = ({
                         type="text"
                         value={dateItems[safeActiveDate].date}
                         onChange={(e) => onUpdateField?.(dateItems[safeActiveDate].id, "date", e.target.value)}
+                        onBlur={() => onSaveDate?.(dateItems[safeActiveDate].id)}
                         placeholder="Fecha de la etapa (ej. 15 de agosto de 2026)"
                         className="font-data text-lg sm:text-xl md:text-2xl font-bold text-[var(--orange)] bg-transparent border-b border-dashed border-[var(--orange)]/50 focus:outline-none focus:border-[var(--orange)] w-full max-w-lg pb-1"
                       />
@@ -199,12 +202,14 @@ export const KeyDatesSection = ({
                         type="text"
                         value={dateItems[safeActiveDate].title}
                         onChange={(e) => onUpdateField?.(dateItems[safeActiveDate].id, "title", e.target.value)}
+                        onBlur={() => onSaveDate?.(dateItems[safeActiveDate].id)}
                         placeholder="Título de la etapa"
                         className="font-display text-xl sm:text-2xl md:text-4xl font-semibold text-[var(--ink)] bg-transparent border-b border-dashed border-[var(--orange)]/50 focus:outline-none focus:border-[var(--orange)] w-full max-w-lg pb-1"
                       />
                       <textarea
                         value={dateItems[safeActiveDate].description}
                         onChange={(e) => onUpdateField?.(dateItems[safeActiveDate].id, "description", e.target.value)}
+                        onBlur={() => onSaveDate?.(dateItems[safeActiveDate].id)}
                         placeholder="Descripción de la etapa"
                         rows={3}
                         className="text-[var(--muted)] leading-relaxed max-w-xl w-full bg-transparent border border-dashed border-[var(--line)] rounded-lg p-3 focus:outline-none focus:border-[var(--orange)]/50 resize-y"
