@@ -18,7 +18,7 @@ import { ConfirmProvider } from "./components/ui/ConfirmDialog";
 
 import Dashboard from "./pages/Dashboard";
 import Events from "./pages/Events";
-import { Eventos } from "./components/sections/eventos";
+import Eventos from "./components/sections/eventos";
 import EventosAdmin from "./components/dashboard/EventosAdmin";
 import AspirantesAdmin from "./components/dashboard/AspirantesAdmin";
 import RequireAdmin from "./components/auth/RequireAdmin";
