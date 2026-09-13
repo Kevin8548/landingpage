@@ -16,6 +16,8 @@ html {
   overflow-x: clip;
   max-width: 100vw;
   width: 100%;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -25,6 +27,59 @@ body {
   overflow-x: clip;
   max-width: 100vw;
   width: 100%;
+}
+
+/* Base compartida: evita que contenido, imágenes o textos extensos rompan
+   el ancho disponible en pantallas pequeñas. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+#root {
+  min-width: 0;
+  overflow-x: clip;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
+img,
+video {
+  height: auto;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+a,
+button,
+label,
+span {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }
 
 @theme {
@@ -92,6 +147,15 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
   .animate-marquee-up,
   .animate-marquee-down {
     animation: none;
