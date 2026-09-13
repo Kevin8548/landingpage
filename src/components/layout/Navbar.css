@@ -310,3 +310,92 @@
   text-transform: uppercase;
   line-height: 1;
 }
+
+/* En tablet vertical el menú completo ya no tiene espacio real para los
+   cuatro enlaces; se comporta como menú móvil antes de que se desborde. */
+@media (max-width: 900px) {
+  .tid-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 58px;
+    padding: 10px 16px;
+    background: rgba(5, 11, 8, 0.94);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .tid-nav-brand {
+    height: auto;
+    padding-top: 0;
+  }
+
+  .tid-brand-wrapper {
+    padding: 0;
+  }
+
+  .tid-nav-brand .tid-nav-line,
+  .tid-nav-item {
+    display: none;
+  }
+
+  .tid-mobile-toggle {
+    display: flex;
+    margin-left: auto;
+  }
+
+  .tid-mobile-menu {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.3s ease, opacity 0.25s ease, padding 0.3s ease;
+    border-top: 1px solid transparent;
+  }
+
+  .tid-mobile-menu.is-open {
+    max-height: 360px;
+    opacity: 1;
+    padding: 12px 0 8px;
+    border-top-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .tid-mobile-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  .tid-mobile-nav-item:hover,
+  .tid-mobile-nav-item.active {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+
+@media (max-width: 360px) {
+  .tid-nav {
+    padding-inline: 12px;
+  }
+
+  .tid-logo-text {
+    font-size: 12px;
+    letter-spacing: 0.22em;
+  }
+
+  .tid-logo-text small {
+    font-size: 7px;
+    letter-spacing: 0.32em;
+  }
+}
