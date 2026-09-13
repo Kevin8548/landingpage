@@ -22,7 +22,7 @@ export default function Auth() {
     const [apellidoMaterno, setApellidoMaterno] = useState("");
     const [carrera, setCarrera] = useState("");
     const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+    const [message, setMessage] = useState<string | null>(null);
     const navigate = useNavigate();
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -44,7 +44,7 @@ export default function Auth() {
                             apellido_paterno: apellidoPaterno.trim(),
                             apellido_materno: apellidoMaterno.trim(),
                             carrera: carrera,
-                            role: "admin",
+                            role: "student",
                         },
                     },
                 });
@@ -52,7 +52,7 @@ export default function Auth() {
                 if (error) throw error;
 
                 if (data.user) {
-                    setMessage({ text: "¡Cuenta creada con éxito! Redirigiendo...", type: "success" });
+                    setMessage("¡Cuenta creada con éxito! Redirigiendo...");
                     setTimeout(() => {
                         navigate("/dashboard");
                     }, 1200);
@@ -83,9 +83,9 @@ export default function Auth() {
             }
         } catch (err: unknown) {
             if (err instanceof Error) {
-                setMessage({ text: err.message, type: "error" });
+                setMessage(err.message);
             } else {
-                setMessage({ text: "Ocurrió un error inesperado.", type: "error" });
+                setMessage("Ocurrió un error inesperado.");
             }
         } finally {
             setLoading(false);
@@ -302,7 +302,7 @@ export default function Auth() {
                                     background: "color-mix(in srgb, var(--orange) 10%, transparent)",
                                 }}
                             >
-                                {message ? message.text : ""}
+                                {message}
                             </p>
                         )}
 
