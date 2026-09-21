@@ -298,7 +298,7 @@ export default function Events() {
         {isSidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
       </button>
       <div className="dashboard-brand"><span className="dashboard-brand__mark">UTT</span><span>Universidad Tecnológica<br />de Tlaxcala</span><button className="dashboard-sidebar__close" onClick={() => setSidebarOpen(false)} aria-label="Cerrar menú"><X size={19}/></button></div>
-      <nav className="dashboard-nav" aria-label="Navegación del panel"><Link to="/dashboard"><LayoutDashboard size={18}/>Resumen</Link><Link className="is-active" to="/dashboard/eventos"><CalendarDays size={18}/>Eventos <span className={isLoadingEvents ? "dashboard-count-placeholder placeholder-glow" : ""}>{isLoadingEvents ? "" : events.length}</span></Link><button type="button" onClick={openCreator}><Plus size={18}/>Crear evento</button></nav>
+      <nav className="dashboard-nav" aria-label="Navegación del panel"><Link to="/dashboard"><LayoutDashboard size={18}/>Resumen</Link><Link className="is-active" to="/dashboard/eventos"><CalendarDays size={18}/>Eventos <span className={isLoadingEvents ? "dashboard-count-placeholder placeholder-glow" : ""}>{isLoadingEvents ? "" : events.length}</span></Link><Link to="/dashboard/padron"><Users size={18}/>Padrón de Alumnos</Link><button type="button" onClick={openCreator}><Plus size={18}/>Crear evento</button></nav>
       <div className="dashboard-sidebar__bottom"><div className="dashboard-profile"><span className="dashboard-avatar">AD</span><div><strong>Administrador</strong><small>Panel de eventos</small></div></div><Link to="/" className="dashboard-signout"><LogOut size={17}/>Salir al sitio</Link></div>
     </aside>
 
