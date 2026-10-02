@@ -96,10 +96,10 @@ export default function Auth() {
                     setAdminAuthenticated(true);
                     navigate("/dashboard"); 
                 } else {
-                    navigate("/"); 
+                    navigate("/dashboard"); 
                 }
 
-                navigate("/");
+                navigate("/dashboard");
             }
         } catch (err: unknown) {
             if (err instanceof Error) {
