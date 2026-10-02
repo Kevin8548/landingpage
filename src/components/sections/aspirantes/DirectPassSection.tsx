@@ -9,7 +9,9 @@ interface DirectPassSectionProps {
   institutionItems: Institution[];
   editMode?: boolean;
   onUpdateField?: (id: string, field: InstitutionTextField, value: string) => void;
-  onUpdateLogo?: (id: string, logo: string | undefined) => void;
+  onSaveField?: (id: string) => void;
+  onImageUpload?: (id: string, file: File) => void;
+  onImageRemove?: (id: string) => void;
   onAddInstitution?: () => void;
   onDeleteInstitution?: (id: string) => void;
 }
@@ -18,19 +20,21 @@ export const DirectPassSection = ({
   institutionItems,
   editMode = false,
   onUpdateField,
-  onUpdateLogo,
+  onSaveField,
+  onImageUpload,
+  onImageRemove,
   onAddInstitution,
   onDeleteInstitution,
 }: DirectPassSectionProps) => {
   return (
-    <section id="pase-directo" className="relative py-28 px-6 bg-[var(--bg)]">
+    <section id="pase-directo" className="relative py-16 sm:py-20 md:py-28 px-4 sm:px-6 bg-[var(--bg)]">
       <div className="pointer-events-none absolute inset-0 bg-noise opacity-25" />
       <div className="relative max-w-6xl mx-auto">
-        <div className="max-w-xl mb-12">
+        <div className="max-w-xl mb-10 md:mb-12">
           <span className="font-data text-xs font-medium uppercase tracking-[0.2em] text-[var(--green)]">
             Convenios institucionales
           </span>
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-[var(--ink)] mt-2">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-[var(--ink)] mt-2">
             Pase directo
           </h2>
           <p className="text-[var(--muted)] mt-3 leading-relaxed">
@@ -39,7 +43,7 @@ export const DirectPassSection = ({
         </div>
 
         <motion.div
-          className="relative rounded-2xl overflow-hidden ring-1 ring-[var(--line)] shadow-2xl shadow-[var(--bg)]/60 mb-14"
+          className="relative rounded-2xl overflow-hidden ring-1 ring-[var(--line)] shadow-2xl shadow-[var(--bg)]/60 mb-10 md:mb-14"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           whileHover={{ scale: 1.01 }}
@@ -57,11 +61,11 @@ export const DirectPassSection = ({
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-6">
           {institutionItems.map(({ id, name, description, logo }, i) => (
             <motion.div
               key={id}
-              className="group relative flex flex-col items-start gap-4 p-6 rounded-2xl border border-[var(--line)] bg-[var(--ink)]/[0.02] hover:bg-[var(--ink)]/[0.04] hover:border-[var(--green)]/20 transition-colors"
+              className="group relative flex flex-col items-start gap-4 p-5 sm:p-6 rounded-2xl border border-[var(--line)] bg-[var(--ink)]/[0.02] hover:bg-[var(--ink)]/[0.04] hover:border-[var(--green)]/20 transition-colors"
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
@@ -105,14 +109,14 @@ export const DirectPassSection = ({
                         className="hidden"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
-                          if (file) onUpdateLogo?.(id, URL.createObjectURL(file));
+                          if (file) onImageUpload?.(id, file);
                         }}
                       />
                     </label>
                     {logo && (
                       <button
                         type="button"
-                        onClick={() => onUpdateLogo?.(id, undefined)}
+                        onClick={() => onImageRemove?.(id)}
                         className="font-data text-[11px] text-[var(--muted)] hover:text-red-400 text-left"
                       >
                         Quitar logo
@@ -141,12 +145,14 @@ export const DirectPassSection = ({
                       type="text"
                       value={name}
                       onChange={(e) => onUpdateField?.(id, "name", e.target.value)}
+                      onBlur={() => onSaveField?.(id)}
                       placeholder="Nombre de la institución"
                       className="font-display text-xl font-semibold text-[var(--ink)] bg-transparent border-b border-dashed border-[var(--green)]/50 focus:outline-none focus:border-[var(--green)] w-full mb-2 pb-1"
                     />
                     <textarea
                       value={description}
                       onChange={(e) => onUpdateField?.(id, "description", e.target.value)}
+                      onBlur={() => onSaveField?.(id)}
                       placeholder="Descripción del convenio"
                       rows={3}
                       className="text-sm text-[var(--muted)] leading-relaxed w-full bg-transparent border border-dashed border-[var(--line)] rounded-lg p-2 focus:outline-none focus:border-[var(--green)]/50 resize-y"
@@ -168,7 +174,7 @@ export const DirectPassSection = ({
             <button
               type="button"
               onClick={() => onAddInstitution?.()}
-              className="flex flex-col items-center justify-center gap-2 p-6 rounded-2xl border-2 border-dashed border-[var(--line)] text-[var(--muted)] hover:border-[var(--green)]/40 hover:text-[var(--green)] transition-colors min-h-[180px]"
+              className="flex flex-col items-center justify-center gap-2 p-5 sm:p-6 rounded-2xl border-2 border-dashed border-[var(--line)] text-[var(--muted)] hover:border-[var(--green)]/40 hover:text-[var(--green)] transition-colors min-h-[180px]"
             >
               <FiPlus className="w-6 h-6" />
               <span className="text-sm font-medium">Agregar institución</span>

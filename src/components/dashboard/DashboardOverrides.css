@@ -19,6 +19,233 @@
   background: #ef9b36;
 }
 
+/* Carga de imagen en el formulario de eventos. */
+.dashboard-image-upload {
+  position: relative;
+  display: grid;
+  min-height: 154px;
+  overflow: hidden;
+  place-items: center;
+  border: 1.5px dashed #b8cbbd;
+  border-radius: 12px;
+  color: var(--dash-green);
+  background: #f7fbf7;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.dashboard-image-upload:hover,
+.dashboard-image-upload.is-dragging {
+  border-color: var(--dash-green);
+  background: #eef8f0;
+}
+
+.dashboard-image-upload__empty {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 20px;
+  text-align: center;
+}
+
+.dashboard-image-upload__empty strong {
+  margin-top: 2px;
+  color: var(--dash-ink);
+  font-size: 13px;
+}
+
+.dashboard-image-upload__empty span,
+.dashboard-image-upload__empty small {
+  color: var(--dash-muted);
+  font-size: 11px;
+}
+
+.dashboard-image-upload__empty small {
+  font-size: 10px;
+}
+
+.dashboard-image-upload img {
+  width: 100%;
+  height: 154px;
+  object-fit: cover;
+}
+
+.dashboard-image-upload__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: #fff;
+  background: rgba(13, 38, 23, 0.56);
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.dashboard-image-upload:hover .dashboard-image-upload__overlay,
+.dashboard-image-upload:focus-within .dashboard-image-upload__overlay {
+  opacity: 1;
+}
+
+.dashboard-image-upload__remove {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  display: grid;
+  width: 29px;
+  height: 29px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(15, 30, 20, 0.72);
+  cursor: pointer;
+}
+
+/* El fondo del dashboard se bloquea; el formulario conserva su propio scroll. */
+.dashboard-modal-backdrop {
+  overflow-y: auto;
+}
+
+.dashboard-modal:has(.dashboard-event-form) {
+  display: flex;
+  max-height: calc(100dvh - 40px);
+  flex-direction: column;
+}
+
+.dashboard-event-form {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+  scrollbar-width: none;
+}
+
+.dashboard-event-form::-webkit-scrollbar {
+  display: none;
+}
+
+.dashboard-event-form textarea {
+  width: 100%;
+  min-height: 76px;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border: 1px solid #dce5dd;
+  border-radius: 9px;
+  outline: 0;
+  color: var(--dash-ink);
+  background: #fbfcfb;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.dashboard-event-form select {
+  width: 100%;
+  min-height: 43px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  border: 1px solid #dce5dd;
+  border-radius: 9px;
+  outline: 0;
+  color: var(--dash-ink);
+  background: #fbfcfb;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.dashboard-event-form textarea:focus {
+  border-color: #4c9d69;
+  box-shadow: 0 0 0 3px #e6f3e9;
+}
+
+.dashboard-event-form select:focus {
+  border-color: #4c9d69;
+  box-shadow: 0 0 0 3px #e6f3e9;
+}
+
+.dashboard-view-image {
+  min-height: 170px;
+  margin-top: 22px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #090b0a;
+}
+
+.dashboard-view-image img {
+  display: block;
+  width: 100%;
+  height: 210px;
+  object-fit: cover;
+}
+
+.dashboard-view-image__empty {
+  display: grid;
+  min-height: 170px;
+  place-content: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  text-align: center;
+}
+
+.dashboard-view-description {
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 10px;
+  background: #f5f8f5;
+}
+
+.dashboard-view-description strong {
+  color: var(--dash-ink);
+  font-size: 11px;
+}
+
+.dashboard-view-description p {
+  margin: 5px 0 0;
+  color: var(--dash-muted);
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+html.dark .dashboard-image-upload {
+  border-color: #46604e;
+  background: #1b241e;
+}
+
+html.dark .dashboard-image-upload:hover,
+html.dark .dashboard-image-upload.is-dragging {
+  border-color: #72d08e;
+  background: #203326;
+}
+
+html.dark .dashboard-image-upload__empty strong,
+html.dark .dashboard-event-form textarea {
+  color: var(--dash-ink);
+}
+
+html.dark .dashboard-event-form select {
+  border-color: #3a424d;
+  color: var(--dash-ink);
+  background: #1b1f25;
+}
+
+html.dark .dashboard-view-description {
+  background: #1d2d23;
+}
+
+html.dark .dashboard-event-form textarea {
+  border-color: #3a424d;
+  background: #1b1f25;
+}
+
 
 /* =========================================================
    BARRA LATERAL
@@ -787,7 +1014,7 @@ html.dark .dashboard-calendar__days button:hover {
 
 
 /* =========================================================
-   SELECTOR DE HORARIO
+  SELECTOR DE HORARIO
    ========================================================= */
 
 .dashboard-time-picker {
@@ -809,7 +1036,6 @@ html.dark .dashboard-calendar__days button:hover {
 
   top: 50%;
   right: 7px;
-
   display: grid;
 
   width: 29px;
@@ -891,6 +1117,85 @@ html.dark .dashboard-calendar__days button:hover {
 .dashboard-time-menu button.is-selected {
   color: #fff;
   background: var(--dash-green);
+}
+
+.dashboard-event-type-picker {
+  position: relative;
+}
+
+.dashboard-event-type-picker__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--dash-muted);
+  text-align: left;
+}
+
+.dashboard-event-type-picker__trigger.has-value {
+  color: var(--dash-ink);
+}
+
+.dashboard-event-type-picker__trigger svg {
+  flex: 0 0 auto;
+  color: var(--dash-green);
+  transition: transform 0.2s ease;
+}
+
+.dashboard-event-type-picker__trigger[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+.dashboard-event-type-menu {
+  position: absolute;
+  z-index: 35;
+  top: calc(100% + 7px);
+  right: 0;
+  left: 0;
+  display: grid;
+  gap: 3px;
+  padding: 6px;
+  border: 1px solid var(--dash-line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 16px 42px rgba(23, 35, 29, 0.18);
+}
+
+.dashboard-event-type-menu button {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--dash-ink);
+  background: transparent;
+  font-family: "Inter", sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dashboard-event-type-menu button strong {
+  font-size: 12px;
+}
+
+.dashboard-event-type-menu button small {
+  color: var(--dash-muted);
+  font-size: 11px;
+}
+
+.dashboard-event-type-menu button:hover {
+  color: var(--dash-green-dark);
+  background: #e8f3ea;
+}
+
+.dashboard-event-type-menu button.is-selected {
+  color: #fff;
+  background: var(--dash-green);
+}
+
+.dashboard-event-type-menu button.is-selected small {
+  color: rgba(255, 255, 255, 0.78);
 }
 
 
@@ -1099,5 +1404,355 @@ html.dark
   .dashboard-welcome__actions,
   .dashboard-welcome-actions {
     align-self: stretch;
+  }
+}
+
+html.dark .dashboard-event-type-menu {
+  border-color: #3a424d;
+  background: #1b1f25;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.42);
+}
+
+html.dark .dashboard-event-type-menu button {
+  color: #edf1f5;
+}
+
+html.dark .dashboard-event-type-menu button small {
+  color: #a9b0ba;
+}
+
+html.dark .dashboard-event-type-menu button:hover {
+  color: #b7f0c7;
+  background: #303842;
+}
+
+/* Estado de carga para que el listado no muestre un "0" momentáneo. */
+.placeholder-glow {
+  background: linear-gradient(100deg, #edf2ee 20%, #f8fbf8 40%, #edf2ee 60%);
+  background-size: 200% 100%;
+  animation: dashboard-placeholder-glow 1.35s ease-in-out infinite;
+}
+
+@keyframes dashboard-placeholder-glow {
+  to { background-position: -200% 0; }
+}
+
+.dashboard-count-placeholder {
+  min-width: 22px;
+  color: transparent !important;
+}
+
+.dashboard-heading-placeholder {
+  display: block;
+  width: 84px;
+  height: 17px;
+  border-radius: 5px;
+}
+
+.dashboard-event-row--placeholder {
+  pointer-events: none;
+}
+
+.dashboard-event-row--placeholder > * {
+  background: transparent;
+}
+
+.dashboard-event-row--placeholder .dashboard-event-row__stripe {
+  background: rgba(105, 147, 118, 0.3);
+}
+
+.dashboard-event-row--placeholder .dashboard-event-row__date {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+}
+
+.dashboard-event-row--placeholder .dashboard-event-row__date i,
+.dashboard-event-row--placeholder .dashboard-event-row__date small,
+.dashboard-event-row--placeholder .dashboard-event-row__details > i,
+.dashboard-event-row--placeholder .dashboard-event-row__details h3,
+.dashboard-event-row--placeholder .dashboard-event-row__details p,
+.dashboard-event-row--placeholder .dashboard-event-actions i {
+  display: block;
+  border-radius: 5px;
+  background: rgba(166, 186, 170, 0.34);
+}
+
+.dashboard-event-row--placeholder .dashboard-event-row__date i {
+  width: 28px;
+  height: 18px;
+}
+
+.dashboard-event-row--placeholder .dashboard-event-row__date small {
+  width: 20px;
+  height: 9px;
+}
+
+.dashboard-event-row--placeholder .dashboard-event-row__details > i {
+  width: 64px;
+  height: 10px;
+}
+
+.dashboard-event-row--placeholder .dashboard-event-row__details h3 {
+  width: min(230px, 65%);
+  height: 16px;
+  margin: 7px 0;
+}
+
+.dashboard-event-row--placeholder .dashboard-event-row__details p {
+  width: min(170px, 48%);
+  height: 11px;
+}
+
+.dashboard-event-row--placeholder .dashboard-event-actions i {
+  width: 47px;
+  height: 32px;
+  border: 1px solid rgba(166, 186, 170, 0.18);
+}
+
+html.dark .placeholder-glow {
+  background: linear-gradient(100deg, #20262d 20%, #2a323b 40%, #20262d 60%);
+  background-size: 200% 100%;
+}
+
+html.dark .dashboard-event-row--placeholder .dashboard-event-row__date i,
+html.dark .dashboard-event-row--placeholder .dashboard-event-row__date small,
+html.dark .dashboard-event-row--placeholder .dashboard-event-row__details > i,
+html.dark .dashboard-event-row--placeholder .dashboard-event-row__details h3,
+html.dark .dashboard-event-row--placeholder .dashboard-event-row__details p,
+html.dark .dashboard-event-row--placeholder .dashboard-event-actions i {
+  background: rgba(143, 163, 150, 0.2);
+}
+
+/* Ajustes para teléfonos pequeños y tablets: el panel nunca debe crear
+   desplazamiento horizontal y los diálogos aprovechan el alto disponible. */
+@media (max-width: 560px) {
+  .dashboard-page,
+  .dashboard-content,
+  .dashboard-body,
+  .dashboard-events {
+    min-width: 0;
+  }
+
+  .dashboard-topbar {
+    padding-inline: 16px;
+  }
+
+  .dashboard-topbar__actions {
+    gap: 8px;
+  }
+
+  .dashboard-events--standalone {
+    padding: 14px;
+  }
+
+  .dashboard-event-list {
+    margin-top: 14px;
+  }
+
+  .dashboard-event-row {
+    grid-template-columns: 4px 44px minmax(0, 1fr);
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .dashboard-event-row__details,
+  .dashboard-event-row__details h3,
+  .dashboard-event-row__details p {
+    min-width: 0;
+  }
+
+  .dashboard-event-actions {
+    grid-column: 2 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: auto;
+    padding: 0 10px 12px 0;
+  }
+
+  .dashboard-event-actions button {
+    width: 100%;
+    min-width: 0;
+    padding-inline: 6px;
+  }
+
+  .dashboard-modal-backdrop {
+    padding: 10px;
+    align-items: end;
+  }
+
+  .dashboard-modal,
+  .dashboard-modal:has(.dashboard-event-form) {
+    width: 100%;
+    max-height: calc(100svh - 20px);
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  /* El detalle del evento puede ser más alto que la pantalla. Se desplaza
+     dentro de su propia tarjeta (sin barra visible), nunca se sale de ella. */
+  .dashboard-view-modal {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+  }
+
+  .dashboard-view-modal::-webkit-scrollbar {
+    display: none;
+  }
+
+  .dashboard-view-modal .dashboard-view-image {
+    min-height: 130px;
+    margin-top: 16px;
+  }
+
+  .dashboard-view-modal .dashboard-view-image img {
+    height: 150px;
+  }
+
+  .dashboard-view-modal .dashboard-view-description {
+    margin-top: 12px;
+    padding: 12px;
+  }
+
+  .dashboard-view-modal .dashboard-view-details {
+    gap: 8px;
+    margin: 14px 0;
+  }
+
+  .dashboard-view-modal .dashboard-view-details p {
+    padding: 10px;
+  }
+
+  .dashboard-view-modal .dashboard-modal__footer {
+    position: sticky;
+    bottom: -18px;
+    margin-top: auto;
+    padding: 12px 0 2px;
+    background: #fff;
+  }
+
+  .dashboard-modal__header {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .dashboard-modal__header h2 {
+    font-size: clamp(17px, 5.5vw, 20px);
+  }
+
+  .dashboard-modal__footer {
+    flex-wrap: wrap;
+  }
+
+  .dashboard-modal__footer > button {
+    min-height: 42px;
+  }
+
+  .dashboard-modal__footer .dashboard-primary-button {
+    flex: 1 1 180px;
+  }
+
+  .dashboard-view-details p {
+    align-items: flex-start;
+  }
+
+  .dashboard-time-menu,
+  .dashboard-event-type-menu,
+  .dashboard-calendar {
+    max-width: 100%;
+  }
+}
+
+html.dark .dashboard-view-modal .dashboard-modal__footer {
+  background: #1b1f25;
+}
+
+/* La regla de escritorio de la barra se declara más arriba en este archivo.
+   Aquí se restablece explícitamente el comportamiento móvil: se superpone,
+   no consume columnas del dashboard y solo aparece al abrir el menú. */
+@media (max-width: 860px) {
+  .dashboard-page {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    overflow-x: clip;
+  }
+
+  .dashboard-sidebar,
+  .dashboard-sidebar.is-collapsed {
+    position: fixed !important;
+    z-index: 50;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    width: min(82vw, 290px) !important;
+    min-width: 0;
+    min-height: 100svh;
+    flex: 0 0 auto !important;
+    padding: 22px 14px 16px !important;
+    box-shadow: 18px 0 46px rgba(17, 48, 28, 0.2);
+    transform: translateX(-110%);
+  }
+
+  .dashboard-sidebar.is-open {
+    transform: translateX(0) !important;
+  }
+
+  .dashboard-sidebar.is-collapsed .dashboard-brand > span:not(.dashboard-brand__mark),
+  .dashboard-sidebar.is-collapsed .dashboard-nav a > :not(svg),
+  .dashboard-sidebar.is-collapsed .dashboard-profile > div,
+  .dashboard-sidebar.is-collapsed .dashboard-signout > :not(svg),
+  .dashboard-sidebar.is-collapsed .dashboard-nav a span {
+    display: initial;
+  }
+
+  .dashboard-sidebar.is-collapsed .dashboard-brand,
+  .dashboard-sidebar.is-collapsed .dashboard-nav a,
+  .dashboard-sidebar.is-collapsed .dashboard-nav button,
+  .dashboard-sidebar.is-collapsed .dashboard-profile,
+  .dashboard-sidebar.is-collapsed .dashboard-signout {
+    justify-content: initial;
+    padding-inline: 12px;
+  }
+
+  .dashboard-content {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .dashboard-menu-button {
+    display: grid;
+    place-items: center;
+    min-width: 42px;
+    min-height: 42px;
+  }
+
+  .dashboard-sidebar-collapse {
+    display: none !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .dashboard-body {
+    padding-inline: 12px;
+  }
+
+  .dashboard-events--standalone,
+  .dashboard-next-event,
+  .dashboard-quick-start {
+    padding: 12px;
+  }
+
+  .dashboard-event-actions {
+    gap: 4px;
+  }
+
+  .dashboard-modal {
+    padding: 15px;
   }
 }

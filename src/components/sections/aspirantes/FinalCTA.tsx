@@ -3,11 +3,11 @@ import { FiArrowRight, FiDownload } from "react-icons/fi";
 
 export const FinalCTA = () => {
   return (
-    <section className="relative py-20 px-6 overflow-hidden bg-[var(--bg)]">
+    <section className="relative py-14 sm:py-16 md:py-20 px-4 sm:px-6 overflow-hidden bg-[var(--bg)]">
       <div className="pointer-events-none absolute inset-0 bg-noise opacity-10" />
-      <div className="relative max-w-5xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-8 text-center md:text-left">
+      <div className="relative max-w-5xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6 md:gap-8 text-center md:text-left">
         <div>
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-[var(--ink)] mb-3">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-[var(--ink)] mb-3">
             ¿Listo para dar el siguiente paso?
           </h2>
           <p className="text-[var(--ink)]/70 max-w-md mx-auto md:mx-0">
@@ -15,13 +15,13 @@ export const FinalCTA = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 shrink-0">
+        <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 sm:gap-4 shrink-0">
           {/* <motion.button
             type="button"
             whileHover={{ scale: 1.04, y: -2 }}
             whileTap={{ scale: 0.96 }}
             transition={{ type: "spring", stiffness: 400, damping: 15 }}
-            className="flex items-center gap-2 px-7 py-3.5 rounded-full bg-[var(--ink)] text-[var(--bg)] text-sm font-semibold shadow-lg shadow-black/20"
+            className="flex items-center gap-2 px-6 py-3 sm:px-7 sm:py-3.5 rounded-full bg-[var(--ink)] text-[var(--bg)] text-sm font-semibold shadow-lg shadow-black/20"
           >
             Ver oferta educativa
             <FiArrowRight className="w-4 h-4" />
@@ -32,7 +32,7 @@ export const FinalCTA = () => {
             whileHover={{ scale: 1.04, y: -2 }}
             whileTap={{ scale: 0.96 }}
             transition={{ type: "spring", stiffness: 400, damping: 15 }}
-            className="flex items-center gap-2 px-7 py-3.5 rounded-full border border-[var(--ink)]/40 text-[var(--ink)] text-sm font-medium hover:bg-[var(--ink)]/10 transition-colors"
+            className="flex items-center gap-2 px-6 py-3 sm:px-7 sm:py-3.5 rounded-full border border-[var(--ink)]/40 text-[var(--ink)] text-sm font-medium hover:bg-[var(--ink)]/10 transition-colors"
           >
             <FiDownload className="w-4 h-4" />
             Descargar información

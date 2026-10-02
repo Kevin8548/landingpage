@@ -12,10 +12,10 @@ export const CareersStrip = () => {
           ({ id, name, shortName, img, iconBg, border, bg, text, path }) => (
             <div
               key={id}
-              className="flex flex-col items-center text-center gap-4 py-10 px-6 h-full"
+              className="flex flex-col items-center text-center gap-3 sm:gap-4 py-8 sm:py-10 px-4 sm:px-6 h-full"
             >
               <div
-                className={`shrink-0 w-36 aspect-[4/3] rounded-2xl flex items-center justify-center shadow-lg shadow-black/20 p-3 ${iconBg}`}
+                className={`shrink-0 w-28 sm:w-32 md:w-36 aspect-[4/3] rounded-2xl flex items-center justify-center shadow-lg shadow-black/20 p-3 ${iconBg}`}
               >
                 <img src={img} alt={name} className="w-full h-full object-contain" />
               </div>
@@ -27,7 +27,7 @@ export const CareersStrip = () => {
               <button
                 type="button"
                 onClick={() => navigate(path)}
-                className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full border text-xs font-data uppercase tracking-wider font-medium transition-opacity hover:opacity-80 ${border} ${bg} ${text}`}
+                className={`inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border text-xs font-data uppercase tracking-wider font-medium transition-opacity hover:opacity-80 ${border} ${bg} ${text}`}
               >
                 {shortName}
                 <FiChevronRight className="w-3.5 h-3.5" />

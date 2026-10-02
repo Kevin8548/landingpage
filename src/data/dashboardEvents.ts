@@ -2,11 +2,14 @@ export type EventStatus = "Publicado" | "Borrador";
 export type DashboardEvent = {
     id: string;
     title: string;
+    description?: string;
+    image?: string;
     date: string;
     dateValue?: string;
     time: string;
     location: string;
     audience: string;
+    type?: "academico" | "cultural" | "deportivo";
     status: EventStatus;
     accent: "amber" | "green" | "blue";
 };
