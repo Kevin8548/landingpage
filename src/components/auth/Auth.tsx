@@ -2,10 +2,10 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     ArrowLeft,
-    ChevronDown,
     GraduationCap,
     LockKeyhole,
     User as UserIcon,
+    Calendar
 } from "lucide-react";
 import { setAdminAuthenticated } from "../../lib/adminAuth";
 import { supabase } from "../../lib/supabase";
@@ -15,12 +15,16 @@ type Mode = "login" | "register";
 
 export default function Auth() {
     const [mode, setMode] = useState<Mode>("login");
+    const [registerStep, setRegisterStep] = useState<1 | 2>(1);
+    
+    // Auth fields
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [nombre, setNombre] = useState("");
-    const [apellidoPaterno, setApellidoPaterno] = useState("");
-    const [apellidoMaterno, setApellidoMaterno] = useState("");
-    const [carrera, setCarrera] = useState("");
+    
+    // Step 1 fields
+    const [matricula, setMatricula] = useState("");
+    const [fechaNacimiento, setFechaNacimiento] = useState("");
+    
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
     const navigate = useNavigate();
@@ -31,31 +35,45 @@ export default function Auth() {
         setLoading(true);
 
         const cleanEmail = email.trim().toLowerCase();
+        const cleanMatricula = matricula.trim();
 
         try {
             if (mode === "register") {
-                // Registro: envía credenciales y metadatos que el trigger de SQL guardará en profiles
-                const { data, error } = await supabase.auth.signUp({
-                    email: cleanEmail,
-                    password: password,
-                    options: {
-                        data: {
-                            nombre: nombre.trim(),
-                            apellido_paterno: apellidoPaterno.trim(),
-                            apellido_materno: apellidoMaterno.trim(),
-                            carrera: carrera,
-                            role: "student",
+                if (registerStep === 1) {
+                    // Paso 1: Validar matrícula y fecha de nacimiento contra el padrón precargado
+                    const { error } = await supabase.rpc('validate_padron', {
+                        p_matricula: cleanMatricula,
+                        p_fecha_nacimiento: fechaNacimiento
+                    });
+
+                    if (error) {
+                        throw new Error(error.message || "Datos incorrectos. Verifica tu matrícula y fecha de nacimiento.");
+                    }
+
+                    // Validación exitosa
+                    setRegisterStep(2);
+                    setMessage(null);
+                } else {
+                    // Paso 2: Crear cuenta en auth.users y delegar sincronización al trigger SQL
+                    const { data, error } = await supabase.auth.signUp({
+                        email: cleanEmail,
+                        password: password,
+                        options: {
+                            data: {
+                                matricula: cleanMatricula,
+                                role: "student",
+                            },
                         },
-                    },
-                });
+                    });
 
-                if (error) throw error;
+                    if (error) throw error;
 
-                if (data.user) {
-                    setMessage("¡Cuenta creada con éxito! Redirigiendo...");
-                    setTimeout(() => {
-                        navigate("/dashboard");
-                    }, 1200);
+                    if (data.user) {
+                        setMessage("¡Cuenta creada con éxito! Redirigiendo...");
+                        setTimeout(() => {
+                            navigate("/");
+                        }, 1200);
+                    }
                 }
             } else {
                 // Inicio de sesión
@@ -74,9 +92,11 @@ export default function Auth() {
                     .select("role")
                     .eq("id", data.user.id)
                     .single();
-
                 if (profile?.role === "admin") {
                     setAdminAuthenticated(true);
+                    navigate("/dashboard"); 
+                } else {
+                    navigate("/dashboard"); 
                 }
 
                 navigate("/dashboard");
@@ -141,6 +161,7 @@ export default function Auth() {
                             onClick={() => {
                                 setMode("login");
                                 setMessage(null);
+                                setRegisterStep(1);
                             }}
                         >
                             Iniciar sesión
@@ -170,111 +191,81 @@ export default function Auth() {
                         <p>
                             {isLogin
                                 ? "Ingresa tus datos para continuar"
-                                : "Completa tus datos para registrarte"}
+                                : registerStep === 1 
+                                ? "Paso 1: Valida tu identidad institucional"
+                                : "Paso 2: Configura tu acceso"}
                         </p>
                     </div>
 
                     <form className="auth-form" onSubmit={handleSubmit}>
-                        {!isLogin && (
+                        {!isLogin && registerStep === 1 && (
                             <>
                                 <label className="auth-field auth-field--full">
-                                    <span>Nombre(s)</span>
+                                    <span>Matrícula</span>
                                     <div className="auth-input-icon">
                                         <UserIcon size={18} />
                                         <input
                                             type="text"
-                                            placeholder="Tu nombre"
-                                            value={nombre}
-                                            onChange={(e) => setNombre(e.target.value)}
+                                            placeholder="Ingresa tu matrícula"
+                                            value={matricula}
+                                            onChange={(e) => setMatricula(e.target.value)}
                                             required
                                         />
                                     </div>
                                 </label>
 
-                                <div className="auth-form__grid">
-                                    <label className="auth-field">
-                                        <span>Apellido Paterno</span>
+                                <label className="auth-field auth-field--full">
+                                    <span>Fecha de Nacimiento</span>
+                                    <div className="auth-input-icon">
+                                        <Calendar size={18} />
                                         <input
-                                            type="text"
-                                            placeholder="Apellido paterno"
-                                            value={apellidoPaterno}
-                                            onChange={(e) => setApellidoPaterno(e.target.value)}
+                                            type="date"
+                                            value={fechaNacimiento}
+                                            onChange={(e) => setFechaNacimiento(e.target.value)}
                                             required
                                         />
-                                    </label>
-
-                                    <label className="auth-field">
-                                        <span>Apellido Materno</span>
-                                        <input
-                                            type="text"
-                                            placeholder="Apellido materno"
-                                            value={apellidoMaterno}
-                                            onChange={(e) => setApellidoMaterno(e.target.value)}
-                                            required
-                                        />
-                                    </label>
-                                </div>
-
-                                <label className="auth-field">
-                                    <span>Carrera</span>
-                                    <div className="auth-select">
-                                        <select
-                                            value={carrera}
-                                            onChange={(e) => setCarrera(e.target.value)}
-                                            required
-                                        >
-                                            <option value="" disabled>
-                                                Selecciona tu carrera
-                                            </option>
-                                            <option value="TSU en Desarrollo de Software">
-                                                TSU en Desarrollo de Software
-                                            </option>
-                                            <option value="TSU en Redes y Ciberseguridad">
-                                                TSU en Redes y Ciberseguridad
-                                            </option>
-                                            <option value="TSU en Entornos Virtuales">
-                                                TSU en Entornos Virtuales
-                                            </option>
-                                            <option value="Ingeniería en TI e Innovación Digital">
-                                                Ingeniería en TI e Innovación Digital
-                                            </option>
-                                        </select>
-                                        <ChevronDown size={17} />
                                     </div>
+                                    <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.5rem", display: "block" }}>
+                                        Tu fecha de nacimiento servirá como dato clave para verificar tu identidad.
+                                    </span>
                                 </label>
                             </>
                         )}
 
-                        <label className="auth-field">
-                            <span>Correo Institucional</span>
-                            <div className="auth-input-icon">
-                                <GraduationCap size={18} />
-                                <input
-                                    type="email"
-                                    placeholder="ejemplo@utt.edu.mx"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                />
-                            </div>
-                        </label>
+                        {(isLogin || (!isLogin && registerStep === 2)) && (
+                            <>
+                                <label className="auth-field">
+                                    <span>Correo Institucional</span>
+                                    <div className="auth-input-icon">
+                                        <GraduationCap size={18} />
+                                        <input
+                                            type="email"
+                                            placeholder="ejemplo@utt.edu.mx"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </label>
 
-                        <label className="auth-field">
-                            <span>Contraseña</span>
-                            <div className="auth-input-icon">
-                                <LockKeyhole size={17} />
-                                <input
-                                    type="password"
-                                    placeholder="Mínimo 6 caracteres"
-                                    autoComplete={
-                                        isLogin ? "current-password" : "new-password"
-                                    }
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                />
-                            </div>
-                        </label>
+                                <label className="auth-field">
+                                    <span>Contraseña</span>
+                                    <div className="auth-input-icon">
+                                        <LockKeyhole size={17} />
+                                        <input
+                                            type="password"
+                                            placeholder="Mínimo 6 caracteres"
+                                            autoComplete={
+                                                isLogin ? "current-password" : "new-password"
+                                            }
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </label>
+                            </>
+                        )}
 
                         {isLogin ? (
                             <label className="auth-check">
@@ -282,12 +273,14 @@ export default function Auth() {
                                 <span>Recordar mi contraseña</span>
                             </label>
                         ) : (
-                            <label className="auth-check">
-                                <input type="checkbox" required />
-                                <span>
-                                    Acepto el aviso de privacidad y los términos de uso.
-                                </span>
-                            </label>
+                            registerStep === 2 && (
+                                <label className="auth-check">
+                                    <input type="checkbox" required />
+                                    <span>
+                                        Acepto el aviso de privacidad y los términos de uso.
+                                    </span>
+                                </label>
+                            )
                         )}
 
                         {message && (
@@ -311,6 +304,8 @@ export default function Auth() {
                                 ? "Procesando..."
                                 : isLogin
                                 ? "Iniciar sesión"
+                                : registerStep === 1
+                                ? "Validar mis datos"
                                 : "Crear mi cuenta"}
                             <span />
                         </button>
@@ -324,6 +319,7 @@ export default function Auth() {
                             onClick={() => {
                                 setMode(isLogin ? "register" : "login");
                                 setMessage(null);
+                                setRegisterStep(1);
                             }}
                         >
                             {isLogin ? "Regístrate" : "Inicia sesión"}

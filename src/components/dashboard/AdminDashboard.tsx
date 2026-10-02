@@ -11,6 +11,7 @@ import {
   Menu,
   Plus,
   Sparkles,
+  Users,
   X,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -173,6 +174,11 @@ export default function AdminDashboard() {
             <CalendarDays size={18} />
             Eventos
             <span>{eventItems.length}</span>
+          </Link>
+          
+          <Link to="/dashboard/padron">
+            <Users size={18} />
+            Padrón de Alumnos
           </Link>
         </nav>
 

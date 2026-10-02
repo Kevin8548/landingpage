@@ -21,6 +21,7 @@ import Events from "./pages/Events";
 import Eventos from "./components/sections/eventos";
 import EventosAdmin from "./components/dashboard/EventosAdmin";
 import AspirantesAdmin from "./components/dashboard/AspirantesAdmin";
+import PadronAdmin from "./pages/PadronAdmin";
 import RequireAdmin from "./components/auth/RequireAdmin";
 import RequirePreviewAccess from "./components/auth/RequirePreviewAccess";
 import NotFound from "./pages/NotFound";
@@ -154,6 +155,14 @@ export default function App() {
             element={
               <RequireAdmin>
                 <Events />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path="/dashboard/padron"
+            element={
+              <RequireAdmin>
+                <PadronAdmin />
               </RequireAdmin>
             }
           />
