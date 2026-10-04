@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock3,
+  FolderKanban,
   LayoutDashboard,
   LogOut,
   MapPin,
@@ -174,6 +175,10 @@ export default function AdminDashboard() {
             <CalendarDays size={18} />
             Eventos
             <span>{eventItems.length}</span>
+          </Link>
+          <Link to="/dashboard/proyectos">
+            <FolderKanban size={18} />
+            Proyectos
           </Link>
           
           <Link to="/dashboard/padron">

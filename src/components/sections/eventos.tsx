@@ -1,6 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
-import { FiBookOpen, FiMusic, FiUsers } from "react-icons/fi";
+import { useEffect, useState } from "react";
+import { FiArrowUpRight, FiBookOpen, FiCode, FiExternalLink, FiMusic, FiUsers, FiX } from "react-icons/fi";
 import type { IconType } from "react-icons";
+import { listPublicProjects, type ManagedProject } from "../../services/manageProjects";
+import EventosAdmin from "../dashboard/EventosAdmin";
 
 export type Category = "academico" | "cultural" | "comunidad";
 
@@ -125,27 +128,33 @@ export const CATEGORY_META: Record<Category, CategoryMeta> = {
 export const CATEGORY_ORDER: Category[] = ["academico", "cultural", "comunidad"];
 
 export default function Eventos() {
-  return (
-    <section className="py-12" id="eventos">
-      <div className="max-w-6xl mx-auto px-4">
-        <h2 className="text-3xl font-bold mb-6">Próximos Eventos</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map((item) => (
-            <article key={item.id} className="border rounded-lg p-5 shadow-sm bg-[var(--bg)]">
-              <span className="text-xs uppercase tracking-wide font-semibold text-[var(--green)]">
-                {CATEGORY_META[item.category]?.label || item.category}
-              </span>
-              <h3 className="text-xl font-bold mt-2">{item.title}</h3>
-              <p className="text-sm opacity-80 mt-1">{item.description}</p>
-              <div className="mt-4 text-xs opacity-70 flex justify-between">
-                <span>{item.date} · {item.time}</span>
-                <span>{item.location}</span>
-              </div>
-            </article>
-          ))}
-        </div>
+  const [projects, setProjects] = useState<ManagedProject[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedProject, setSelectedProject] = useState<ManagedProject | null>(null);
+
+  useEffect(() => {
+    const loadContent = async () => {
+      const loadedProjects = await listPublicProjects().catch((error) => {
+        console.error("Error cargando proyectos:", error);
+        return [] as ManagedProject[];
+      });
+      setProjects(loadedProjects);
+      setIsLoading(false);
+    };
+    void loadContent();
+  }, []);
+
+  return <>
+    <section id="eventos"><EventosAdmin allowEditing={false} /></section>
+
+    {projects.length > 0 && <section className="eventos-board relative bg-[var(--bg)] px-6 py-20 sm:px-8" id="proyectos">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-8 max-w-4xl"><div className="mb-4 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.25em] text-[var(--muted)]"><span className="h-px w-6 bg-[var(--line)]" /> Talento estudiantil</div><div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><h2 className="font-display text-4xl font-extrabold tracking-tight text-[var(--ink)] sm:text-5xl">Proyectos</h2><p className="max-w-sm text-sm leading-relaxed text-[var(--muted)] sm:text-right">Soluciones, experiencias e ideas creadas por estudiantes de la UTT.</p></div></div>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{projects.map((project) => <button key={project.id} type="button" onClick={() => setSelectedProject(project)} className="event-card-glow group relative flex min-h-[320px] flex-col overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--glass)] text-left"><span className="absolute inset-x-0 top-0 z-20 h-[3px] bg-[linear-gradient(90deg,var(--green),var(--orange))]" /><div className="relative h-40 w-full shrink-0 overflow-hidden bg-[radial-gradient(circle_at_25%_20%,color-mix(in_srgb,var(--green)_30%,var(--bg))_0%,var(--bg)_75%)]"><FiCode className="absolute inset-0 m-auto h-14 w-14 text-[var(--green)] opacity-20" />{project.imagen_url && <img src={project.imagen_url} alt={`Imagen de ${project.titulo}`} className="relative z-10 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(event) => { event.currentTarget.style.display = "none"; }} />}<div className="pointer-events-none absolute inset-0 z-20 bg-[linear-gradient(180deg,transparent_45%,color-mix(in_srgb,var(--bg)_65%,transparent)_100%)]" /></div><div className="flex flex-1 flex-col p-5"><span className="font-mono text-[11px] uppercase tracking-wide text-[var(--green)]">{project.categoria || "Proyecto estudiantil"}</span><h3 className="mt-2 font-display text-xl font-bold text-[var(--ink)]">{project.titulo}</h3><p className="mt-2 line-clamp-3 text-sm leading-relaxed text-[var(--muted)]">{project.descripcion}</p><div className="mt-auto flex items-center justify-between gap-3 border-t border-[var(--line)] pt-4 font-mono text-[11px] text-[var(--muted)]"><span className="truncate">{project.autores}</span><FiArrowUpRight className="h-4 w-4 shrink-0 text-[var(--orange)]" /></div></div></button>)}</div>
       </div>
-    </section>
-  );
+    </section>}
+
+    {selectedProject && <div className="fixed inset-0 z-[100] grid place-items-center bg-black/65 p-4" role="presentation" onMouseDown={() => setSelectedProject(null)}><article role="dialog" aria-modal="true" aria-labelledby="public-project-title" className="w-full max-w-3xl overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--bg)] shadow-2xl" onMouseDown={(event) => event.stopPropagation()}><div className="grid md:grid-cols-[.9fr_1.1fr]"><div className="relative min-h-48 bg-[radial-gradient(circle_at_25%_20%,color-mix(in_srgb,var(--green)_30%,var(--bg))_0%,var(--bg)_75%)] md:min-h-full"><FiCode className="absolute inset-0 m-auto h-16 w-16 text-[var(--green)] opacity-20" />{selectedProject.imagen_url && <img src={selectedProject.imagen_url} alt={`Imagen de ${selectedProject.titulo}`} className="relative z-10 h-full w-full object-cover" onError={(event) => { event.currentTarget.style.display = "none"; }} />}<button type="button" onClick={() => setSelectedProject(null)} className="absolute right-4 top-4 z-20 grid h-9 w-9 place-items-center rounded-full border border-[var(--line)] bg-[var(--bg)] text-[var(--ink)] shadow" aria-label="Cerrar"><FiX /></button></div><div className="max-h-[75dvh] overflow-y-auto p-6 sm:p-8"><p className="font-mono text-[11px] uppercase tracking-[.2em] text-[var(--orange)]">{selectedProject.categoria || "Proyecto estudiantil"}</p><h3 id="public-project-title" className="mt-3 font-display text-2xl font-bold text-[var(--ink)]">{selectedProject.titulo}</h3><p className="mt-2 text-sm font-medium text-[var(--green)]">{selectedProject.autores}</p><p className="mt-5 whitespace-pre-line text-sm leading-7 text-[var(--muted)]">{selectedProject.descripcion}</p><dl className="mt-6 grid gap-4 border-y border-[var(--line)] py-5 text-sm"><div><dt className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)]">Carrera</dt><dd className="mt-1 text-[var(--ink)]">{selectedProject.carrera || "No especificada"}</dd></div><div><dt className="font-mono text-[10px] uppercase tracking-wider text-[var(--muted)]">Tecnologías</dt><dd className="mt-1 text-[var(--ink)]">{selectedProject.tecnologias.length ? selectedProject.tecnologias.join(" · ") : "No especificadas"}</dd></div></dl>{selectedProject.enlace && <a href={selectedProject.enlace} target="_blank" rel="noreferrer" className="mt-6 inline-flex items-center gap-2 rounded-full bg-[var(--ink)] px-4 py-2.5 font-mono text-xs uppercase tracking-wide text-[var(--bg)] transition-colors hover:bg-[var(--green)]">Ver proyecto <FiExternalLink /></a>}</div></div></article></div>}
+  </>;
 }
 export { Eventos };

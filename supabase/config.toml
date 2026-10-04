@@ -423,6 +423,11 @@ entrypoint = "./functions/manage-events/index.ts"
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/manage-events/*.html" ]
 
+[functions.manage-projects]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/manage-projects/index.ts"
+
 [functions.manage-aspirantes]
 enabled = true
 verify_jwt = false

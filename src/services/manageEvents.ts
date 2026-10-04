@@ -38,15 +38,20 @@ async function invokeManageEvents<T>(body: Record<string, unknown>) {
     headers: { Authorization: `Bearer ${session.access_token}` },
   });
   if (error) throw error;
+  if (!data) throw new Error("La función no devolvió información del evento.");
   return data;
 }
 
 export async function createManagedEvent(event: EventPayload) {
-  return (await invokeManageEvents<{ event: ManagedEvent }>({ operation: "create", event })).event;
+  const response = await invokeManageEvents<{ event: ManagedEvent }>({ operation: "create", event });
+  if (!response.event) throw new Error("No se recibió el evento creado.");
+  return response.event;
 }
 
 export async function updateManagedEvent(id: string, event: EventPayload) {
-  return (await invokeManageEvents<{ event: ManagedEvent }>({ operation: "update", id, event })).event;
+  const response = await invokeManageEvents<{ event: ManagedEvent }>({ operation: "update", id, event });
+  if (!response.event) throw new Error("No se recibió el evento actualizado.");
+  return response.event;
 }
 
 export async function deleteManagedEvent(id: string) {

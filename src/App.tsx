@@ -18,8 +18,10 @@ import { ConfirmProvider } from "./components/ui/ConfirmDialog";
 
 import Dashboard from "./pages/Dashboard";
 import Events from "./pages/Events";
+import Projects from "./pages/Projects";
 import Eventos from "./components/sections/eventos";
 import EventosAdmin from "./components/dashboard/EventosAdmin";
+import ProjectsPreview from "./components/dashboard/ProjectsPreview";
 import AspirantesAdmin from "./components/dashboard/AspirantesAdmin";
 import PadronAdmin from "./pages/PadronAdmin";
 import RequireAdmin from "./components/auth/RequireAdmin";
@@ -63,8 +65,10 @@ function AppFooter() {
     pathname === "/acceso" ||
     pathname === "/dashboard" ||
     pathname === "/dashboard/eventos" ||
+    pathname === "/dashboard/proyectos" ||
     pathname === "/dashboard/aspirantes" ||
     pathname === "/eventos" ||
+    pathname === "/proyectos" ||
     pathname === "/aspirantes"
   ) {
     return null;
@@ -155,6 +159,23 @@ export default function App() {
             element={
               <RequireAdmin>
                 <Events />
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path="/proyectos"
+            element={
+              <RequirePreviewAccess>
+                <Navbar />
+                <ProjectsPreview />
+              </RequirePreviewAccess>
+            }
+          />
+          <Route
+            path="/dashboard/proyectos"
+            element={
+              <RequireAdmin>
+                <Projects />
               </RequireAdmin>
             }
           />

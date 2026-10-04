@@ -538,7 +538,7 @@ const HeroSpotlight = ({ event, onViewInBoard, reduceMotion }: HeroSpotlightProp
   );
 };
 
-export default function EventosAdmin() {
+export default function EventosAdmin({ allowEditing = true }: { allowEditing?: boolean }) {
   const confirm = useConfirm();
   const reduceMotion = !!useReducedMotion();
 
@@ -565,6 +565,8 @@ export default function EventosAdmin() {
 
   const sorted = useMemo(() => [...eventItems].sort((a, b) => a.date.localeCompare(b.date)), [eventItems]);
   const upcoming = useMemo(() => sorted.filter((e) => daysUntil(e.date) >= 0), [sorted]);
+  // El tablón es una agenda completa: no se limita al siguiente evento.
+  const boardEvents = sorted;
   const nextEvent = upcoming[0];
 
   const counts = useMemo(() => {
@@ -787,9 +789,9 @@ export default function EventosAdmin() {
               <div className="mb-4 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.25em] text-[var(--muted)]">
                   <span className="h-px w-6 bg-[var(--line)]" />
-                  Calendario del campus · Admin
+                  Calendario del campus{allowEditing ? " · Admin" : ""}
                 </div>
-                <PreviewMenu />
+                {allowEditing && <PreviewMenu />}
               </div>
 
               <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -839,13 +841,13 @@ export default function EventosAdmin() {
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-6 bg-gradient-to-t from-[var(--bg)] to-transparent" />
                   <div
                     className={reduceMotion ? "" : "animate-marquee-up hover:[animation-play-state:paused]"}
-                    style={reduceMotion ? undefined : { animationDuration: `${upcoming.length * 3.2}s` }}
+                    style={reduceMotion ? undefined : { animationDuration: `${Math.max(boardEvents.length, 1) * 3.2}s` }}
                   >
-                    {(reduceMotion ? upcoming : [...upcoming, ...upcoming]).map((e, i) => {
+                    {(reduceMotion ? boardEvents : [...boardEvents, ...boardEvents]).map((e, index) => {
                       const meta = CATEGORY_META[e.category];
                       return (
                         <button
-                          key={`${e.id}-${i}`}
+                          key={`${e.id}-${index}`}
                           type="button"
                           onClick={() => jumpToEvent(e.id, e.date)}
                           className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[var(--ink)]/5 focus-visible:outline-none focus-visible:bg-[var(--ink)]/5"
@@ -977,9 +979,7 @@ export default function EventosAdmin() {
                       <motion.div
                         variants={sectionVariants}
                         initial={reduceMotion || editMode ? false : "hidden"}
-                        animate={editMode ? "show" : undefined}
-                        whileInView={editMode ? undefined : "show"}
-                        viewport={{ once: true, amount: 0.15 }}
+                        animate="show"
                         className="relative grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
                       >
                         {group.events.map((e) => (
@@ -1042,7 +1042,7 @@ export default function EventosAdmin() {
         </>
       )}
 
-      <div className="sticky bottom-6 z-50 flex justify-end px-6 pointer-events-none">
+      {allowEditing && <div className="sticky bottom-6 z-50 flex justify-end px-6 pointer-events-none">
         <button
           type="button"
           onClick={() => setEditMode((v) => !v)}
@@ -1053,7 +1053,7 @@ export default function EventosAdmin() {
           {editMode ? <FiX className="w-4 h-4" /> : <FiEdit3 className="w-4 h-4" />}
           {editMode ? "Salir de edición" : "Editar página"}
         </button>
-      </div>
+      </div>}
     </div>
   );
 }
