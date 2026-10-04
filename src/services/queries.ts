@@ -22,7 +22,10 @@ export async function getEventsFromSupabase(): Promise<EventItem[]> {
         const fecha = new Date(row.fecha_inicio);
         if (!isNaN(fecha.getTime())) {
           dateStr = fecha.toISOString().split("T")[0];
-          timeStr = fecha.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
+          // El input type="time" solo acepta HH:MM. El formato localizado
+          // ("08:00 a. m.") hacía que el control mostrara --:-- y el
+          // guardado terminara con “Invalid time value”.
+          timeStr = `${String(fecha.getHours()).padStart(2, "0")}:${String(fecha.getMinutes()).padStart(2, "0")}`;
         }
       } catch (e) {
         console.error("Fecha inválida en evento:", row.id);
@@ -55,11 +58,26 @@ function categoryToTipo(category: Category): "academico" | "cultural" | "deporti
 }
 
 function buildFechaISO(date: string, time: string): string {
-  return new Date(`${date}T${time}:00`).toISOString();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw new Error("Selecciona una fecha válida para el evento.");
+  }
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
+    throw new Error("Selecciona un horario válido para el evento.");
+  }
+  const parsed = new Date(`${date}T${time}:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    throw new Error("La fecha u horario del evento no son válidos.");
+  }
+  return parsed.toISOString();
 }
 
 async function callManageEvents(payload: Record<string, unknown>) {
-  const { data, error } = await supabase.functions.invoke("manage-events", { body: payload });
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error("No hay una sesión activa. Inicia sesión nuevamente.");
+  const { data, error } = await supabase.functions.invoke("manage-events", {
+    body: payload,
+    headers: { Authorization: `Bearer ${session.access_token}` },
+  });
   if (error) throw error;
   if (data?.error) throw new Error(data.error);
   return data;

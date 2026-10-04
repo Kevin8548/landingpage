@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { 
-  ChevronLeft, ChevronRight, LayoutDashboard, CalendarDays, Users, 
+  ChevronLeft, ChevronRight, ChevronDown, LayoutDashboard, CalendarDays, FolderKanban, Users, 
   LogOut, Menu, X, Upload, FileText, Plus, Pencil, Trash2, Search, Download 
 } from "lucide-react";
 import { AnimatedThemeToggler } from "../components/ui/AnimatedThemeToggler";
@@ -9,6 +9,7 @@ import { supabase } from "../lib/supabase";
 import "../components/dashboard/Dashboard.css";
 import "../components/dashboard/DashboardOverrides.css";
 import { showDashboardAlert } from "../lib/dashboardAlerts";
+import DashboardSelect from "../components/dashboard/DashboardSelect";
 
 type Alumno = {
   id?: string;
@@ -22,6 +23,26 @@ type Alumno = {
   fecha_nacimiento: string;
   registrado?: boolean;
 };
+
+const dateFromValue = (value: string) => value ? new Date(`${value}T12:00:00`) : new Date();
+const dateToValue = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+function BirthDatePicker({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [viewDate, setViewDate] = useState(() => dateFromValue(value));
+  const firstDay = (new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay() + 6) % 7;
+  const totalDays = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
+  const label = value ? value.split("-").reverse().join("/") : "Selecciona una fecha";
+
+  return <div className="event-inline-picker dashboard-birth-date-picker">
+    <button type="button" className="event-inline-picker__trigger" onClick={() => { setViewDate(dateFromValue(value)); setIsOpen((current) => !current); }} aria-expanded={isOpen} aria-haspopup="dialog"><CalendarDays size={14} /><span>{label}</span><ChevronDown className="dashboard-birth-date-picker__chevron" size={15} aria-hidden="true" /></button>
+    {isOpen && <div className="event-inline-picker__menu event-inline-calendar" role="dialog" aria-label="Seleccionar fecha de nacimiento">
+      <header><button type="button" onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))} aria-label="Mes anterior">‹</button><strong>{new Intl.DateTimeFormat("es-MX", { month: "long", year: "numeric" }).format(viewDate)}</strong><button type="button" onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))} aria-label="Mes siguiente">›</button></header>
+      <div className="event-inline-calendar__week">{["Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do"].map((day) => <span key={day}>{day}</span>)}</div>
+      <div className="event-inline-calendar__days">{Array.from({ length: firstDay + totalDays }, (_, index) => { if (index < firstDay) return <i key={`empty-${index}`} />; const day = index - firstDay + 1; const date = new Date(viewDate.getFullYear(), viewDate.getMonth(), day, 12); const nextValue = dateToValue(date); return <button type="button" key={nextValue} className={nextValue === value ? "is-selected" : ""} onClick={() => { onChange(nextValue); setIsOpen(false); }}>{day}</button>; })}</div>
+    </div>}
+  </div>;
+}
 
 export default function PadronAdmin() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -43,6 +64,7 @@ export default function PadronAdmin() {
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [editingAlumno, setEditingAlumno] = useState<Alumno | null>(null);
+  const [selectedBirthDate, setSelectedBirthDate] = useState("");
 
   // Estados del CSV
   const [csvData, setCsvData] = useState<Alumno[]>([]);
@@ -197,11 +219,13 @@ export default function PadronAdmin() {
 
   const openCreator = () => {
     setEditingAlumno(null);
+    setSelectedBirthDate("");
     setIsFormModalOpen(true);
   };
 
   const openEditor = (alumno: Alumno) => {
     setEditingAlumno(alumno);
+    setSelectedBirthDate(alumno.fecha_nacimiento);
     setIsFormModalOpen(true);
   };
 
@@ -219,6 +243,11 @@ export default function PadronAdmin() {
       grupo: formData.get("grupo") as string,
       fecha_nacimiento: formData.get("fecha_nacimiento") as string,
     };
+
+    if (!payload.carrera || !payload.grado || !payload.grupo || !payload.fecha_nacimiento) {
+      void showDashboardAlert({ icon: "warning", title: "Completa los campos pendientes" });
+      return;
+    }
 
     try {
       let error;
@@ -248,14 +277,17 @@ export default function PadronAdmin() {
   const deleteAlumno = async (id: string, nombre: string) => {
     const result = await showDashboardAlert({
       icon: "warning",
-      title: "¿Eliminar a este alumno?",
-      text: `El registro de ${nombre} será borrado permanentemente.`,
+      title: "Confirmar eliminación",
+      text: `Escribe ELIMINAR para borrar permanentemente a ${nombre}.`,
+      input: "text",
+      inputPlaceholder: "ELIMINAR",
+      inputValidator: (value) => value === "ELIMINAR" ? undefined : "Escribe ELIMINAR exactamente, en mayúsculas, para continuar.",
       showCancelButton: true,
       confirmButtonText: "Sí, eliminar",
       cancelButtonText: "Cancelar"
     });
 
-    if (result.isConfirmed) {
+    if (result.isConfirmed && result.value === "ELIMINAR") {
       const { error } = await supabase.from('padron_alumnos').delete().eq('id', id);
       if (error) {
         void showDashboardAlert({ icon: "error", title: "Error al eliminar", text: error.message });
@@ -279,6 +311,7 @@ export default function PadronAdmin() {
         <nav className="dashboard-nav">
           <Link to="/dashboard"><LayoutDashboard size={18}/>Resumen</Link>
           <Link to="/dashboard/eventos"><CalendarDays size={18}/>Eventos</Link>
+          <Link to="/dashboard/proyectos"><FolderKanban size={18}/>Proyectos</Link>
           <Link className="is-active" to="/dashboard/padron"><Users size={18}/>Padrón de Alumnos</Link>
         </nav>
         <div className="dashboard-sidebar__bottom">
@@ -301,8 +334,8 @@ export default function PadronAdmin() {
               <h1>Padrón de Alumnos<span>.</span></h1>
               <p>Administra la base de datos oficial para que los alumnos puedan registrarse.</p>
             </div>
-            <div style={{ display: "flex", gap: "1rem" }}>
-              <button className="dashboard-primary-button" style={{ background: "var(--ink)", color: "var(--bg)" }} onClick={() => setIsCsvModalOpen(true)}>
+            <div className="padron-header-actions">
+              <button className="dashboard-secondary-button" onClick={() => setIsCsvModalOpen(true)}>
                 <Upload size={18}/> Importar CSV
               </button>
               <button className="dashboard-primary-button" onClick={openCreator}>
@@ -312,22 +345,22 @@ export default function PadronAdmin() {
           </div>
 
           <section className="dashboard-events dashboard-events--standalone">
-            <div className="dashboard-section-heading" style={{ flexWrap: "wrap", gap: "1rem" }}>
+            <div className="dashboard-section-heading padron-section-heading">
               <div>
                 <p>LISTADO GENERAL</p>
                 <h2>{filteredAlumnos.length} {filteredAlumnos.length === 1 ? "alumno" : "alumnos"} {searchTerm ? "filtrados" : "registrados"}</h2>
               </div>
               
-                            <div style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
+              <div className="padron-toolbar">
                 {/* Buscador */}
-                <div style={{ position: "relative", minWidth: "300px" }}>
-                  <Search size={18} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+                <div className="padron-search">
+                  <Search size={18} />
                   <input 
                     type="text"
                     placeholder="Buscar alumno, matrícula, carrera..." 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{ width: "100%", padding: "0.7rem 1rem 0.7rem 2.5rem", borderRadius: "2rem", border: "1px solid var(--line)", background: "color-mix(in srgb, var(--line) 30%, transparent)", outline: "none", color: "var(--text)" }}
+                    className="padron-search__input"
                   />
                 </div>
                 
@@ -335,7 +368,7 @@ export default function PadronAdmin() {
                 <button 
                   onClick={exportToCSV}
                   disabled={filteredAlumnos.length === 0}
-                  style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.7rem 1.2rem", borderRadius: "2rem", border: "1px solid var(--green)", background: "color-mix(in srgb, var(--green) 10%, transparent)", color: "var(--green)", fontWeight: 600, cursor: filteredAlumnos.length === 0 ? "not-allowed" : "pointer", opacity: filteredAlumnos.length === 0 ? 0.5 : 1 }}
+                  className="padron-csv-button"
                 >
                   <Download size={18} />
                   Exportar CSV
@@ -345,7 +378,7 @@ export default function PadronAdmin() {
 
             <div className="dashboard-event-list" aria-busy={isLoading}>
               {isLoading ? (
-                <p style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)" }}>Cargando datos...</p>
+                <div className="padron-table-placeholder" aria-label="Cargando padrón">{Array.from({ length: 6 }, (_, index) => <i className="placeholder-glow" key={index} />)}</div>
               ) : alumnos.length === 0 ? (
                 <div style={{ padding: "3rem", textAlign: "center", border: "1px dashed var(--line)", borderRadius: "1rem", marginTop: "1rem" }}>
                   <Users size={32} style={{ margin: "0 auto 1rem", opacity: 0.5 }} />
@@ -357,26 +390,17 @@ export default function PadronAdmin() {
               ) : filteredAlumnos.length === 0 ? (
                 <p style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)" }}>No se encontraron alumnos con esa búsqueda.</p>
               ) : (
-                <div style={{ overflowX: "auto", border: "1px solid var(--line)", borderRadius: "0.5rem", marginTop: "1rem" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.9rem" }}>
-                    <thead style={{ background: "color-mix(in srgb, var(--bg) 50%, transparent)", borderBottom: "1px solid var(--line)" }}>
+                <div className="padron-table-wrap">
+                  <table className="padron-table">
+                    <thead>
                       <tr>
-                        <th style={{ padding: "1rem" }}>Matrícula</th>
-                        <th style={{ padding: "1rem" }}>Nombre Completo</th>
-                        <th style={{ padding: "1rem" }}>Carrera</th>
-                        <th style={{ padding: "1rem" }}>Grado y Grupo</th>
-                        <th style={{ padding: "1rem" }}>Estado</th>
-                        <th style={{ padding: "1rem", textAlign: "right" }}>Acciones</th>
+                        <th>Matrícula</th><th>Nombre completo</th><th>Carrera</th><th>Grado y grupo</th><th>Estado</th><th className="padron-table__actions">Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
                       {currentAlumnos.map((alumno) => (
-                        <tr key={alumno.id} style={{ borderBottom: "1px solid var(--line)", transition: "background 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.background = "var(--line)"} onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
-                          <td style={{ padding: "1rem" }}><strong>{alumno.matricula}</strong></td>
-                          <td style={{ padding: "1rem" }}>{alumno.nombre} {alumno.apellido_paterno} {alumno.apellido_materno}</td>
-                          <td style={{ padding: "1rem", color: "var(--text-muted)" }}>{alumno.carrera}</td>
-                          <td style={{ padding: "1rem" }}>{alumno.grado}° "{alumno.grupo}"</td>
-                          <td style={{ padding: "1rem" }}>
+                        <tr key={alumno.id}>
+                          <td><strong>{alumno.matricula}</strong></td><td>{alumno.nombre} {alumno.apellido_paterno} {alumno.apellido_materno}</td><td className="padron-table__muted">{alumno.carrera}</td><td>{alumno.grado}° "{alumno.grupo}"</td><td>
                             {alumno.registrado ? (
                               <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", fontSize: "0.75rem", background: "color-mix(in srgb, var(--green) 15%, transparent)", color: "var(--green)", padding: "0.2rem 0.6rem", borderRadius: "1rem", fontWeight: 600 }}>Activa</span>
                             ) : (
@@ -384,10 +408,10 @@ export default function PadronAdmin() {
                             )}
                           </td>
                           <td style={{ padding: "1rem", textAlign: "right", display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
-                            <button onClick={() => openEditor(alumno)} style={{ padding: "0.4rem", borderRadius: "0.3rem", background: "color-mix(in srgb, var(--text) 5%, transparent)", cursor: "pointer", border: "none" }} aria-label="Editar">
+                            <button className="padron-action-button" onClick={() => openEditor(alumno)} aria-label="Editar">
                               <Pencil size={15} />
                             </button>
-                            <button onClick={() => alumno.id && deleteAlumno(alumno.id, alumno.nombre)} style={{ padding: "0.4rem", borderRadius: "0.3rem", background: "color-mix(in srgb, var(--orange) 10%, transparent)", color: "var(--orange)", cursor: "pointer", border: "none" }} aria-label="Eliminar">
+                            <button className="padron-action-button is-danger" onClick={() => alumno.id && deleteAlumno(alumno.id, alumno.nombre)} aria-label="Eliminar">
                               <Trash2 size={15} />
                             </button>
                           </td>
@@ -439,14 +463,17 @@ export default function PadronAdmin() {
               <button onClick={() => setIsFormModalOpen(false)}><X size={20} /></button>
             </div>
             
-            <form onSubmit={saveAlumno} className="dashboard-event-form">
+            <form onSubmit={saveAlumno} className="dashboard-event-form padron-student-form">
               <label>Matrícula
                 <input name="matricula" defaultValue={editingAlumno?.matricula} required />
               </label>
               
               <div className="dashboard-form-grid">
                 <label>Nombre(s) <input name="nombre" defaultValue={editingAlumno?.nombre} required /></label>
-                <label>Fecha Nac. <input type="date" name="fecha_nacimiento" defaultValue={editingAlumno?.fecha_nacimiento} required /></label>
+                <label>Fecha Nac.
+                  <input type="hidden" name="fecha_nacimiento" value={selectedBirthDate} required />
+                  <BirthDatePicker value={selectedBirthDate} onChange={setSelectedBirthDate} />
+                </label>
               </div>
 
               <div className="dashboard-form-grid">
@@ -455,31 +482,20 @@ export default function PadronAdmin() {
               </div>
 
               <label>Carrera
-                <select name="carrera" defaultValue={editingAlumno?.carrera || ""} required style={{ width: "100%", padding: "0.8rem", borderRadius: "0.5rem", border: "1px solid var(--line)", background: "var(--bg)", color: "var(--text)" }}>
-                  <option value="" disabled>Selecciona una carrera</option>
-                  <option value="TSU en Desarrollo de Software">TSU en Desarrollo de Software</option>
-                  <option value="TSU en Redes y Ciberseguridad">TSU en Redes y Ciberseguridad</option>
-                  <option value="TSU en Entornos Virtuales">TSU en Entornos Virtuales</option>
-                  <option value="Ingeniería en TI e Innovación Digital">Ingeniería en TI e Innovación Digital</option>
-                </select>
+                <DashboardSelect name="carrera" defaultValue={editingAlumno?.carrera || ""} placeholder="Selecciona una carrera" options={[
+                  { value: "TSU en Desarrollo de Software", label: "TSU en Desarrollo de Software" },
+                  { value: "TSU en Redes y Ciberseguridad", label: "TSU en Redes y Ciberseguridad" },
+                  { value: "TSU en Entornos Virtuales", label: "TSU en Entornos Virtuales" },
+                  { value: "Ingeniería en TI e Innovación Digital", label: "Ingeniería en TI e Innovación Digital" },
+                ]} />
               </label>
 
               <div className="dashboard-form-grid">
                 <label>Grado
-                  <select name="grado" defaultValue={editingAlumno?.grado || ""} required style={{ width: "100%", padding: "0.8rem", borderRadius: "0.5rem", border: "1px solid var(--line)", background: "var(--bg)", color: "var(--text)" }}>
-                    <option value="" disabled>Selecciona...</option>
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
-                      <option key={num} value={num}>{num}°</option>
-                    ))}
-                  </select>
+                  <DashboardSelect name="grado" defaultValue={editingAlumno?.grado || ""} placeholder="Selecciona..." options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => ({ value: String(num), label: `${num}°` }))} />
                 </label>
                 <label>Grupo
-                  <select name="grupo" defaultValue={editingAlumno?.grupo || ""} required style={{ width: "100%", padding: "0.8rem", borderRadius: "0.5rem", border: "1px solid var(--line)", background: "var(--bg)", color: "var(--text)" }}>
-                    <option value="" disabled>Selecciona...</option>
-                    {"ABCD".split("").map(letra => (
-                      <option key={letra} value={letra}>{letra}</option>
-                    ))}
-                  </select>
+                  <DashboardSelect name="grupo" defaultValue={editingAlumno?.grupo || ""} placeholder="Selecciona..." options={"ABCD".split("").map((letter) => ({ value: letter, label: letter }))} />
                 </label>
               </div>
 

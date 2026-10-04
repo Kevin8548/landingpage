@@ -50,28 +50,26 @@ export function useEventosStore() {
   const commit = useCallback((updater: (prev: EventItem[]) => EventItem[]) => {
     setEventItemsState((prev) => {
       const next = updater(prev);
+      // La persistencia puede ocurrir inmediatamente después de onChange.
+      // Actualizamos la ref en este mismo instante para que saveEvent nunca
+      // lea el valor anterior mientras React aún programa el re-render.
+      eventItemsRef.current = next;
       writeStorage(next);
       return next;
     });
   }, []);
 
-  // Carga los eventos reales desde Supabase al montar. Mientras tanto se
-  // muestra lo que haya en localStorage (o la data semilla) para que no
-  // se vea vacío.
-  useEffect(() => {
-    let mounted = true;
-    async function loadRealEvents() {
-      const realEvents = await getEventsFromSupabase();
-      if (mounted && realEvents.length > 0) {
-        setEventItemsState(realEvents);
-      }
-    }
-    loadRealEvents();
-
-    return () => {
-      mounted = false;
-    };
+  const reloadEvents = useCallback(async () => {
+    const realEvents = await getEventsFromSupabase();
+    eventItemsRef.current = realEvents;
+    setEventItemsState(realEvents);
+    writeStorage(realEvents);
   }, []);
+
+  // Supabase es la fuente de verdad, aun cuando la lista esté vacía.
+  useEffect(() => {
+    void reloadEvents();
+  }, [reloadEvents]);
 
   const updateEventField = useCallback(
     (id: string, field: EventTextField, value: string) => {
@@ -107,9 +105,13 @@ export function useEventosStore() {
       await updateEventInSupabase(id, rest);
     } catch (err) {
       console.error("No se pudo guardar el evento:", err);
-      // aquí podrías disparar un toast de error si tienen uno
+      throw err;
     }
   }, []);
+
+  const saveEvents = useCallback(async (ids: string[]) => {
+    await Promise.all(ids.map((id) => saveEvent(id)));
+  }, [saveEvent]);
 
   // Sube (o quita) la imagen de verdad a Supabase Storage y actualiza el
   // estado local con la URL pública real que regresa la función, para que
@@ -167,6 +169,8 @@ export function useEventosStore() {
     updateEventImage,
     deleteEvent,
     saveEvent,
+    saveEvents,
     saveEventImage,
+    reloadEvents,
   };
 }

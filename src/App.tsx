@@ -61,16 +61,7 @@ function ScrollManager() {
 function AppFooter() {
   const { pathname } = useLocation();
 
-  if (
-    pathname === "/acceso" ||
-    pathname === "/dashboard" ||
-    pathname === "/dashboard/eventos" ||
-    pathname === "/dashboard/proyectos" ||
-    pathname === "/dashboard/aspirantes" ||
-    pathname === "/eventos" ||
-    pathname === "/proyectos" ||
-    pathname === "/aspirantes"
-  ) {
+  if (pathname === "/acceso" || pathname.startsWith("/dashboard") || ["/eventos", "/proyectos", "/aspirantes"].includes(pathname)) {
     return null;
   }
 

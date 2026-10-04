@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import "./Navbar.css";
 import logo from "../../assets/letrasDark.svg";
 
@@ -21,6 +22,8 @@ const SECTION_IDS = [
 const clamp = (value: number) => Math.max(0, Math.min(100, value));
 
 export default function Navbar() {
+  const { pathname } = useLocation();
+  const isPreview = ["/eventos", "/proyectos", "/aspirantes", "/dashboard/aspirantes"].includes(pathname);
   const [activeIndex, setActiveIndex] = useState(0);
   const [sectionProgress, setSectionProgress] = useState(
     Array(SECTION_IDS.length).fill(0),
@@ -95,12 +98,7 @@ export default function Navbar() {
           <span className="tid-brand-text">TLAXCALA</span>
         </div>
 
-        <span className="tid-nav-line" aria-hidden="true">
-          <span
-            className="tid-nav-line-fill"
-            style={{ width: `${sectionProgress[0]}%` }}
-          />
-        </span>
+        {!isPreview && <span className="tid-nav-line" aria-hidden="true"><span className="tid-nav-line-fill" style={{ width: `${sectionProgress[0]}%` }} /></span>}
       </a>
 
       <button
@@ -128,18 +126,13 @@ export default function Navbar() {
             <span className="tid-dot" aria-hidden="true">
               <span
                 className="tid-dot-fill"
-                style={{ height: `${sectionProgress[sectionIndex]}%` }}
+                style={{ height: isPreview ? "0%" : `${sectionProgress[sectionIndex]}%` }}
               />
             </span>
 
             <span>{item.label}</span>
 
-            <span className="tid-nav-line" aria-hidden="true">
-              <span
-                className="tid-nav-line-fill"
-                style={{ width: `${sectionProgress[sectionIndex]}%` }}
-              />
-            </span>
+            {!isPreview && <span className="tid-nav-line" aria-hidden="true"><span className="tid-nav-line-fill" style={{ width: `${sectionProgress[sectionIndex]}%` }} /></span>}
           </a>
         );
       })}
@@ -163,7 +156,7 @@ export default function Navbar() {
               <span className="tid-dot" aria-hidden="true">
                 <span
                   className="tid-dot-fill"
-                  style={{ height: `${sectionProgress[sectionIndex]}%` }}
+                  style={{ height: isPreview ? "0%" : `${sectionProgress[sectionIndex]}%` }}
                 />
               </span>
               <span>{item.label}</span>
