@@ -50,4 +50,4 @@ vite.svg
 *.tsbuildinfo
 
 # supabase (solo se ignoran los temporales)
-supabase/.temp/
+supabase/.temp/.vscode/
