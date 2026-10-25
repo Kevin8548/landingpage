@@ -1,10 +1,12 @@
 // # Cerebro del bot (detección de intenciones, búsqueda de eventos, test vocacional)
 import { events, type EventItem } from "../../data/eventos";
+import { askGroqAI } from "../../services/aiService";
 import {
   CAREERS_INFO,
   VOCATIONAL_QUESTIONS,
   CAREER_JUSTIFICATIONS,
   DEFAULT_SUGGESTIONS,
+  CONCEPT_FAQS,
   type CareerQuickInfo,
 } from "./chatbotData";
 
@@ -41,11 +43,12 @@ export function normalize(text: string): string {
     .trim();
 }
 
-export function handleUserMessage(
+export async function handleUserMessage(
   rawInput: string,
   quizState: QuizState,
-  setQuizState: React.Dispatch<React.SetStateAction<QuizState>>
-): BotResponse {
+  setQuizState: React.Dispatch<React.SetStateAction<QuizState>>,
+  currentEvents: EventItem[] = events
+): Promise<BotResponse> {
   const input = normalize(rawInput);
 
   // -------------------------------------------------------------
@@ -155,6 +158,32 @@ export function handleUserMessage(
       quizStep: 0,
     };
   }
+    // -------------------------------------------------------------
+  // PREGUNTAS CLAVE Y CONCEPTOS (¿Qué es un hackathon?, ¿Qué es un congreso?, etc.)
+  // -------------------------------------------------------------
+  const isQuestioningConcept =
+    input.includes("que es") ||
+    input.includes("que significa") ||
+    input.includes("de que trata") ||
+    input.includes("en que consiste") ||
+    input.includes("explicame");
+
+  // Buscamos si el mensaje coincide con alguna de las preguntas clave
+  const matchedFAQ = CONCEPT_FAQS.find((faq) => {
+    // Si pregunta explícitamente "que es..." o si escribe directamente la palabra clave
+    return faq.keywords.some((kw) => {
+      const normalizedKW = normalize(kw);
+      return input.includes(normalizedKW);
+    });
+  });
+
+  if (matchedFAQ && (isQuestioningConcept || input === normalize(matchedFAQ.question) || matchedFAQ.keywords.some((k) => input === normalize(k)))) {
+    return {
+      text: matchedFAQ.answer,
+      suggestions: matchedFAQ.suggestions,
+      action: matchedFAQ.action,
+    };
+  }
 
   // -------------------------------------------------------------
   // 3. CONSULTAS SOBRE EVENTOS (HU-09)
@@ -169,31 +198,37 @@ export function handleUserMessage(
     input.includes("feria")
   ) {
     // Si solo pide ver eventos generales
-    if (input === "ver eventos" || input === "eventos" || input === "que eventos hay") {
-      const proximos = events.slice(0, 3);
-      const lista = proximos
-        .map((e) => `• **${e.title}** (${e.date}) - ${e.location}`)
-        .join("\n");
-
-      return {
-        text: `**Próximos eventos destacados:**\n\n${lista}\n\n¿Deseas información específica de alguno de ellos?`,
-        suggestions: [proximos[0]?.title || "Eventos", "Conocer carreras", "Orientación vocacional"],
-        action: {
-          label: "Ir a la sección de eventos",
-          url: "#eventos",
-        },
-      };
+   if (input === "ver eventos" || input === "eventos" || input === "que eventos hay") {
+        if (currentEvents.length === 0) {
+            return {
+            text: "Por el momento no hay eventos programados en el calendario institucional. Te invitamos a estar atento a próximos avisos.",
+            suggestions: ["Conocer carreras", "Orientación vocacional"],
+            };
+        }
+        const proximos = currentEvents.slice(0, 3);
+        const lista = proximos
+            .map((e) => `• **${e.title}** (${e.date}) - ${e.location}`)
+            .join("\n");
+        return {
+            text: `**Próximos eventos destacados:**\n\n${lista}\n\n¿Deseas información específica de alguno de ellos?`,
+            suggestions: [proximos[0]?.title || "Eventos", "Conocer carreras", "Orientación vocacional"],
+            action: {
+            label: "Ir a la sección de eventos",
+            url: "#eventos",
+            },
+        };
     }
 
-    // Buscar evento específico por nombre o categoría
-    const found = events.find((e) => {
-      const titleNorm = normalize(e.title);
-      const catNorm = normalize(e.category);
-      return (
-        input.includes(titleNorm) ||
-        titleNorm.includes(input.replace("evento", "").trim()) ||
-        input.includes(catNorm)
-      );
+    // Buscar evento específico por nombre o categoría dentro de la DB
+    
+    const found = currentEvents.find((e) => {
+        const titleNorm = normalize(e.title);
+        const catNorm = normalize(e.category);
+        return (
+            input.includes(titleNorm) ||
+            titleNorm.includes(input.replace("evento", "").trim()) ||
+            input.includes(catNorm)
+        );
     });
 
     if (found) {
@@ -223,31 +258,59 @@ export function handleUserMessage(
     }
   }
 
-  // -------------------------------------------------------------
+    // -------------------------------------------------------------
   // 4. CONSULTAS SOBRE CARRERAS (HU-11)
   // -------------------------------------------------------------
-  // Identificar si menciona alguna de las 3 carreras
+  // 1. Descartar términos comunes que NO son la carrera universitaria
+  const isFalsePositive =
+    input.includes("redes sociales") ||
+    input.includes("red social") ||
+    input.includes("red wifi") ||
+    input.includes("clases virtuales") ||
+    input.includes("aula virtual") ||
+    input.includes("campus virtual");
+
   let targetCareerKey: string | null = null;
-  if (input.includes("software") || input.includes("programacion") || input.includes("desarrollo")) {
-    targetCareerKey = "desarrollo-software";
-  } else if (input.includes("red") || input.includes("ciberseguridad") || input.includes("seguridad")) {
-    targetCareerKey = "redes";
-  } else if (input.includes("entorno") || input.includes("virtual") || input.includes("videojuego") || input.includes("3d")) {
-    targetCareerKey = "entornos-virtuales";
+
+  if (!isFalsePositive) {
+    // Detectamos si se refiere específicamente a una de las 3 carreras
+    if (
+      input === "desarrollo de software" ||
+      input === "software" ||
+      input.includes("carrera de software") ||
+      (input.includes("software") && (input.includes("duracion") || input.includes("requisito") || input.includes("campo laboral")))
+    ) {
+      targetCareerKey = "desarrollo-software";
+    } else if (
+      input === "redes" ||
+      input === "redes y ciberseguridad" ||
+      input.includes("carrera de redes") ||
+      input.includes("ciberseguridad") ||
+      (input.includes("redes") && (input.includes("duracion") || input.includes("requisito") || input.includes("campo laboral")))
+    ) {
+      targetCareerKey = "redes";
+    } else if (
+      input === "entornos virtuales" ||
+      input === "entornos" ||
+      input.includes("carrera de entornos") ||
+      (input.includes("entornos") && (input.includes("duracion") || input.includes("requisito") || input.includes("campo laboral")))
+    ) {
+      targetCareerKey = "entornos-virtuales";
+    }
   }
 
-  // Si pregunta por carreras en general
+  // Si pregunta por la lista general de carreras (ej. clic en el botón "Conocer carreras")
   if (
     input === "conocer carreras" ||
-    input.includes("que carreras") ||
-    input.includes("carreras hay") ||
+    input === "carreras" ||
+    input.includes("que carreras hay") ||
     input.includes("oferta educativa")
   ) {
     return {
-      text: "Contamos con ** 3 carreras de Técnico Superior Universitario (TSU)** con continuidad a Ingeniería:\n\n" +
-        "1.** Desarrollo de Software Multiplataforma**\n" +
-        "2.** Redes y Ciberseguridad**\n" +
-        "3.** Entornos Virtuales y Negocios Digitales**\n\n" +
+      text: "Contamos con **3 carreras de Técnico Superior Universitario (TSU)** con continuidad a Ingeniería:\n\n" +
+        "1.**Desarrollo de Software Multiplataforma**\n" +
+        "2.**Redes y Ciberseguridad**\n" +
+        "3.**Entornos Virtuales y Negocios Digitales**\n\n" +
         "¿Sobre cuál te gustaría conocer duración, campo laboral o requisitos?",
       suggestions: [
         "Desarrollo de Software",
@@ -261,11 +324,11 @@ export function handleUserMessage(
     };
   }
 
-  // Si pregunta por una carrera específica
+  // Si detectó una carrera específica:
   if (targetCareerKey) {
     const info = CAREERS_INFO[targetCareerKey];
 
-    // Pregunta por Duración
+    // Pregunta concreta por Duración
     if (input.includes("duracion") || input.includes("tiempo") || input.includes("cuanto dura") || input.includes("cuatrimestre")) {
       return {
         text: `La carrera de **${info.shortName}** tiene una duración de **${info.duracion}** (modalidad cuatrimestral intensiva con estadía profesional).`,
@@ -277,7 +340,7 @@ export function handleUserMessage(
       };
     }
 
-    // Pregunta por Requisitos
+    // Pregunta concreta por Requisitos
     if (input.includes("requisito") || input.includes("necesito") || input.includes("admision") || input.includes("entrar")) {
       return {
         text: `**Requisitos para ${info.shortName}:**\n${info.requisitos}`,
@@ -289,7 +352,7 @@ export function handleUserMessage(
       };
     }
 
-    // Pregunta por Campo Laboral
+    // Pregunta concreta por Campo Laboral
     if (input.includes("campo") || input.includes("laboral") || input.includes("trabajo") || input.includes("donde trabajar")) {
       return {
         text: `**Campo laboral de ${info.shortName}:**\n${info.campoLaboral}`,
@@ -301,18 +364,34 @@ export function handleUserMessage(
       };
     }
 
-    // Resumen general de la carrera elegida
-    return {
-      text: `**${info.name}**\n\n` +
-        `**¿De qué trata?** ${info.descripcion}\n` +
-        `**Duración:** ${info.duracion}\n` +
-        `**Campo laboral:** ${info.campoLaboral}`,
-      suggestions: ["Duración", "Requisitos", "Otras carreras"],
-      action: {
-        label: `Ver página de ${info.shortName}`,
-        url: info.link,
-      },
-    };
+    // Solo mostramos la ficha resumen completa si fue una consulta directa o clic de botón
+    const isDirectIntent =
+      input === info.shortName.toLowerCase() ||
+      input === info.name.toLowerCase() ||
+      input === targetCareerKey ||
+      input === "redes" ||
+      input === "entornos" ||
+      input === "software" ||
+      input.startsWith("conocer ") ||
+      input.startsWith("hablame de ") ||
+      input.startsWith("informacion de ");
+
+    if (isDirectIntent) {
+      return {
+        text: `**${info.name}**\n\n` +
+          `**¿De qué trata?** ${info.descripcion}\n` +
+          `**Duración:** ${info.duracion}\n` +
+          `**Campo laboral:** ${info.campoLaboral}`,
+        suggestions: ["Duración", "Requisitos", "Otras carreras"],
+        action: {
+          label: `Ver página de ${info.shortName}`,
+          url: info.link,
+        },
+      };
+    }
+
+    // SI NO ES UNA CONSULTA DIRECTA (es una duda conversacional como "¿En entornos enseñan Blender?"):
+    // No hacemos return aquí; dejamos que el flujo continúe hacia Groq AI para que responda con IA.
   }
 
   // -------------------------------------------------------------
@@ -326,14 +405,22 @@ export function handleUserMessage(
   }
 
   // -------------------------------------------------------------
-  // 6. FALLBACK HONESTO (HU-11 Criterio de aceptación)
+  // 6. INTELIGENCIA ARTIFICIAL CON GROQ (Para preguntas abiertas o variaciones)
   // -------------------------------------------------------------
-  return {
-    text: "Disculpa, no dispongo de esa información exacta en este momento. Te invito a explorar nuestras secciones especializadas o realizar el test vocacional.",
-    suggestions: DEFAULT_SUGGESTIONS,
-    action: {
-      label: "Ir al inicio",
-      url: "/",
-    },
-  };
+  try {
+    const aiAnswer = await askGroqAI(rawInput, currentEvents);
+    return {
+      text: aiAnswer,
+      suggestions: ["Conocer carreras", "Ver eventos", "Orientación vocacional"],
+    };
+  } catch {
+    return {
+      text: "Disculpa, no dispongo de esa información exacta en este momento. Te invito a explorar nuestras secciones especializadas o realizar el test vocacional.",
+      suggestions: DEFAULT_SUGGESTIONS,
+      action: {
+        label: "Ir al inicio",
+        url: "/",
+      },
+    };
+  }
 }
