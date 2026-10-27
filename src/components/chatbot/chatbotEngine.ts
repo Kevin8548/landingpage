@@ -1,14 +1,15 @@
 // # Cerebro del bot (detección de intenciones, búsqueda de eventos, test vocacional)
 import { events, type EventItem } from "../../data/eventos";
-import { askGroqAI } from "../../services/aiService";
+import { askSmartAI, type ChatHistoryItem } from "../../services/aiService";
 import {
   CAREERS_INFO,
   VOCATIONAL_QUESTIONS,
-  CAREER_JUSTIFICATIONS,
+  CAREER_PROFILES,
   DEFAULT_SUGGESTIONS,
   CONCEPT_FAQS,
   type CareerQuickInfo,
 } from "./chatbotData";
+
 
 export interface BotAction {
   label: string;
@@ -47,22 +48,47 @@ export async function handleUserMessage(
   rawInput: string,
   quizState: QuizState,
   setQuizState: React.Dispatch<React.SetStateAction<QuizState>>,
-  currentEvents: EventItem[] = events
+  currentEvents: EventItem[] = events,
+  history: ChatHistoryItem[] = []
 ): Promise<BotResponse> {
   const input = normalize(rawInput);
 
-  // -------------------------------------------------------------
-  // 1. GESTIÓN DEL FLUJO VOCACIONAL (HU-10)
+
+  if (
+    input === "ver plan de estudios" ||
+    input === "plan de estudios" ||
+    input === "materias" ||
+    input === "reticula"
+  ) {
+    return {
+      text: "¿De cuál de nuestras 3 carreras te gustaría conocer el plan de estudios y materias clave?",
+      suggestions: [
+        "Plan de Desarrollo de Software",
+        "Plan de Redes y Ciberseguridad",
+        "Plan de Entornos Virtuales",
+      ],
+      action: {
+        label: "Ver sección de carreras",
+        url: "#carreras",
+      },
+    };
+  }
+    // -------------------------------------------------------------
+  // 1. GESTIÓN DEL FLUJO VOCACIONAL DINÁMICO
   // -------------------------------------------------------------
   if (quizState.active) {
+    // Si el usuario decide salir antes y ver su resultado en la pregunta 3 o 4
+    if (input.includes("ver resultado") || input.includes("resultado ahora") || input.includes("calcular")) {
+      return finishQuizAndShowResult(quizState.scores, setQuizState);
+    }
+
     const currentQ = VOCATIONAL_QUESTIONS[quizState.step];
     
-    // Verificar si el usuario seleccionó una opción válida
+    // Buscar la opción elegida por texto o por número (1, 2, 3)
     let selectedOption = currentQ.options.find(
       (opt) => normalize(opt.text) === input || input.includes(normalize(opt.text).slice(0, 15))
     );
 
-    // Si escribió un número (1, 2, 3)
     const numChoice = parseInt(rawInput, 10);
     if (!selectedOption && !isNaN(numChoice) && numChoice >= 1 && numChoice <= currentQ.options.length) {
       selectedOption = currentQ.options[numChoice - 1];
@@ -70,14 +96,14 @@ export async function handleUserMessage(
 
     if (!selectedOption) {
       return {
-        text: `Por favor, selecciona una de las opciones de la pregunta ${quizState.step + 1} para continuar.`,
+        text: `Por favor, elige una de las opciones para continuar:`,
         suggestions: currentQ.options.map((o) => o.text),
         isQuiz: true,
         quizStep: quizState.step,
       };
     }
 
-    // Acumular puntos
+    // Acumular puntos de la opción
     const newScores = { ...quizState.scores };
     Object.entries(selectedOption.points).forEach(([career, pts]) => {
       const key = career as keyof typeof newScores;
@@ -86,14 +112,24 @@ export async function handleUserMessage(
 
     const nextStep = quizState.step + 1;
 
-    // Si aun quedan preguntas (maximo 4 preguntas)
-    if (nextStep < VOCATIONAL_QUESTIONS.length) {
-      setQuizState({
-        active: true,
-        step: nextStep,
-        scores: newScores,
-      });
+    // Si llegó a la pregunta 3 (ya tiene suficiente información para una predicción):
+    if (nextStep === 3) {
+      setQuizState({ active: true, step: nextStep, scores: newScores });
+      const nextQ = VOCATIONAL_QUESTIONS[nextStep];
+      return {
+        text: `*¡Ya detecto una inclinación clara en tu perfil!* Puedes ver tu resultado ahora mismo o responder 2 preguntas más para afinarlo al 100%:\n\n${nextQ.question}`,
+        suggestions: [
+          ...nextQ.options.map((o) => o.text),
+          "Ver mi resultado ahora :) ", // Botón de salida rapida
+        ],
+        isQuiz: true,
+        quizStep: nextStep,
+      };
+    }
 
+    // Si aún quedan preguntas
+    if (nextStep < VOCATIONAL_QUESTIONS.length) {
+      setQuizState({ active: true, step: nextStep, scores: newScores });
       const nextQ = VOCATIONAL_QUESTIONS[nextStep];
       return {
         text: nextQ.question,
@@ -103,38 +139,74 @@ export async function handleUserMessage(
       };
     }
 
-    // FINAL DEL TEST: Calcular carrera ganadora
-    let winner: keyof typeof newScores = "desarrollo-software";
-    let maxPts = -1;
+    // Si completó las 5 preguntas
+    return finishQuizAndShowResult(newScores, setQuizState);
+  }
 
-    (Object.keys(newScores) as Array<keyof typeof newScores>).forEach((c) => {
-      if (newScores[c] > maxPts) {
-        maxPts = newScores[c];
-        winner = c;
-      }
-    });
-
+  function finishQuizAndShowResult(
+    scores: { "desarrollo-software": number; redes: number; "entornos-virtuales": number },
+    setQuizState: React.Dispatch<React.SetStateAction<QuizState>>
+  ): BotResponse {
     setQuizState({
       active: false,
       step: 0,
       scores: { "desarrollo-software": 0, redes: 0, "entornos-virtuales": 0 },
     });
 
-    const career = CAREERS_INFO[winner];
-    const justif = CAREER_JUSTIFICATIONS[winner];
+    const totalPointsEarned = Object.values(scores).reduce((a, b) => a + b, 0) || 1;
+
+    // Ordenar por puntaje
+    const sortedCareers = (Object.keys(scores) as Array<keyof typeof scores>)
+      .map((key) => {
+        const pts = scores[key];
+        const percentage = Math.min(Math.round((pts / totalPointsEarned) * 100), 96);
+        return {
+          key,
+          percentage: percentage < 25 ? 25 : percentage,
+          info: CAREERS_INFO[key],
+          profile: CAREER_PROFILES[key],
+        };
+      })
+      .sort((a, b) => b.percentage - a.percentage);
+
+    const winner = sortedCareers[0];
+    const runnerUp = sortedCareers[1];
+
+    const resultMessage = `
+  **¡Diagnóstico Vocacional Completado!**
+
+  **Carrera Recomendada:**
+  **${winner.info.name}**
+  **Afinidad con tu perfil:** **${winner.percentage}%**
+
+  **${winner.profile.title}**
+  ${winner.profile.justification}
+
+  **Tus fortalezas clave:**
+  ${winner.profile.strengths.map((s: string) => `• ${s}`).join("\n")}
+
+  **Tu segunda mejor opción:**
+  **${runnerUp.info.shortName}** (${runnerUp.percentage}% de afinidad).
+
+  **Duración:** ${winner.info.duracion}
+  `.trim();
 
     return {
-      text: `**¡Hemos terminado tu orientación vocacional!**\n\nTu carrera recomendada es:\n**${career.name}**\n\n**¿Por qué esta carrera para ti?**\n${justif}\n\nDuración: ${career.duracion}`,
-      suggestions: ["Conocer carreras", "Ver eventos", "Reiniciar test"],
+      text: resultMessage,
+      suggestions: [
+        `Ver plan de ${winner.info.shortName}`,
+        `Ver plan de ${runnerUp.info.shortName}`,
+        "Ver eventos",
+        "Reiniciar test",
+      ],
       action: {
-        label: `Ver detalles de ${career.shortName}`,
-        url: career.link,
+        label: `Explorar ${winner.info.shortName}`,
+        url: winner.info.link,
       },
     };
   }
-
   // -------------------------------------------------------------
-  // 2. ACTIVAR ORIENTACIÓN VOCACIONAL (HU-10)
+  // 2. ACTIVAR ORIENTACIÓN VOCACIONAL 
   // -------------------------------------------------------------
   if (
     input.includes("orientacion") ||
@@ -152,7 +224,7 @@ export async function handleUserMessage(
 
     const firstQ = VOCATIONAL_QUESTIONS[0];
     return {
-      text: `**Orientación Vocacional**\nTe haré 4 preguntas rápidas para recomendarte la carrera ideal para tu perfil.\n\n${firstQ.question}`,
+      text: `**Orientación Vocacional**\nTe haré unas preguntas dinámicas para recomendarte la carrera ideal para tu perfil.\n\n${firstQ.question}`,
       suggestions: firstQ.options.map((o) => o.text),
       isQuiz: true,
       quizStep: 0,
@@ -211,13 +283,14 @@ export async function handleUserMessage(
             .join("\n");
         return {
             text: `**Próximos eventos destacados:**\n\n${lista}\n\n¿Deseas información específica de alguno de ellos?`,
-            suggestions: [proximos[0]?.title || "Eventos", "Conocer carreras", "Orientación vocacional"],
+            suggestions: [proximos[1]?.title || "Eventos", "Conocer carreras", "Orientación vocacional"],
             action: {
             label: "Ir a la sección de eventos",
             url: "#eventos",
             },
         };
     }
+    
 
     // Buscar evento específico por nombre o categoría dentro de la DB
     
@@ -328,6 +401,18 @@ export async function handleUserMessage(
   if (targetCareerKey) {
     const info = CAREERS_INFO[targetCareerKey];
 
+    // Pregunta concreta por Plan de Estudios / Materias
+    if (
+      input.includes("plan") ||
+      input.includes("materia") ||
+      input.includes("asignatura") ||
+      input.includes("reticula") ||
+      input.includes("que llevan") ||
+      input.includes("que materias")
+    ) {
+      return getStudyPlanResponse(targetCareerKey, info);
+    }
+
     // Pregunta concreta por Duración
     if (input.includes("duracion") || input.includes("tiempo") || input.includes("cuanto dura") || input.includes("cuatrimestre")) {
       return {
@@ -408,7 +493,7 @@ export async function handleUserMessage(
   // 6. INTELIGENCIA ARTIFICIAL CON GROQ (Para preguntas abiertas o variaciones)
   // -------------------------------------------------------------
   try {
-    const aiAnswer = await askGroqAI(rawInput, currentEvents);
+    const aiAnswer = await askSmartAI(rawInput, currentEvents, history);
     return {
       text: aiAnswer,
       suggestions: ["Conocer carreras", "Ver eventos", "Orientación vocacional"],
@@ -423,4 +508,78 @@ export async function handleUserMessage(
       },
     };
   }
+}
+
+// Presentación formal e institucional del plan de estudios
+function getStudyPlanResponse(careerKey: string, info: CareerQuickInfo): BotResponse {
+  let highlights = "";
+
+  if (careerKey === "desarrollo-software") {
+    highlights = `
+**Ciclos de Fundamentos:**
+• Fundamentos de Programación y Lógica
+• Fundamentos de Redes
+• Bases de Datos Relacionales (SQL)
+• Matemáticas y Física
+
+**Ciclos de Especialización y Desarrollo:**
+• Programación Estructurada y Orientada a Objetos
+• Desarrollo de Aplicaciones Web
+• Desarrollo de Aplicaciones Móviles (Android e iOS)
+• Tópicos de Calidad para el Diseño de Software
+• Proyectos Integradores I y II
+
+**Ciclos de Integración y Titulación:**
+• Aplicaciones Web Orientadas a Servicios y APIs
+• Bases de Datos Avanzadas
+• Estadía Profesional en el Sector Productivo
+`.trim();
+  } else if (careerKey === "redes") {
+    highlights = `
+**Ciclos de Fundamentos e Infraestructura:**
+• Fundamentos de Redes y Telecomunicaciones
+• Conmutación y Enrutamiento de Redes
+• Sistemas Operativos y Arquitectura de Servidores
+• Cableado Estructurado
+
+**Ciclos de Seguridad y Administración:**
+• Ciberseguridad y Criptografía
+• Seguridad Perimetral y Redes Privadas Virtuales (VPN)
+• Administración de Servidores Linux y Windows
+• Proyectos Integradores I y II
+
+**Ciclos de Auditoría y Titulación:**
+• Auditoría de Seguridad en Tecnologías de la Información
+• Computación en la Nube y Virtualización
+• Estadía Profesional en el Sector Productivo
+`.trim();
+  } else {
+    highlights = `
+**Ciclos de Fundamentos y Diseño Digital:**
+• Principios de Modelado 3D, Iluminación y Texturizado
+• Diseño de Interfaces y Experiencia de Usuario (UI/UX)
+• Animación y Gráficos Digitales
+• Fundamentos de Negocios Digitales
+
+**Ciclos de Tecnologías Inmersivas:**
+• Programación en Motores de Videojuegos y Simulación
+• Desarrollo de Aplicaciones en Realidad Virtual y Aumentada
+• Modelado 3D Avanzado e Interacción en Tiempo Real
+• Proyectos Integradores I y II
+
+**Ciclos de Estrategia Digital y Titulación:**
+• Estrategias de Comercio y Marketing Digital
+• Simulación Aplicada al Sector Productivo
+• Estadía Profesional en el Sector Productivo
+`.trim();
+  }
+
+  return {
+    text: `**Plan de Estudios — ${info.name}**\n**Duración:** ${info.duracion} (Modelo 70% práctico y 30% teórico).\n\n${highlights}\n\nPuede consultar la retícula completa y asignaturas por cuatrimestre a través del siguiente enlace:`,
+    suggestions: ["Requisitos de ingreso", "Campo laboral", "Conocer carreras"],
+    action: {
+      label: `Ver plan curricular de ${info.shortName}`,
+      url: info.link,
+    },
+  };
 }

@@ -98,21 +98,35 @@ interface ChatMessage {
 
         // Simula tiempo de respuesta para mayor naturalidad
         // Dentro de handleSendMessage:
-        setTimeout(async () => {
-            // Ahora usamos await porque la IA consulta a Groq en la red
-            const response = await handleUserMessage(text, quizState, setQuizState, realEvents);
-            
-            const botMsg: ChatMessage = {
-                id: "b-" + Date.now(),
-                sender: "bot",
-                text: response.text,
-                time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-                suggestions: response.suggestions,
-                action: response.action,
-            };
+            setTimeout(async () => {
+        // 1. Convertimos los mensajes actuales a formato para la IA (omitiendo el saludo inicial)
+        const chatHistory = messages
+            .filter((m) => m.id !== "init-1")
+            .map((m) => ({
+            role: (m.sender === "user" ? "user" : "assistant") as "user" | "assistant",
+            content: m.text,
+            }));
 
-            setMessages((prev) => [...prev, botMsg]);
-            setIsTyping(false);
+        // 2. Le pasamos chatHistory como 5to argumento a handleUserMessage
+        const response = await handleUserMessage(
+            text,
+            quizState,
+            setQuizState,
+            realEvents,
+            chatHistory
+        );
+        
+        const botMsg: ChatMessage = {
+            id: "b-" + Date.now(),
+            sender: "bot",
+            text: response.text,
+            time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            suggestions: response.suggestions,
+            action: response.action,
+        };
+
+        setMessages((prev) => [...prev, botMsg]);
+        setIsTyping(false);
         }, 450);
     };
 

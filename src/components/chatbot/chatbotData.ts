@@ -164,89 +164,140 @@ export interface QuizQuestion {
   options: QuizOption[];
 }
 
-// HU-10: Máximo 4 preguntas vocacionales
+// Test Vocacional Dinámico y Gamificado
 export const VOCATIONAL_QUESTIONS: QuizQuestion[] = [
   {
     id: 1,
-    question: "1/4: ¿Qué actividad despierta más tu curiosidad?",
+    question: "1/5 **MISIÓN:** Una empresa sufre una falla crítica y sus servicios se detienen. ¿En qué equipo te gustaría entrar al rescate?",
     options: [
       {
-        text: "Crear aplicaciones web, sitios interactivos o apps móviles",
+        text: "Equipo Software: Modificar y desplegar el código para restaurar la plataforma de compras.",
         points: { "desarrollo-software": 3 },
       },
       {
-        text: "Proteger sistemas contra ataques y configurar conexiones seguras",
+        text: "Equipo Ciberdefensa: Bloquear el ataque, asegurar los servidores y blindar las conexiones.",
         points: { "redes": 3 },
       },
       {
-        text: "Diseñar gráficos en 3D, mundos virtuales y videojuegos",
+        text: "Equipo Simulación: Diagnosticar la falla en un gemelo digital 3D interactivo en tiempo real.",
         points: { "entornos-virtuales": 3 },
       },
     ],
   },
   {
     id: 2,
-    question: "2/4: ¿Con qué tipo de herramientas te gustaría trabajar a diario?",
+    question: "2/5 **INVERSIÓN:** Imagina que te dan 1 millón de dólares para fundar tu propia empresa tecnológica. ¿Qué crearías?",
     options: [
       {
-        text: "Editores de código, APIs y bases de datos",
+        text: "La próxima gran plataforma digital (como Uber, Spotify o Mercado Libre).",
         points: { "desarrollo-software": 3 },
       },
       {
-        text: "Routers, servidores, consolas de red y monitores de tráfico",
+        text: "Una firma de ciberseguridad e infraestructura que proteja a bancos y hospitales.",
         points: { "redes": 3 },
       },
       {
-        text: "Motores de videojuegos (Unity, Unreal) y software de modelado 3D",
+        text: "Un estudio de videojuegos y simuladores inmersivos con Realidad Virtual.",
         points: { "entornos-virtuales": 3 },
       },
     ],
   },
   {
     id: 3,
-    question: "3/4: Si estuvieras en una empresa tecnológica, ¿cuál sería tu rol soñado?",
+    question: "3/5 **ZONA DE TRABAJO:** Si pudieras equipar tu escritorio soñado sin límite de presupuesto, ¿qué tendría?",
     options: [
       {
-        text: "Programar la lógica y las funciones del producto que usan miles de usuarios",
+        text: "3 monitores verticales llenos de código, APIs y bases de datos con música de fondo.",
         points: { "desarrollo-software": 3 },
       },
       {
-        text: "Garantizar que los servidores nunca caigan y la información esté blindada",
+        text: "Servidores propios, consolas de red con luces parpadeando y monitoreo de tráfico.",
         points: { "redes": 3 },
       },
       {
-        text: "Diseñar la experiencia visual interactiva e inmersiva del usuario",
+        text: "Visores de Realidad Virtual (VR/AR), tarjeta gráfica tope de gama y software de modelado 3D.",
         points: { "entornos-virtuales": 3 },
       },
     ],
   },
   {
     id: 4,
-    question: "4/4: ¿Qué tipo de proyectos finales te entusiasmaría presentar?",
+    question: "4/5 **TALENTO NATURAL:** ¿Cuál de estas habilidades se te da mejor sin tanto esfuerzo?",
     options: [
       {
-        text: "Una plataforma web completa",
+        text: "Desarmar problemas lógicos, encontrar patrones y automatizar tareas.",
         points: { "desarrollo-software": 3 },
       },
       {
-        text: "Una infraestructura de red corporativa segura y monitoreada",
+        text: "Detectar por dónde alguien podría hacer trampa o romper las reglas.",
         points: { "redes": 3 },
       },
       {
-        text: "Un simulador de Realidad Virtual o una experiencia en 3D",
+        text: "Diseñar cosas visualmente atractivas, armoniosas y fáciles de entender.",
+        points: { "entornos-virtuales": 3 },
+      },
+    ],
+  },
+  {
+    id: 5,
+    question: "5/5 **META FINAL:** Al graduarte de la UTT y entrar al mundo laboral, ¿dónde te visualizas?",
+    options: [
+      {
+        text: "En una empresa de tecnología o trabajando remoto para el extranjero creando software.",
+        points: { "desarrollo-software": 3 },
+      },
+      {
+        text: "Administrando los centros de datos y la seguridad informática de una corporación.",
+        points: { "redes": 3 },
+      },
+      {
+        text: "Creando experiencias interactivas 3D, simuladores médicos o mundos virtuales.",
         points: { "entornos-virtuales": 3 },
       },
     ],
   },
 ];
 
-export const CAREER_JUSTIFICATIONS: Record<string, string> = {
-  "desarrollo-software":
-    "Tus respuestas demuestran un fuerte interés por la lógica de programación, la creación de aplicaciones funcionales y el desarrollo de soluciones digitales que resuelven problemas cotidianos.",
-  "redes":
-    "Tienes un perfil orientado a la infraestructura, la seguridad informática y la protección de datos, áreas esenciales para que cualquier empresa opere sin interrupciones.",
-  "entornos-virtuales":
-    "Destacas por tu creatividad visual, interés en experiencias inmersivas (VR/AR) y el desarrollo de tecnologías interactivas de última generación.",
+
+// Perfiles detallados y justificaciones con fortalezas (Reemplaza a CAREER_JUSTIFICATIONS)
+export const CAREER_PROFILES: Record<
+  string,
+  {
+    title: string;
+    strengths: string[];
+    justification: string;
+  }
+> = {
+  "desarrollo-software": {
+    title: "Perfil: Creador Digital y Arquitecto de Software",
+    strengths: [
+      "Pensamiento lógico-estructurado",
+      "Resolución algorítmica de problemas",
+      "Pasión por construir herramientas y plataformas útiles",
+    ],
+    justification:
+      "Tienes una mente orientada a entender cómo funcionan los engranes detrás de las aplicaciones. Te apasiona ver cómo unas líneas de lógica se transforman en una plataforma real que facilita la vida de las personas.",
+  },
+  "redes": {
+    title: "Perfil: Estratega de Infraestructura y Ciberdefensa",
+    strengths: [
+      "Visión preventiva y seguridad digital",
+      "Pensamiento sistémico e interconexión",
+      "Garantía de estabilidad operativa y protección de datos",
+    ],
+    justification:
+      "Posees un perfil analítico que valora la estabilidad, la conexión y la protección de datos. En un mundo donde todo está conectado a internet, tu vocación es garantizar que la infraestructura nunca se caiga y que la información confidencial esté blindada.",
+  },
+  "entornos-virtuales": {
+    title: "Perfil: Diseñador de Experiencias Inmersivas y Nuevas Realidades",
+    strengths: [
+      "Creatividad visual y espacial",
+      "Diseño de interacción y experiencia de usuario",
+      "Curiosidad por tecnologías emergentes (VR/AR/3D/Videojuegos)",
+    ],
+    justification:
+      "Combinas el talento visual con la tecnología interactiva. No solo quieres que un sistema funcione, quieres que sorprenda visualmente y sumerja al usuario en experiencias envolventes, simuladores o videojuegos.",
+  },
 };
 
 export const DEFAULT_SUGGESTIONS = [
