@@ -27,6 +27,7 @@ import PadronAdmin from "./pages/PadronAdmin";
 import RequireAdmin from "./components/auth/RequireAdmin";
 import RequirePreviewAccess from "./components/auth/RequirePreviewAccess";
 import NotFound from "./pages/NotFound";
+import ChatbotWidget from "./components/chatbot/ChatbotWidget";
 
 const CareerDetail = lazy(() => import("./pages/CareerDetail"));
 const AspirantesPage = lazy(() => import("./pages/Aspirantes"));
@@ -206,6 +207,7 @@ export default function App() {
         </Routes>
 
         <AppFooter />
+        <ChatbotWidget />
       </BrowserRouter>
     </ConfirmProvider>
   );
