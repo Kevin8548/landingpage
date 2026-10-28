@@ -432,3 +432,23 @@ entrypoint = "./functions/manage-projects/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/manage-aspirantes/index.ts"
+
+[functions.activate-student]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/activate-student/index.ts"
+
+[functions.student-login]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/student-login/index.ts"
+
+[functions.create-admin]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/create-admin/index.ts"
+
+[functions.manage-workshops]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/manage-workshops/index.ts"

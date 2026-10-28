@@ -36,6 +36,8 @@ export type EventTextField = "title" | "description" | "location" | "date" | "ti
 
 export function useEventosStore() {
   const [eventItems, setEventItemsState] = useState<EventItem[]>(readStorage);
+  const [eventsLoading, setEventsLoading] = useState(true);
+  const [eventsLoadError, setEventsLoadError] = useState("");
 
   // Ref sincronizado con el estado más reciente, para que saveEvent /
   // saveEventImage / deleteEvent lean el valor actual sin quedarse pegados
@@ -60,10 +62,24 @@ export function useEventosStore() {
   }, []);
 
   const reloadEvents = useCallback(async () => {
-    const realEvents = await getEventsFromSupabase();
-    eventItemsRef.current = realEvents;
-    setEventItemsState(realEvents);
-    writeStorage(realEvents);
+    setEventsLoading(true);
+    try {
+      const realEvents = await getEventsFromSupabase();
+      eventItemsRef.current = realEvents;
+      setEventItemsState(realEvents);
+      writeStorage(realEvents);
+      setEventsLoadError("");
+      return true;
+    } catch (reason) {
+      const message = reason && typeof reason === "object" && "message" in reason && typeof reason.message === "string"
+        ? reason.message
+        : "No se pudieron consultar los eventos.";
+      console.error("No se pudo actualizar la lista de eventos:", reason);
+      setEventsLoadError(message);
+      return false;
+    } finally {
+      setEventsLoading(false);
+    }
   }, []);
 
   // Supabase es la fuente de verdad, aun cuando la lista esté vacía.
@@ -163,6 +179,8 @@ export function useEventosStore() {
 
   return {
     eventItems,
+    eventsLoading,
+    eventsLoadError,
     addEvent,
     updateEventField,
     updateEventCategory,

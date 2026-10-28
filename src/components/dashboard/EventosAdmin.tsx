@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   FiClock,
   FiMapPin,
   FiFilter,
   FiArrowRight,
+  FiArrowLeft,
   FiCalendar,
   FiEdit3,
   FiX,
@@ -44,6 +47,51 @@ const fmtDateShort = (iso: string) => {
   if (!isValidDate(d)) return "";
   return d.toLocaleDateString("es-MX", { day: "2-digit", month: "short" }).replace(".", "");
 };
+
+type PickerPosition = { top: number; left: number };
+function useInlinePickerPosition(
+  open: boolean,
+  setOpen: (value: boolean) => void,
+  trigger: React.RefObject<HTMLButtonElement | null>,
+  menu: React.RefObject<HTMLDivElement | null>,
+  width: number,
+  height: number,
+) {
+  const [position, setPosition] = useState<PickerPosition>({ top: 0, left: 0 });
+  useEffect(() => {
+    if (!open) return;
+    const place = () => {
+      const rect = trigger.current?.getBoundingClientRect();
+      if (!rect) return;
+      const left = Math.max(12, Math.min(rect.left, window.innerWidth - width - 12));
+      const below = rect.bottom + 8;
+      const top = below + height > window.innerHeight - 12
+        ? Math.max(12, rect.top - height - 8)
+        : below;
+      setPosition({ top, left });
+    };
+    const closeFromOutside = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (!trigger.current?.contains(target) && !menu.current?.contains(target)) setOpen(false);
+    };
+    const closeOtherPicker = () => setOpen(false);
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setOpen(false); };
+    place();
+    document.addEventListener("pointerdown", closeFromOutside, true);
+    document.addEventListener("keydown", closeOnEscape);
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    window.addEventListener("utt:close-event-picker", closeOtherPicker);
+    return () => {
+      document.removeEventListener("pointerdown", closeFromOutside, true);
+      document.removeEventListener("keydown", closeOnEscape);
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+      window.removeEventListener("utt:close-event-picker", closeOtherPicker);
+    };
+  }, [height, open, setOpen, trigger, width, menu]);
+  return position;
+}
 
 const dayNumber = (iso: string) => {
   const d = parseISO(iso);
@@ -145,15 +193,54 @@ const FilterPill = ({ active, color, onClick, children }: FilterPillProps) => (
 const InlineDatePicker = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => {
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(() => parseISO(value));
+  const trigger = useRef<HTMLButtonElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
+  const position = useInlinePickerPosition(open, setOpen, trigger, menu, 262, 250);
   const first = (new Date(month.getFullYear(), month.getMonth(), 1).getDay() + 6) % 7;
   const days = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
-  return <div className="event-inline-picker"><button type="button" className="event-inline-picker__trigger" onClick={() => { setMonth(parseISO(value)); setOpen((current) => !current); }}><FiCalendar size={13} /><span>{fmtDateShort(value)}</span><b>⌄</b></button>{open && <div className="event-inline-picker__menu event-inline-calendar"><header><button type="button" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}>‹</button><strong>{month.toLocaleDateString("es-MX", { month: "long", year: "numeric" })}</strong><button type="button" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}>›</button></header><div className="event-inline-calendar__week">{["Lu","Ma","Mi","Ju","Vi","Sá","Do"].map((day) => <span key={day}>{day}</span>)}</div><div className="event-inline-calendar__days">{Array.from({ length: first + days }, (_, index) => { if (index < first) return <i key={index} />; const day = index - first + 1; const next = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2,"0")}-${String(day).padStart(2,"0")}`; return <button type="button" className={next === value ? "is-selected" : ""} key={next} onClick={() => { onChange(next); setOpen(false); }}>{day}</button>; })}</div></div>}</div>;
+  const today = startOfToday();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth();
+  const todayIso = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  const toggle = () => {
+    const wasOpen = open;
+    window.dispatchEvent(new Event("utt:close-event-picker"));
+    const selected = parseISO(value);
+    const firstAllowedMonth = new Date(currentYear, currentMonth, 1);
+    setMonth(selected < firstAllowedMonth ? firstAllowedMonth : selected);
+    setOpen(!wasOpen);
+  };
+
+  return <div className="event-inline-picker">
+    <button ref={trigger} type="button" aria-expanded={open} className="event-inline-picker__trigger" onClick={toggle}>
+      <FiCalendar size={13}/><span>{fmtDateShort(value)}</span><b>⌄</b>
+    </button>
+    {open && createPortal(<div ref={menu} className="event-inline-picker__menu event-inline-picker__menu--floating event-inline-calendar" style={{ top: position.top, left: position.left }}>
+      <header>
+        <button type="button" aria-label="Mes anterior" disabled={month.getFullYear() === currentYear && month.getMonth() <= currentMonth} onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}>‹</button>
+        <strong>{capitalize(month.toLocaleDateString("es-MX", { month: "long" }))} {month.getFullYear()}</strong>
+        <button type="button" aria-label="Mes siguiente" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}>›</button>
+      </header>
+      <div className="event-inline-calendar__week">{["Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do"].map((day) => <span key={day}>{day}</span>)}</div>
+      <div className="event-inline-calendar__days">{Array.from({ length: first + days }, (_, index) => {
+        if (index < first) return <i key={`empty-${index}`}/>;
+        const day = index - first + 1;
+        const next = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        const disabled = next < todayIso;
+        return <button type="button" disabled={disabled} className={next === value && !disabled ? "is-selected" : ""} key={next} onClick={() => { onChange(next); setOpen(false); }}>{day}</button>;
+      })}</div>
+    </div>, document.body)}
+  </div>;
 };
 
 const InlineTimePicker = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => {
   const [open, setOpen] = useState(false);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
+  const position = useInlinePickerPosition(open, setOpen, trigger, menu, 188, 220);
   const options = Array.from({ length: 24 }, (_, hour) => ["00", "30"].map((minute) => `${String(hour).padStart(2,"0")}:${minute}`)).flat();
-  return <div className="event-inline-picker"><button type="button" className="event-inline-picker__trigger" onClick={() => setOpen((current) => !current)}><FiClock size={13} /><span>{value || "--:--"}</span><b>⌄</b></button>{open && <div className="event-inline-picker__menu event-inline-time-menu">{options.map((time) => <button type="button" className={time === value ? "is-selected" : ""} key={time} onClick={() => { onChange(time); setOpen(false); }}>{time}</button>)}</div>}</div>;
+  const toggle = () => { const wasOpen = open; window.dispatchEvent(new Event("utt:close-event-picker")); setOpen(!wasOpen); };
+  return <div className="event-inline-picker"><button ref={trigger} type="button" aria-expanded={open} className="event-inline-picker__trigger" onClick={toggle}><FiClock size={13} /><span>{value || "--:--"}</span><b>⌄</b></button>{open && createPortal(<div ref={menu} className="event-inline-picker__menu event-inline-picker__menu--floating event-inline-time-menu" style={{ top: position.top, left: position.left }}>{options.map((time) => <button type="button" className={time === value ? "is-selected" : ""} key={time} onClick={() => { onChange(time); setOpen(false); }}>{time}</button>)}</div>, document.body)}</div>;
 };
 
 interface EmptyBoardProps {
@@ -515,6 +602,7 @@ export default function EventosAdmin({ allowEditing = true }: { allowEditing?: b
 
   const {
     eventItems,
+    eventsLoadError,
     addEvent: storeAddEvent,
     updateEventField,
     updateEventCategory,
@@ -713,7 +801,11 @@ export default function EventosAdmin({ allowEditing = true }: { allowEditing?: b
         destructive: true,
       });
       if (!discard) return;
-      await reloadEvents();
+      const refreshed = await reloadEvents();
+      if (!refreshed) {
+        void showDashboardAlert({ icon: "error", title: "No se pudo actualizar la lista", text: "Conservamos los datos actuales. Reintenta cuando vuelva la conexión antes de salir del modo de edición." });
+        return;
+      }
       setDirtyEventIds(new Set());
     }
     setEditMode(false);
@@ -772,6 +864,17 @@ export default function EventosAdmin({ allowEditing = true }: { allowEditing?: b
         .event-card-highlight { animation: event-highlight-pulse 1s ease-out 2; }
       `}</style>
 
+      {eventsLoadError && (
+        <div className="dashboard-data-error mx-auto mt-5 w-[min(100%-2rem,1200px)]" role="alert">
+          <div>
+            <strong>No se pudo actualizar la lista de eventos</strong>
+            <p>{eventsLoadError}</p>
+            <small>Se conservan los datos disponibles; un fallo de conexión no se trata como una lista vacía.</small>
+          </div>
+          <button type="button" onClick={() => void reloadEvents()}>Reintentar</button>
+        </div>
+      )}
+
       {editMode && (
         <div className="sticky top-0 z-40 bg-[var(--orange)] text-[var(--bg)] text-center text-[11px] font-mono uppercase tracking-wider py-2 px-4">
           Modo edición activo — guarda tus cambios cuando termines
@@ -803,7 +906,15 @@ export default function EventosAdmin({ allowEditing = true }: { allowEditing?: b
                   <span className="h-px w-6 bg-[var(--line)]" />
                   Calendario del campus{allowEditing ? " · Admin" : ""}
                 </div>
-                {allowEditing && <PreviewMenu />}
+                {allowEditing && (
+                  <div className="events-admin-preview-actions">
+                    <Link to="/dashboard" className="events-dashboard-back">
+                      <FiArrowLeft aria-hidden="true" />
+                      Volver al dashboard
+                    </Link>
+                    <PreviewMenu />
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -815,9 +926,12 @@ export default function EventosAdmin({ allowEditing = true }: { allowEditing?: b
                 >
                   Eventos
                 </motion.h1>
-                <p className="max-w-sm text-sm leading-relaxed text-[var(--muted)] sm:text-right">
-                  Conferencias, torneos, hackathons y actividades estudiantiles, agrupadas por mes.
-                </p>
+                <div className="flex flex-col gap-3 sm:items-end">
+                  <p className="max-w-sm text-sm leading-relaxed text-[var(--muted)] sm:text-right">
+                    Conferencias, torneos, hackathons y actividades estudiantiles, agrupadas por mes.
+                  </p>
+                  {!allowEditing && !editMode && <Link to="/acceso?tipo=alumno" className="events-student-access">Acceso para alumnos <FiArrowRight aria-hidden="true" /></Link>}
+                </div>
               </div>
             </div>
           </section>

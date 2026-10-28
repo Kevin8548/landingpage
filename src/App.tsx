@@ -27,6 +27,8 @@ import PadronAdmin from "./pages/PadronAdmin";
 import RequireAdmin from "./components/auth/RequireAdmin";
 import RequirePreviewAccess from "./components/auth/RequirePreviewAccess";
 import NotFound from "./pages/NotFound";
+import StudentActivities from "./pages/StudentActivities";
+import AdminAccounts from "./pages/AdminAccounts";
 
 const CareerDetail = lazy(() => import("./pages/CareerDetail"));
 const AspirantesPage = lazy(() => import("./pages/Aspirantes"));
@@ -61,7 +63,7 @@ function ScrollManager() {
 function AppFooter() {
   const { pathname } = useLocation();
 
-  if (pathname === "/acceso" || pathname.startsWith("/dashboard") || ["/eventos", "/proyectos", "/aspirantes"].includes(pathname)) {
+  if (pathname === "/acceso" || pathname === "/alumno/actividades" || pathname.startsWith("/dashboard") || ["/eventos", "/proyectos", "/aspirantes"].includes(pathname)) {
     return null;
   }
 
@@ -114,10 +116,12 @@ export default function App() {
           <Route
             path="/eventos"
             element={
-              <RequirePreviewAccess>
-                <Navbar />
-                <EventosAdmin />
-              </RequirePreviewAccess>
+              <RequireAdmin>
+                <RequirePreviewAccess>
+                  <Navbar />
+                  <EventosAdmin />
+                </RequirePreviewAccess>
+              </RequireAdmin>
             }
           />
 
@@ -135,6 +139,7 @@ export default function App() {
 
           {/* Pantalla estática de acceso */}
           <Route path="/acceso" element={<Auth />} />
+          <Route path="/alumno/actividades" element={<StudentActivities />} />
 
           {/* Panel para administrar eventos */}
           <Route
@@ -156,10 +161,12 @@ export default function App() {
           <Route
             path="/proyectos"
             element={
-              <RequirePreviewAccess>
-                <Navbar />
-                <ProjectsPreview />
-              </RequirePreviewAccess>
+              <RequireAdmin>
+                <RequirePreviewAccess>
+                  <Navbar />
+                  <ProjectsPreview />
+                </RequirePreviewAccess>
+              </RequireAdmin>
             }
           />
           <Route
@@ -178,6 +185,7 @@ export default function App() {
               </RequireAdmin>
             }
           />
+          <Route path="/dashboard/administradores" element={<RequireAdmin><AdminAccounts /></RequireAdmin>} />
 
           {/* Edición de Aspirantes: mismo patrón que /eventos, pero
               usando RequirePreviewAccess por el mismo motivo (solo
@@ -185,10 +193,12 @@ export default function App() {
           <Route
             path="/dashboard/aspirantes"
             element={
-              <RequirePreviewAccess>
-                <Navbar />
-                <AspirantesAdmin />
-              </RequirePreviewAccess>
+              <RequireAdmin>
+                <RequirePreviewAccess>
+                  <Navbar />
+                  <AspirantesAdmin />
+                </RequirePreviewAccess>
+              </RequireAdmin>
             }
           />
 

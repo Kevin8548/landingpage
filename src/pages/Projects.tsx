@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, type DragEvent, type FormEvent } from "react";
-import { ArrowUpRight, CalendarDays, ChevronLeft, ChevronRight, Code2, ExternalLink, Eye, FolderKanban, ImagePlus, LayoutDashboard, LogOut, Menu, Pencil, Plus, Trash2, Upload, Users, X } from "lucide-react";
+import { ArrowUpRight, CalendarDays, ChevronLeft, ChevronRight, Code2, ExternalLink, Eye, FolderKanban, ImagePlus, LayoutDashboard, LogOut, Menu, Pencil, Plus, ShieldCheck, Trash2, Upload, Users, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { AnimatedThemeToggler } from "../components/ui/AnimatedThemeToggler";
 import "../components/dashboard/Dashboard.css";
 import "../components/dashboard/DashboardOverrides.css";
 import "../components/dashboard/Projects.css";
 import { showDashboardAlert } from "../lib/dashboardAlerts";
+import { useDashboardSidebar } from "../lib/useDashboardSidebar";
 import DashboardSelect from "../components/dashboard/DashboardSelect";
 import { createManagedProject, deleteManagedProject, listManagedProjects, updateManagedProject, type ManagedProject, type ProjectPayload } from "../services/manageProjects";
 
@@ -15,7 +16,7 @@ export default function Projects() {
   const [projects, setProjects] = useState<ManagedProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setSidebarCollapsed] = useDashboardSidebar();
   const [isFormOpen, setFormOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<ManagedProject | null>(null);
   const [viewingProject, setViewingProject] = useState<ManagedProject | null>(null);
@@ -128,7 +129,7 @@ export default function Projects() {
     <aside className={`dashboard-sidebar ${isSidebarOpen ? "is-open" : ""} ${isSidebarCollapsed ? "is-collapsed" : ""}`}>
       <button className="dashboard-sidebar-collapse" onClick={() => setSidebarCollapsed((value) => !value)} aria-label={isSidebarCollapsed ? "Expandir barra lateral" : "Contraer barra lateral"}>{isSidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}</button>
       <div className="dashboard-brand"><span className="dashboard-brand__mark">UTT</span><span>Universidad Tecnológica<br />de Tlaxcala</span><button className="dashboard-sidebar__close" onClick={() => setSidebarOpen(false)} aria-label="Cerrar menú"><X size={19} /></button></div>
-      <nav className="dashboard-nav" aria-label="Navegación del panel"><Link to="/dashboard"><LayoutDashboard size={18} />Resumen</Link><Link to="/dashboard/eventos"><CalendarDays size={18} />Eventos</Link><Link className="is-active" to="/dashboard/proyectos"><FolderKanban size={18} />Proyectos <span>{isLoading ? "" : projects.length}</span></Link><Link to="/dashboard/padron"><Users size={18} />Padrón de Alumnos</Link><button type="button" onClick={openCreator}><Plus size={18} />Crear proyecto</button></nav>
+      <nav className="dashboard-nav" aria-label="Navegación del panel"><Link to="/dashboard"><LayoutDashboard size={18} />Resumen</Link><Link to="/dashboard/eventos"><CalendarDays size={18} />Eventos</Link><Link className="is-active" to="/dashboard/proyectos"><FolderKanban size={18} />Proyectos <span>{isLoading ? "" : projects.length}</span></Link><Link to="/dashboard/padron"><Users size={18} />Padrón de Alumnos</Link><Link to="/dashboard/administradores"><ShieldCheck size={18} />Administradores</Link><Link to="/dashboard/eventos?crear=1"><Plus size={18} />Crear evento</Link><button type="button" onClick={openCreator}><Plus size={18} />Crear proyecto</button></nav>
       <div className="dashboard-sidebar__bottom"><div className="dashboard-profile"><span className="dashboard-avatar">AD</span><div><strong>Administrador</strong><small>Proyectos destacados</small></div></div><Link to="/" className="dashboard-signout"><LogOut size={17} />Salir al sitio</Link></div>
     </aside>
 

@@ -1,11 +1,13 @@
-import { useState, useRef, useEffect, type FormEvent } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { 
-  ChevronLeft, ChevronRight, ChevronDown, LayoutDashboard, CalendarDays, FolderKanban, Users, 
+  ChevronLeft, ChevronRight, ChevronDown, LayoutDashboard, CalendarDays, FolderKanban, ShieldCheck, Users,
   LogOut, Menu, X, Upload, FileText, Plus, Pencil, Trash2, Search, Download 
 } from "lucide-react";
 import { AnimatedThemeToggler } from "../components/ui/AnimatedThemeToggler";
 import { supabase } from "../lib/supabase";
+import { useDashboardSidebar } from "../lib/useDashboardSidebar";
 import "../components/dashboard/Dashboard.css";
 import "../components/dashboard/DashboardOverrides.css";
 import { showDashboardAlert } from "../lib/dashboardAlerts";
@@ -24,34 +26,96 @@ type Alumno = {
   registrado?: boolean;
 };
 
+// Mantiene una copia en memoria mientras el administrador navega entre
+// secciones. No se guarda en localStorage porque contiene datos personales.
+let padronAlumnosEnMemoria: Alumno[] = [];
+
 const dateFromValue = (value: string) => value ? new Date(`${value}T12:00:00`) : new Date();
 const dateToValue = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
 function BirthDatePicker({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [openSelector, setOpenSelector] = useState<"month" | "year" | null>(null);
   const [viewDate, setViewDate] = useState(() => dateFromValue(value));
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const yearListRef = useRef<HTMLDivElement>(null);
+  const currentYear = new Date().getFullYear();
   const firstDay = (new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay() + 6) % 7;
   const totalDays = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
   const label = value ? value.split("-").reverse().join("/") : "Selecciona una fecha";
+  const months = Array.from({ length: 12 }, (_, month) => new Intl.DateTimeFormat("es-MX", { month: "long" }).format(new Date(2020, month, 1)));
+  const years = Array.from({ length: currentYear - 1899 }, (_, index) => currentYear - index);
+
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    const positionMenu = () => {
+      const trigger = triggerRef.current;
+      const menu = menuRef.current;
+      if (!trigger || !menu) return;
+      const rect = trigger.getBoundingClientRect();
+      const width = Math.min(320, window.innerWidth - 24);
+      const height = menu.offsetHeight;
+      const left = Math.max(12, Math.min(rect.right - width, window.innerWidth - width - 12));
+      let top = rect.bottom + 8;
+      if (top + height > window.innerHeight - 12) top = Math.max(12, rect.top - height - 8);
+      setMenuPosition({ top, left });
+    };
+    positionMenu();
+    const frame = window.requestAnimationFrame(positionMenu);
+    window.addEventListener("resize", positionMenu);
+    window.addEventListener("scroll", positionMenu, true);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", positionMenu);
+      window.removeEventListener("scroll", positionMenu, true);
+    };
+  }, [isOpen, viewDate]);
+
+  useLayoutEffect(() => {
+    if (openSelector !== "year" || !yearListRef.current) return;
+    const selected = yearListRef.current.querySelector<HTMLElement>("[aria-selected='true']");
+    if (selected) yearListRef.current.scrollTop = selected.offsetTop - yearListRef.current.offsetTop - yearListRef.current.clientHeight / 2 + selected.clientHeight / 2;
+  }, [openSelector]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (!triggerRef.current?.contains(event.target as Node) && !menuRef.current?.contains(event.target as Node)) setIsOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setIsOpen(false); };
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [isOpen]);
 
   return <div className="event-inline-picker dashboard-birth-date-picker">
-    <button type="button" className="event-inline-picker__trigger" onClick={() => { setViewDate(dateFromValue(value)); setIsOpen((current) => !current); }} aria-expanded={isOpen} aria-haspopup="dialog"><CalendarDays size={14} /><span>{label}</span><ChevronDown className="dashboard-birth-date-picker__chevron" size={15} aria-hidden="true" /></button>
-    {isOpen && <div className="event-inline-picker__menu event-inline-calendar" role="dialog" aria-label="Seleccionar fecha de nacimiento">
-      <header><button type="button" onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))} aria-label="Mes anterior">‹</button><strong>{new Intl.DateTimeFormat("es-MX", { month: "long", year: "numeric" }).format(viewDate)}</strong><button type="button" onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))} aria-label="Mes siguiente">›</button></header>
+    <button ref={triggerRef} type="button" className="event-inline-picker__trigger" onClick={() => { setViewDate(dateFromValue(value)); setOpenSelector(null); setIsOpen((current) => !current); }} aria-expanded={isOpen} aria-haspopup="dialog"><CalendarDays size={14} /><span>{label}</span><ChevronDown className="dashboard-birth-date-picker__chevron" size={15} aria-hidden="true" /></button>
+    {isOpen && createPortal(<div ref={menuRef} className="event-inline-picker__menu event-inline-calendar dashboard-birth-date-picker__menu--portal" style={{ top: menuPosition.top, left: menuPosition.left }} role="dialog" aria-label="Seleccionar fecha de nacimiento">
+      <header className="dashboard-birth-date-picker__header"><button type="button" onClick={() => { setOpenSelector(null); setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1)); }} aria-label="Mes anterior">‹</button><div className="dashboard-birth-date-picker__selectors">
+        <div className="dashboard-birth-date-picker__selector"><button type="button" className="dashboard-birth-date-picker__selector-trigger dashboard-birth-date-picker__selector-trigger--month" aria-label={`Mes: ${months[viewDate.getMonth()]}`} aria-haspopup="listbox" aria-expanded={openSelector === "month"} onClick={() => setOpenSelector((current) => current === "month" ? null : "month")}>{months[viewDate.getMonth()]}<ChevronDown size={14}/></button>{openSelector === "month" && <div className="dashboard-birth-date-picker__option-menu dashboard-birth-date-picker__option-menu--months" role="listbox" aria-label="Mes">{months.map((month, index) => <button type="button" role="option" aria-selected={index === viewDate.getMonth()} className={index === viewDate.getMonth() ? "is-selected" : ""} key={month} onClick={() => { setViewDate(new Date(viewDate.getFullYear(), index, 1)); setOpenSelector(null); }}>{month}</button>)}</div>}</div>
+        <div className="dashboard-birth-date-picker__selector"><button type="button" className="dashboard-birth-date-picker__selector-trigger dashboard-birth-date-picker__selector-trigger--year" aria-label={`Año: ${viewDate.getFullYear()}`} aria-haspopup="listbox" aria-expanded={openSelector === "year"} onClick={() => setOpenSelector((current) => current === "year" ? null : "year")}>{viewDate.getFullYear()}<ChevronDown size={14}/></button>{openSelector === "year" && <div ref={yearListRef} className="dashboard-birth-date-picker__option-menu dashboard-birth-date-picker__option-menu--years" role="listbox" aria-label="Año">{years.map((year) => <button type="button" role="option" aria-selected={year === viewDate.getFullYear()} className={year === viewDate.getFullYear() ? "is-selected" : ""} key={year} onClick={() => { setViewDate(new Date(year, viewDate.getMonth(), 1)); setOpenSelector(null); }}>{year}</button>)}</div>}</div>
+      </div><button type="button" onClick={() => { setOpenSelector(null); setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1)); }} aria-label="Mes siguiente">›</button></header>
       <div className="event-inline-calendar__week">{["Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do"].map((day) => <span key={day}>{day}</span>)}</div>
       <div className="event-inline-calendar__days">{Array.from({ length: firstDay + totalDays }, (_, index) => { if (index < firstDay) return <i key={`empty-${index}`} />; const day = index - firstDay + 1; const date = new Date(viewDate.getFullYear(), viewDate.getMonth(), day, 12); const nextValue = dateToValue(date); return <button type="button" key={nextValue} className={nextValue === value ? "is-selected" : ""} onClick={() => { onChange(nextValue); setIsOpen(false); }}>{day}</button>; })}</div>
-    </div>}
+    </div>, document.body)}
   </div>;
 }
 
 export default function PadronAdmin() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setSidebarCollapsed] = useDashboardSidebar();
   
   // Estado principal
-  const [alumnos, setAlumnos] = useState<Alumno[]>([]);
+  const [alumnos, setAlumnos] = useState<Alumno[]>(() => padronAlumnosEnMemoria);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const isFetchingAlumnos = useRef(false);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
 
@@ -74,22 +138,78 @@ export default function PadronAdmin() {
 
   
 
-  useEffect(() => {
-    fetchAlumnos();
-  }, []);
-
-  const fetchAlumnos = async () => {
-    setIsLoading(true);
-    const { data, error } = await supabase
-      .from('padron_alumnos')
-      .select('*')
-      .order('created_at', { ascending: false });
-      
-    if (!error && data) {
-      setAlumnos(data);
+  const fetchAlumnos = async (silent = false) => {
+    if (isFetchingAlumnos.current) return;
+    isFetchingAlumnos.current = true;
+    if (!silent) setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('padron_alumnos')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      const rows = data ?? [];
+      // Una respuesta vacía aislada (por ejemplo, durante una renovación de
+      // sesión/RLS) no debe borrar el padrón que ya se había cargado.
+      if (rows.length === 0 && padronAlumnosEnMemoria.length > 0) {
+        await new Promise((resolve) => window.setTimeout(resolve, 500));
+        const retry = await supabase
+          .from('padron_alumnos')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (retry.error) throw retry.error;
+        if ((retry.data ?? []).length === 0) {
+          const detail = "La consulta devolvió cero alumnos aunque ya había registros cargados. Se conserva la última lista; vuelve a intentar para verificar el acceso a la base de datos.";
+          setLoadError(detail);
+          return;
+        }
+        padronAlumnosEnMemoria = retry.data ?? [];
+        setAlumnos(padronAlumnosEnMemoria);
+      } else {
+        padronAlumnosEnMemoria = rows;
+        setAlumnos(rows);
+      }
+      setLoadError("");
+    } catch (reason) {
+      const detail = reason && typeof reason === "object" && "message" in reason && typeof reason.message === "string"
+        ? reason.message
+        : "Error desconocido al consultar Supabase.";
+      console.error("No se pudo cargar el padrón de alumnos:", reason);
+      setLoadError(detail);
+    } finally {
+      isFetchingAlumnos.current = false;
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
+
+  useEffect(() => {
+    void fetchAlumnos();
+
+    // Actualiza el padrón al volver a esta pestaña y también si la activación
+    // se completa desde otra pestaña. Realtime acelera el cambio; el sondeo
+    // cubre proyectos donde Realtime aún no está habilitado en Supabase.
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") void fetchAlumnos(true);
+    };
+    const channel = supabase
+      .channel("padron-alumnos-activacion")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "padron_alumnos" }, () => {
+        void fetchAlumnos(true);
+      })
+      .subscribe();
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") void fetchAlumnos(true);
+    }, 15000);
+    window.addEventListener("focus", refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refreshWhenVisible);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+      void supabase.removeChannel(channel);
+    };
+  }, []);
 
   // Función auxiliar para quitar acentos y pasar a minúsculas
   const normalizeText = (text: string) => {
@@ -168,7 +288,7 @@ export default function PadronAdmin() {
       const cols = line.split(',');
       if (cols.length >= 8) {
         result.push({
-          matricula: cols[0].trim(),
+          matricula: cols[0].trim().toUpperCase(),
           nombre: cols[1].trim(),
           apellido_paterno: cols[2].trim(),
           apellido_materno: cols[3].trim(),
@@ -203,7 +323,8 @@ export default function PadronAdmin() {
     if (csvData.length === 0) return;
     setIsUploading(true);
     try {
-      const { error } = await supabase.from('padron_alumnos').upsert(csvData, { onConflict: 'matricula' });
+      const normalizedRows = csvData.map((alumno) => ({ ...alumno, matricula: alumno.matricula.trim().toUpperCase() }));
+      const { error } = await supabase.from('padron_alumnos').upsert(normalizedRows, { onConflict: 'matricula' });
       if (error) throw error;
       
       void showDashboardAlert({ icon: "success", title: "Padrón actualizado", text: `Se cargaron ${csvData.length} registros exitosamente.` });
@@ -234,7 +355,7 @@ export default function PadronAdmin() {
     const formData = new FormData(e.currentTarget);
     
     const payload = {
-      matricula: formData.get("matricula") as string,
+      matricula: String(formData.get("matricula") ?? "").trim().toUpperCase(),
       nombre: formData.get("nombre") as string,
       apellido_paterno: formData.get("apellido_paterno") as string,
       apellido_materno: formData.get("apellido_materno") as string,
@@ -280,7 +401,6 @@ export default function PadronAdmin() {
       title: "Confirmar eliminación",
       text: `Escribe ELIMINAR para borrar permanentemente a ${nombre}.`,
       input: "text",
-      inputPlaceholder: "ELIMINAR",
       inputValidator: (value) => value === "ELIMINAR" ? undefined : "Escribe ELIMINAR exactamente, en mayúsculas, para continuar.",
       showCancelButton: true,
       confirmButtonText: "Sí, eliminar",
@@ -292,6 +412,7 @@ export default function PadronAdmin() {
       if (error) {
         void showDashboardAlert({ icon: "error", title: "Error al eliminar", text: error.message });
       } else {
+        padronAlumnosEnMemoria = padronAlumnosEnMemoria.filter((alumno) => alumno.id !== id);
         fetchAlumnos();
       }
     }
@@ -313,6 +434,8 @@ export default function PadronAdmin() {
           <Link to="/dashboard/eventos"><CalendarDays size={18}/>Eventos</Link>
           <Link to="/dashboard/proyectos"><FolderKanban size={18}/>Proyectos</Link>
           <Link className="is-active" to="/dashboard/padron"><Users size={18}/>Padrón de Alumnos</Link>
+          <Link to="/dashboard/administradores"><ShieldCheck size={18}/>Administradores</Link>
+          <Link to="/dashboard/eventos?crear=1"><Plus size={18}/>Crear evento</Link>
         </nav>
         <div className="dashboard-sidebar__bottom">
           <div className="dashboard-profile"><span className="dashboard-avatar">AD</span><div><strong>Administrador</strong><small>Panel principal</small></div></div>
@@ -345,10 +468,11 @@ export default function PadronAdmin() {
           </div>
 
           <section className="dashboard-events dashboard-events--standalone">
+            {loadError && <div className="dashboard-data-error" role="alert"><div><strong>No se pudo actualizar el padrón</strong><p>{loadError}</p><small>Los datos anteriores se conservan; no se mostrarán como si el padrón estuviera vacío.</small></div><button type="button" onClick={() => void fetchAlumnos()} disabled={isLoading}>{isLoading ? "Reintentando…" : "Reintentar"}</button></div>}
             <div className="dashboard-section-heading padron-section-heading">
               <div>
                 <p>LISTADO GENERAL</p>
-                <h2>{filteredAlumnos.length} {filteredAlumnos.length === 1 ? "alumno" : "alumnos"} {searchTerm ? "filtrados" : "registrados"}</h2>
+                <h2>{loadError && alumnos.length === 0 ? "No se pudo verificar el padrón" : <>{filteredAlumnos.length} {filteredAlumnos.length === 1 ? "alumno" : "alumnos"} {searchTerm ? "filtrados" : "registrados"}</>}</h2>
               </div>
               
               <div className="padron-toolbar">
@@ -379,12 +503,13 @@ export default function PadronAdmin() {
             <div className="dashboard-event-list" aria-busy={isLoading}>
               {isLoading ? (
                 <div className="padron-table-placeholder" aria-label="Cargando padrón">{Array.from({ length: 6 }, (_, index) => <i className="placeholder-glow" key={index} />)}</div>
-              ) : alumnos.length === 0 ? (
+              ) : loadError && alumnos.length === 0 ? null : alumnos.length === 0 ? (
                 <div style={{ padding: "3rem", textAlign: "center", border: "1px dashed var(--line)", borderRadius: "1rem", marginTop: "1rem" }}>
                   <Users size={32} style={{ margin: "0 auto 1rem", opacity: 0.5 }} />
-                  <p>Aún no hay alumnos en el padrón.</p>
+                  <p>No encontramos alumnos en esta consulta. Si ya habías cargado el padrón, vuelve a intentarlo o revisa la conexión y los permisos.</p>
                   <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginTop: "1rem" }}>
                     <button onClick={() => setIsCsvModalOpen(true)} style={{ color: "var(--orange)", textDecoration: "underline", background: "none", border: "none", cursor: "pointer", padding: 0 }}>Sube un CSV</button>
+                    <button onClick={() => void fetchAlumnos()} style={{ color: "var(--dash-green)", textDecoration: "underline", background: "none", border: "none", cursor: "pointer", padding: 0 }}>Reintentar consulta</button>
                   </div>
                 </div>
               ) : filteredAlumnos.length === 0 ? (
@@ -465,7 +590,7 @@ export default function PadronAdmin() {
             
             <form onSubmit={saveAlumno} className="dashboard-event-form padron-student-form">
               <label>Matrícula
-                <input name="matricula" defaultValue={editingAlumno?.matricula} required />
+                <input name="matricula" defaultValue={editingAlumno?.matricula} autoCapitalize="characters" onInput={(event) => { event.currentTarget.value = event.currentTarget.value.toUpperCase(); }} required />
               </label>
               
               <div className="dashboard-form-grid">

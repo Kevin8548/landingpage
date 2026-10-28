@@ -12,6 +12,7 @@ export interface EventItem {
   category: Category;
   description: string;
   image?: string; // URL opcional. Sin imagen, se usa un fondo generado por categoría.
+  registrationUrl?: string;
 }
 
 export interface CategoryMeta {

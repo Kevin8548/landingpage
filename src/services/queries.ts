@@ -9,7 +9,7 @@ export async function getEventsFromSupabase(): Promise<EventItem[]> {
 
   if (error) {
     console.error("Error cargando eventos:", error);
-    return [];
+    throw error;
   }
 
   // Transformamos los datos de Supabase al formato que espera tu Landing Page
@@ -45,6 +45,7 @@ export async function getEventsFromSupabase(): Promise<EventItem[]> {
           ? "comunidad"
           : "cultural") as Category,
       image: row.imagen_url || undefined,
+      registrationUrl: row.link_registro || undefined,
     };
   });
 }
