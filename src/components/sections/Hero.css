@@ -157,7 +157,7 @@
 
 .hero__main {
   position: relative;
-  max-width: 900px;
+  max-width: 1080px;
   margin: auto 0;
   padding-top: clamp(30px, 100vh, 40px);
 }
@@ -253,6 +253,7 @@
 
 .row-2 {
   margin-left: clamp(2rem, 8vw, 8.1rem);
+  flex-wrap: nowrap;
 }
 
 .hero__title .outline {
@@ -727,6 +728,7 @@ transform:translateY(6px);
 
   .row-2 {
     margin-left: 1rem;
+    flex-wrap: wrap;
   }
 
   .hero__footer {
