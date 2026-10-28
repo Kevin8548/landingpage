@@ -29,7 +29,7 @@ import RequirePreviewAccess from "./components/auth/RequirePreviewAccess";
 import NotFound from "./pages/NotFound";
 import StudentActivities from "./pages/StudentActivities";
 import AdminAccounts from "./pages/AdminAccounts";
-
+import ChatbotWidget from "./components/chatbot/ChatbotWidget";
 const CareerDetail = lazy(() => import("./pages/CareerDetail"));
 const AspirantesPage = lazy(() => import("./pages/Aspirantes"));
 
@@ -216,6 +216,7 @@ export default function App() {
         </Routes>
 
         <AppFooter />
+        <ChatbotWidget />
       </BrowserRouter>
     </ConfirmProvider>
   );

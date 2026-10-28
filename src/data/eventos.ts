@@ -26,93 +26,83 @@ export interface CategoryMeta {
 export const events: EventItem[] = [
   {
     id: "hackathon-tic",
-    title: "Hackathon TIC 2026",
-    date: "2026-08-22",
+    title: "Hackathon TIC",
+    date: "2027-11-12",
+    time: "00:00",
+    location: "Edificio P",
+    category: "academico",
+    description:
+      "24 horas para construir un proyecto desde cero. Equipos de hasta 6 integrantes, mentores en sitio y premios para los tres primeros lugares.",
+  },
+  {
+    id: "congreso",
+    title: "Congreso de Tecnología y Ciberseguridad",
+    date: "2027-10-15",
+    time: "10:00",
+    location: "Plaza cívica",
+    category: "academico",
+    description:
+      "Dos días de conferencias, talleres y demostraciones con ponentes invitados de distintas industrias.",
+  },
+  {
+    id: "concurso-ofrendas",
+    title: "Concurso de Ofrendas",
+    date: "2027-10-20",
+    time: "10:00",
+    location: "Plaza cívica",
+    category: "comunidad",
+    description:
+      "Concurso de ofrendas por carrera, realizada a nivel institucional.",
+  },
+  {
+    id: "cine-terror",
+    title: "Cine de Terror",
+    date: "2027-10-25",
     time: "09:00",
-    location: "Explanada principal",
-    category: "academico",
+    location: "Edificio P",
+    category: "cultural",
     description:
-      "24 horas para construir un proyecto desde cero. Equipos de hasta 4 integrantes, mentores en sitio y premios para los tres primeros lugares.",
+      "Películas de terror y suspenso proyectadas en el edificio P, con palomitas y bebidas para los asistentes.",
   },
   {
-    id: "semana-ciencia",
-    title: "Semana de la Ciencia y la Tecnología",
-    date: "2026-09-08",
+    id: "rally",
+    title: "Rally",
+    date: "2027-11-12",
+    time: "09:00",
+    location: "Edificio P",
+    category: "cultural",
+    description:
+      "Competencia entre equipos de estudiantes de distintas carreras, con pruebas de ingenio y destreza física.",
+  },
+  {
+    id: "integradora-terceros",
+    title: "Integradora de Tercer Cuatrimestre",
+    date: "2027-08-01",
     time: "10:00",
-    location: "Auditorio central",
+    location: "Sala P",
     category: "academico",
     description:
-      "Cinco días de conferencias, talleres y demostraciones con investigadores invitados de distintas industrias.",
+      "Presentación de proyectos finales de los estudiantes de tercer cuatrimestre de las tres carreras",
   },
   {
-    id: "torneo-voleibol",
-    title: "Torneo Intramuros de Voleibol",
-    date: "2026-09-16",
-    time: "12:00",
-    location: "Canchas deportivas",
-    category: "cultural",
-    description:
-      "Fase de grupos entre todas las carreras. Inscribe a tu equipo en Servicios Escolares antes del cierre de convocatoria.",
-  },
-  {
-    id: "noche-talentos",
-    title: "Noche de Talentos UTT",
-    date: "2026-09-25",
-    time: "18:00",
-    location: "Explanada principal",
-    category: "cultural",
-    description:
-      "Música, danza y stand-up hecho por estudiantes. Convocatoria para participar abierta dos semanas antes.",
-  },
-  {
-    id: "feria-ingenierias",
-    title: "Feria de Ingenierías y Vinculación Empresarial",
-    date: "2026-10-07",
-    time: "09:30",
-    location: "Domo institucional",
-    category: "academico",
-    description:
-      "Empresas del corredor industrial de Tlaxcala presentan vacantes, retos y proyectos de residencia profesional.",
-  },
-  {
-    id: "conferencia-ia",
-    title: "IA aplicada a la industria",
-    date: "2026-10-15",
-    time: "17:00",
-    location: "Sala audiovisual",
-    category: "academico",
-    description:
-      "Conferencia abierta sobre casos reales de automatización e inteligencia artificial en manufactura local.",
-  },
-  {
-    id: "brigada-comunitaria",
-    title: "Brigada de Servicio Social Comunitario",
-    date: "2026-10-24",
-    time: "08:00",
-    location: "Salida desde el campus",
-    category: "comunidad",
-    description:
-      "Jornada de apoyo con una comunidad vecina: talleres para niños y mantenimiento de espacios públicos.",
-  },
-  {
-    id: "dia-muertos",
-    title: "Festival de Día de Muertos",
-    date: "2026-11-02",
-    time: "11:00",
-    location: "Plaza central del campus",
-    category: "cultural",
-    description:
-      "Concurso de ofrendas por carrera, comida tradicional y proyección de cortometrajes al caer la tarde.",
-  },
-  {
-    id: "graduacion-2026",
-    title: "Ceremonia de Graduación — Generación 2026",
-    date: "2026-12-11",
+    id: "integradora-quintos",
+    title: "Integradora de Quinto Cuatrimestre",
+    date: "2027-04-01",
     time: "10:00",
-    location: "Auditorio central",
-    category: "comunidad",
+    location: "Sala P",
+    category: "academico",
     description:
-      "Entrega de reconocimientos para egresados de las tres ingenierías. Cupo limitado por invitación.",
+      "Presentación de proyectos finales de los estudiantes de quinto cuatrimestre de las tres carreras",
+  },
+  {
+    id: "integradora-novenos",
+    title: "Integradora de Noveno Cuatrimestre",
+    date: "2027-12-01",
+    time: "10:00",
+    location: "Sala P",
+    category: "academico",
+    description:
+      "Presentación de proyectos finales de los estudiantes de noveno cuatrimestre de las tres carreras",
   },
 ];
 
