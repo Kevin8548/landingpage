@@ -6,6 +6,7 @@ import { DirectPassSection } from "../components/sections/aspirantes/DirectPassS
 import { FinalCTA } from "../components/sections/aspirantes/FinalCTA";
 import { SectionDivider } from "../components/ui/SectionDivider";
 import { useAspirantesStore } from "../data/aspirantesStore";
+import { RutasTransporte } from "../components/sections/aspirantes/RutasTransporte";
 
 // Página 100% pública. A propósito NO importa nada relacionado con admin
 // (ni useIsAdmin, ni RequireAdmin, ni useConfirm): así, sin importar sesión,
@@ -48,6 +49,9 @@ export const Aspirantes = () => {
 
       <SectionDivider />
       <DirectPassSection institutionItems={institutionItems} />
+
+      <SectionDivider />
+      <RutasTransporte />
 
       <SectionDivider />
       <section id="aspirantes-descarga">
