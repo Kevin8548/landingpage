@@ -51,3 +51,6 @@ vite.svg
 
 # supabase (solo se ignoran los temporales)
 supabase/.temp/.vscode/
+
+# de vscode (PORQUE LUEGO ALGUIEN NO LOS PONE EN VERDE)
+.vscode/settings.json

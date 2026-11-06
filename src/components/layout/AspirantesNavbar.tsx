@@ -6,7 +6,7 @@ const NAV_ITEMS = [
   { label: "Carreras que se ofrecen", href: "#aspirantes-carreras" },
   { label: "Fechas clave", href: "#fechas" },
   { label: "Convenios", href: "#pase-directo" },
-  { label: "Descargar información", href: "#aspirantes-descarga" },
+  { label: "Rutas y Transporte", href: "#rutas-transporte" },
 ];
 
 const SECTION_IDS = [
@@ -14,7 +14,7 @@ const SECTION_IDS = [
   "aspirantes-carreras",
   "fechas",
   "pase-directo",
-  "aspirantes-descarga",
+  "rutas-transporte",
 ];
 
 const clamp = (value: number) => Math.max(0, Math.min(100, value));
