@@ -20,6 +20,7 @@ ESTADO_PR_BORRADOR = "En progreso"
 
 TOKEN = os.environ["NOTION_TOKEN"]
 DB_ID = os.environ["NOTION_DATABASE_ID"]
+SLACK_URL = os.environ.get("SLACK_WEBHOOK_URL", "")  # opcional: si no existe, no avisa a Slack
 API = "https://api.notion.com/v1"
 HEAD = {
     "Authorization": f"Bearer {TOKEN}",
@@ -34,6 +35,22 @@ def call(method, path, body=None):
         print("ERROR", r.status_code, r.text[:400])
         sys.exit(1)
     return r.json()
+
+
+def avisar_slack(hu, nombre, estado, url_pr):
+    """Manda un mensaje al canal de Slack. Si falla, no detiene el proceso."""
+    if not SLACK_URL:
+        return
+    esc = lambda t: t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    texto = f"*{esc(nombre)}* pasó a *{esc(estado)}*"
+    if url_pr:
+        texto += f"  ·  <{url_pr}|Ver pull request>"
+    try:
+        r = requests.post(SLACK_URL, json={"text": texto}, timeout=15)
+        if r.status_code >= 300:
+            print("Aviso: Slack respondió", r.status_code, r.text[:200])
+    except requests.RequestException as e:
+        print("Aviso: no se pudo avisar a Slack:", e)
 
 
 def main():
@@ -76,8 +93,11 @@ def main():
             cambios[prop_estado] = {"status": {"name": estado}}
         if prop_url and url_pr:
             cambios[prop_url] = {"url": url_pr}
-        call("PATCH", f"/pages/{res['results'][0]['id']}", {"properties": cambios})
+        pagina = res["results"][0]
+        call("PATCH", f"/pages/{pagina['id']}", {"properties": cambios})
         print(f"{hu}: Estado -> {estado} | PR -> {url_pr}")
+        nombre = "".join(t["plain_text"] for t in pagina["properties"][titulo]["title"]) or hu
+        avisar_slack(hu, nombre, estado, url_pr)
 
 
 if __name__ == "__main__":
