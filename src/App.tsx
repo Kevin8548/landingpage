@@ -18,14 +18,18 @@ import { ConfirmProvider } from "./components/ui/ConfirmDialog";
 
 import Dashboard from "./pages/Dashboard";
 import Events from "./pages/Events";
+import Projects from "./pages/Projects";
 import Eventos from "./components/sections/eventos";
 import EventosAdmin from "./components/dashboard/EventosAdmin";
+import ProjectsPreview from "./components/dashboard/ProjectsPreview";
 import AspirantesAdmin from "./components/dashboard/AspirantesAdmin";
 import PadronAdmin from "./pages/PadronAdmin";
 import RequireAdmin from "./components/auth/RequireAdmin";
 import RequirePreviewAccess from "./components/auth/RequirePreviewAccess";
 import NotFound from "./pages/NotFound";
-
+import StudentActivities from "./pages/StudentActivities";
+import AdminAccounts from "./pages/AdminAccounts";
+import ChatbotWidget from "./components/chatbot/ChatbotWidget";
 const CareerDetail = lazy(() => import("./pages/CareerDetail"));
 const AspirantesPage = lazy(() => import("./pages/Aspirantes"));
 
@@ -59,14 +63,7 @@ function ScrollManager() {
 function AppFooter() {
   const { pathname } = useLocation();
 
-  if (
-    pathname === "/acceso" ||
-    pathname === "/dashboard" ||
-    pathname === "/dashboard/eventos" ||
-    pathname === "/dashboard/aspirantes" ||
-    pathname === "/eventos" ||
-    pathname === "/aspirantes"
-  ) {
+  if (pathname === "/acceso" || pathname === "/alumno/actividades" || pathname.startsWith("/dashboard") || ["/eventos", "/proyectos", "/aspirantes"].includes(pathname)) {
     return null;
   }
 
@@ -119,10 +116,12 @@ export default function App() {
           <Route
             path="/eventos"
             element={
-              <RequirePreviewAccess>
-                <Navbar />
-                <EventosAdmin />
-              </RequirePreviewAccess>
+              <RequireAdmin>
+                <RequirePreviewAccess>
+                  <Navbar />
+                  <EventosAdmin />
+                </RequirePreviewAccess>
+              </RequireAdmin>
             }
           />
 
@@ -140,6 +139,7 @@ export default function App() {
 
           {/* Pantalla estática de acceso */}
           <Route path="/acceso" element={<Auth />} />
+          <Route path="/alumno/actividades" element={<StudentActivities />} />
 
           {/* Panel para administrar eventos */}
           <Route
@@ -159,6 +159,25 @@ export default function App() {
             }
           />
           <Route
+            path="/proyectos"
+            element={
+              <RequireAdmin>
+                <RequirePreviewAccess>
+                  <Navbar />
+                  <ProjectsPreview />
+                </RequirePreviewAccess>
+              </RequireAdmin>
+            }
+          />
+          <Route
+            path="/dashboard/proyectos"
+            element={
+              <RequireAdmin>
+                <Projects />
+              </RequireAdmin>
+            }
+          />
+          <Route
             path="/dashboard/padron"
             element={
               <RequireAdmin>
@@ -166,6 +185,7 @@ export default function App() {
               </RequireAdmin>
             }
           />
+          <Route path="/dashboard/administradores" element={<RequireAdmin><AdminAccounts /></RequireAdmin>} />
 
           {/* Edición de Aspirantes: mismo patrón que /eventos, pero
               usando RequirePreviewAccess por el mismo motivo (solo
@@ -173,10 +193,12 @@ export default function App() {
           <Route
             path="/dashboard/aspirantes"
             element={
-              <RequirePreviewAccess>
-                <Navbar />
-                <AspirantesAdmin />
-              </RequirePreviewAccess>
+              <RequireAdmin>
+                <RequirePreviewAccess>
+                  <Navbar />
+                  <AspirantesAdmin />
+                </RequirePreviewAccess>
+              </RequireAdmin>
             }
           />
 
@@ -194,6 +216,7 @@ export default function App() {
         </Routes>
 
         <AppFooter />
+        <ChatbotWidget />
       </BrowserRouter>
     </ConfirmProvider>
   );

@@ -1,21 +1,27 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   FiClock,
   FiMapPin,
   FiFilter,
   FiArrowRight,
+  FiArrowLeft,
   FiCalendar,
   FiEdit3,
   FiX,
   FiTrash2,
   FiPlus,
+  FiSave,
   FiUpload,
 } from "react-icons/fi";
 import { CATEGORY_META, CATEGORY_ORDER, type Category, type EventItem } from "../../data/eventos";
 import { useEventosStore, type EventTextField } from "../../data/eventosStore";
 import { useConfirm } from "../ui/ConfirmDialog";
 import PreviewMenu from "../ui/PreviewMenu";
+import { showDashboardAlert } from "../../lib/dashboardAlerts";
+import DashboardSelect from "./DashboardSelect";
 
 interface MonthGroup {
   key: string;
@@ -41,6 +47,51 @@ const fmtDateShort = (iso: string) => {
   if (!isValidDate(d)) return "";
   return d.toLocaleDateString("es-MX", { day: "2-digit", month: "short" }).replace(".", "");
 };
+
+type PickerPosition = { top: number; left: number };
+function useInlinePickerPosition(
+  open: boolean,
+  setOpen: (value: boolean) => void,
+  trigger: React.RefObject<HTMLButtonElement | null>,
+  menu: React.RefObject<HTMLDivElement | null>,
+  width: number,
+  height: number,
+) {
+  const [position, setPosition] = useState<PickerPosition>({ top: 0, left: 0 });
+  useEffect(() => {
+    if (!open) return;
+    const place = () => {
+      const rect = trigger.current?.getBoundingClientRect();
+      if (!rect) return;
+      const left = Math.max(12, Math.min(rect.left, window.innerWidth - width - 12));
+      const below = rect.bottom + 8;
+      const top = below + height > window.innerHeight - 12
+        ? Math.max(12, rect.top - height - 8)
+        : below;
+      setPosition({ top, left });
+    };
+    const closeFromOutside = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (!trigger.current?.contains(target) && !menu.current?.contains(target)) setOpen(false);
+    };
+    const closeOtherPicker = () => setOpen(false);
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setOpen(false); };
+    place();
+    document.addEventListener("pointerdown", closeFromOutside, true);
+    document.addEventListener("keydown", closeOnEscape);
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    window.addEventListener("utt:close-event-picker", closeOtherPicker);
+    return () => {
+      document.removeEventListener("pointerdown", closeFromOutside, true);
+      document.removeEventListener("keydown", closeOnEscape);
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+      window.removeEventListener("utt:close-event-picker", closeOtherPicker);
+    };
+  }, [height, open, setOpen, trigger, width, menu]);
+  return position;
+}
 
 const dayNumber = (iso: string) => {
   const d = parseISO(iso);
@@ -139,6 +190,59 @@ const FilterPill = ({ active, color, onClick, children }: FilterPillProps) => (
   </button>
 );
 
+const InlineDatePicker = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => {
+  const [open, setOpen] = useState(false);
+  const [month, setMonth] = useState(() => parseISO(value));
+  const trigger = useRef<HTMLButtonElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
+  const position = useInlinePickerPosition(open, setOpen, trigger, menu, 262, 250);
+  const first = (new Date(month.getFullYear(), month.getMonth(), 1).getDay() + 6) % 7;
+  const days = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  const today = startOfToday();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth();
+  const todayIso = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  const toggle = () => {
+    const wasOpen = open;
+    window.dispatchEvent(new Event("utt:close-event-picker"));
+    const selected = parseISO(value);
+    const firstAllowedMonth = new Date(currentYear, currentMonth, 1);
+    setMonth(selected < firstAllowedMonth ? firstAllowedMonth : selected);
+    setOpen(!wasOpen);
+  };
+
+  return <div className="event-inline-picker">
+    <button ref={trigger} type="button" aria-expanded={open} className="event-inline-picker__trigger" onClick={toggle}>
+      <FiCalendar size={13}/><span>{fmtDateShort(value)}</span><b>⌄</b>
+    </button>
+    {open && createPortal(<div ref={menu} className="event-inline-picker__menu event-inline-picker__menu--floating event-inline-calendar" style={{ top: position.top, left: position.left }}>
+      <header>
+        <button type="button" aria-label="Mes anterior" disabled={month.getFullYear() === currentYear && month.getMonth() <= currentMonth} onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}>‹</button>
+        <strong>{capitalize(month.toLocaleDateString("es-MX", { month: "long" }))} {month.getFullYear()}</strong>
+        <button type="button" aria-label="Mes siguiente" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}>›</button>
+      </header>
+      <div className="event-inline-calendar__week">{["Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do"].map((day) => <span key={day}>{day}</span>)}</div>
+      <div className="event-inline-calendar__days">{Array.from({ length: first + days }, (_, index) => {
+        if (index < first) return <i key={`empty-${index}`}/>;
+        const day = index - first + 1;
+        const next = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        const disabled = next < todayIso;
+        return <button type="button" disabled={disabled} className={next === value && !disabled ? "is-selected" : ""} key={next} onClick={() => { onChange(next); setOpen(false); }}>{day}</button>;
+      })}</div>
+    </div>, document.body)}
+  </div>;
+};
+
+const InlineTimePicker = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => {
+  const [open, setOpen] = useState(false);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
+  const position = useInlinePickerPosition(open, setOpen, trigger, menu, 188, 220);
+  const options = Array.from({ length: 24 }, (_, hour) => ["00", "30"].map((minute) => `${String(hour).padStart(2,"0")}:${minute}`)).flat();
+  const toggle = () => { const wasOpen = open; window.dispatchEvent(new Event("utt:close-event-picker")); setOpen(!wasOpen); };
+  return <div className="event-inline-picker"><button ref={trigger} type="button" aria-expanded={open} className="event-inline-picker__trigger" onClick={toggle}><FiClock size={13} /><span>{value || "--:--"}</span><b>⌄</b></button>{open && createPortal(<div ref={menu} className="event-inline-picker__menu event-inline-picker__menu--floating event-inline-time-menu" style={{ top: position.top, left: position.left }}>{options.map((time) => <button type="button" className={time === value ? "is-selected" : ""} key={time} onClick={() => { onChange(time); setOpen(false); }}>{time}</button>)}</div>, document.body)}</div>;
+};
+
 interface EmptyBoardProps {
   title: string;
   message: string;
@@ -170,7 +274,6 @@ interface EventCardProps {
   onImageUpload: (id: string, file: File) => void;
   onImageRemove: (id: string) => void;
   onDelete: (id: string) => void;
-  onSaveField: (id: string) => void;
   highlighted?: boolean;
 }
 
@@ -183,7 +286,6 @@ const EventCard = ({
   onImageUpload,
   onImageRemove,
   onDelete,
-  onSaveField,
   highlighted = false,
 }: EventCardProps) => {
   const meta = CATEGORY_META[event.category];
@@ -311,61 +413,20 @@ const EventCard = ({
         {editMode ? (
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap items-center gap-2">
-              <div
-                onClick={() => openPicker(dateInputRef)}
-                className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-dashed border-[var(--line)] bg-transparent px-2 py-1 transition-colors hover:border-[var(--orange)]/60 focus-within:border-[var(--orange)]"
-              >
-                <FiCalendar className="h-3 w-3 shrink-0 text-[var(--muted)]" aria-hidden="true" />
-                <input
-                  ref={dateInputRef}
-                  type="date"
-                  value={localDate}
-                  onFocus={() => setIsDateFocused(true)}
-                  onChange={(e) => setLocalDate(e.target.value)}
-                  onBlur={() => {
-                    setIsDateFocused(false);
-                    const isValid = localDate && !Number.isNaN(parseISO(localDate).getTime());
-                    if (isValid && localDate !== event.date) {
-                      onConfirmDate(event.id, localDate);
-                    } else if (!isValid) {
-                      setLocalDate(event.date);
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                  className="date-time-input w-[6.4rem] bg-transparent font-mono text-[11px] text-[var(--ink)] focus:outline-none"
-                />
-              </div>
+              <InlineDatePicker value={event.date} onChange={(value) => onConfirmDate(event.id, value)} />
 
-              <div
-                onClick={() => openPicker(timeInputRef)}
-                className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-dashed border-[var(--line)] bg-transparent px-2 py-1 transition-colors hover:border-[var(--orange)]/60 focus-within:border-[var(--orange)]"
-              >
-                <FiClock className="h-3 w-3 shrink-0 text-[var(--muted)]" aria-hidden="true" />
-                <input
-                  ref={timeInputRef}
-                  type="time"
-                  value={event.time}
-                  onChange={(e) => onUpdateField(event.id, "time", e.target.value)}
-                  onBlur={() => onSaveField(event.id)}
-                  onClick={(e) => e.stopPropagation()}
-                  className="date-time-input w-[4.4rem] bg-transparent font-mono text-[11px] text-[var(--ink)] focus:outline-none"
-                />
-              </div>
+              <InlineTimePicker value={event.time} onChange={(value) => onUpdateField(event.id, "time", value)} />
 
-              <select
+              <DashboardSelect
                 value={event.category}
-                onChange={(e) => onUpdateCategory(event.id, e.target.value as Category)}
-                className="rounded-md border border-dashed border-[var(--line)] bg-[var(--bg)] px-1.5 py-1 font-mono text-[10px] uppercase tracking-wide text-[var(--ink)] focus:outline-none focus:border-[var(--orange)]"
-              >
-                {CATEGORY_ORDER.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {CATEGORY_META[cat].label}
-                  </option>
-                ))}
-              </select>
+                onChange={(value) => onUpdateCategory(event.id, value as Category)}
+                placeholder="Tipo de evento"
+                ariaLabel="Tipo de evento"
+                options={CATEGORY_ORDER.map((category) => ({
+                  value: category,
+                  label: CATEGORY_META[category].label,
+                }))}
+              />
               <button
                 type="button"
                 onClick={() => onDelete(event.id)}
@@ -380,7 +441,6 @@ const EventCard = ({
               type="text"
               value={event.title}
               onChange={(e) => onUpdateField(event.id, "title", e.target.value)}
-              onBlur={() => onSaveField(event.id)}
               placeholder="Título del evento"
               className="font-display text-lg font-bold leading-snug text-[var(--ink)] bg-transparent border-b border-dashed border-[var(--line)] pb-1 focus:outline-none focus:border-[var(--orange)]"
             />
@@ -388,7 +448,6 @@ const EventCard = ({
             <textarea
               value={event.description}
               onChange={(e) => onUpdateField(event.id, "description", e.target.value)}
-              onBlur={() => onSaveField(event.id)}
               rows={2}
               placeholder="Descripción"
               className="resize-y rounded-lg border border-dashed border-[var(--line)] bg-transparent p-2 text-sm leading-relaxed text-[var(--muted)] focus:outline-none focus:border-[var(--orange)]/50"
@@ -398,7 +457,6 @@ const EventCard = ({
               type="text"
               value={event.location}
               onChange={(e) => onUpdateField(event.id, "location", e.target.value)}
-              onBlur={() => onSaveField(event.id)}
               placeholder="Ubicación"
               className="font-mono text-[11px] text-[var(--muted)] bg-transparent border-b border-dashed border-[var(--line)] pb-1 focus:outline-none focus:border-[var(--orange)]"
             />
@@ -538,22 +596,27 @@ const HeroSpotlight = ({ event, onViewInBoard, reduceMotion }: HeroSpotlightProp
   );
 };
 
-export default function EventosAdmin() {
+export default function EventosAdmin({ allowEditing = true }: { allowEditing?: boolean }) {
   const confirm = useConfirm();
   const reduceMotion = !!useReducedMotion();
 
   const {
     eventItems,
+    eventsLoadError,
     addEvent: storeAddEvent,
     updateEventField,
     updateEventCategory,
     updateEventImage,
     deleteEvent: storeDeleteEvent,
     saveEvent,
+    saveEvents,
     saveEventImage,
+    reloadEvents,
   } = useEventosStore();
 
   const [editMode, setEditMode] = useState(false);
+  const [dirtyEventIds, setDirtyEventIds] = useState<Set<string>>(new Set());
+  const [isSavingChanges, setIsSavingChanges] = useState(false);
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const [pendingScroll, setPendingScroll] = useState<string | null>(null);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
@@ -565,6 +628,8 @@ export default function EventosAdmin() {
 
   const sorted = useMemo(() => [...eventItems].sort((a, b) => a.date.localeCompare(b.date)), [eventItems]);
   const upcoming = useMemo(() => sorted.filter((e) => daysUntil(e.date) >= 0), [sorted]);
+  // El tablón es una agenda completa: no se limita al siguiente evento.
+  const boardEvents = sorted;
   const nextEvent = upcoming[0];
 
   const counts = useMemo(() => {
@@ -694,15 +759,56 @@ export default function EventosAdmin() {
 
   const handleConfirmDate = (id: string, value: string) => {
     updateEventField(id, "date", value);
+    setDirtyEventIds((current) => new Set(current).add(id));
     setActiveMonth(monthKey(value));
     setPendingScroll(id);
     setHighlightedId(id);
-    saveEvent(id);
   };
 
   const handleCategoryChange = (id: string, category: Category) => {
     updateEventCategory(id, category);
-    saveEvent(id);
+    setDirtyEventIds((current) => new Set(current).add(id));
+  };
+
+  const handleUpdateField = (id: string, field: EventTextField, value: string) => {
+    updateEventField(id, field, value);
+    setDirtyEventIds((current) => new Set(current).add(id));
+  };
+
+  const savePendingChanges = async () => {
+    const ids = [...dirtyEventIds];
+    if (!ids.length) return;
+    setIsSavingChanges(true);
+    try {
+      await saveEvents(ids);
+      setDirtyEventIds(new Set());
+      void showDashboardAlert({ icon: "success", title: "Cambios guardados", timer: 1500, showConfirmButton: false });
+    } catch (error) {
+      console.error("No se pudieron guardar los cambios:", error);
+      void showDashboardAlert({ icon: "error", title: "No fue posible guardar los cambios", text: error instanceof Error ? error.message : "Inténtalo nuevamente." });
+    } finally {
+      setIsSavingChanges(false);
+    }
+  };
+
+  const leaveEditMode = async () => {
+    if (dirtyEventIds.size) {
+      const discard = await confirm({
+        title: "Hay cambios sin guardar",
+        description: "Si sales ahora, esos cambios se descartarán.",
+        confirmLabel: "Salir sin guardar",
+        cancelLabel: "Seguir editando",
+        destructive: true,
+      });
+      if (!discard) return;
+      const refreshed = await reloadEvents();
+      if (!refreshed) {
+        void showDashboardAlert({ icon: "error", title: "No se pudo actualizar la lista", text: "Conservamos los datos actuales. Reintenta cuando vuelva la conexión antes de salir del modo de edición." });
+        return;
+      }
+      setDirtyEventIds(new Set());
+    }
+    setEditMode(false);
   };
 
   const fileToDataUrl = (file: File): Promise<string> =>
@@ -758,9 +864,20 @@ export default function EventosAdmin() {
         .event-card-highlight { animation: event-highlight-pulse 1s ease-out 2; }
       `}</style>
 
+      {eventsLoadError && (
+        <div className="dashboard-data-error mx-auto mt-5 w-[min(100%-2rem,1200px)]" role="alert">
+          <div>
+            <strong>No se pudo actualizar la lista de eventos</strong>
+            <p>{eventsLoadError}</p>
+            <small>Se conservan los datos disponibles; un fallo de conexión no se trata como una lista vacía.</small>
+          </div>
+          <button type="button" onClick={() => void reloadEvents()}>Reintentar</button>
+        </div>
+      )}
+
       {editMode && (
         <div className="sticky top-0 z-40 bg-[var(--orange)] text-[var(--bg)] text-center text-[11px] font-mono uppercase tracking-wider py-2 px-4">
-          Modo edición activo — los cambios se guardan directo en la base de datos
+          Modo edición activo — guarda tus cambios cuando termines
         </div>
       )}
 
@@ -787,9 +904,17 @@ export default function EventosAdmin() {
               <div className="mb-4 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.25em] text-[var(--muted)]">
                   <span className="h-px w-6 bg-[var(--line)]" />
-                  Calendario del campus · Admin
+                  Calendario del campus{allowEditing ? " · Admin" : ""}
                 </div>
-                <PreviewMenu />
+                {allowEditing && (
+                  <div className="events-admin-preview-actions">
+                    <Link to="/dashboard" className="events-dashboard-back">
+                      <FiArrowLeft aria-hidden="true" />
+                      Volver al dashboard
+                    </Link>
+                    <PreviewMenu />
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -801,9 +926,12 @@ export default function EventosAdmin() {
                 >
                   Eventos
                 </motion.h1>
-                <p className="max-w-sm text-sm leading-relaxed text-[var(--muted)] sm:text-right">
-                  Conferencias, torneos, hackathons y actividades estudiantiles, agrupadas por mes.
-                </p>
+                <div className="flex flex-col gap-3 sm:items-end">
+                  <p className="max-w-sm text-sm leading-relaxed text-[var(--muted)] sm:text-right">
+                    Conferencias, torneos, hackathons y actividades estudiantiles, agrupadas por mes.
+                  </p>
+                  {!allowEditing && !editMode && <Link to="/acceso?tipo=alumno" className="events-student-access">Acceso para alumnos <FiArrowRight aria-hidden="true" /></Link>}
+                </div>
               </div>
             </div>
           </section>
@@ -839,13 +967,13 @@ export default function EventosAdmin() {
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-6 bg-gradient-to-t from-[var(--bg)] to-transparent" />
                   <div
                     className={reduceMotion ? "" : "animate-marquee-up hover:[animation-play-state:paused]"}
-                    style={reduceMotion ? undefined : { animationDuration: `${upcoming.length * 3.2}s` }}
+                    style={reduceMotion ? undefined : { animationDuration: `${Math.max(boardEvents.length, 1) * 3.2}s` }}
                   >
-                    {(reduceMotion ? upcoming : [...upcoming, ...upcoming]).map((e, i) => {
+                    {(reduceMotion ? boardEvents : [...boardEvents, ...boardEvents]).map((e, index) => {
                       const meta = CATEGORY_META[e.category];
                       return (
                         <button
-                          key={`${e.id}-${i}`}
+                          key={`${e.id}-${index}`}
                           type="button"
                           onClick={() => jumpToEvent(e.id, e.date)}
                           className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[var(--ink)]/5 focus-visible:outline-none focus-visible:bg-[var(--ink)]/5"
@@ -977,9 +1105,7 @@ export default function EventosAdmin() {
                       <motion.div
                         variants={sectionVariants}
                         initial={reduceMotion || editMode ? false : "hidden"}
-                        animate={editMode ? "show" : undefined}
-                        whileInView={editMode ? undefined : "show"}
-                        viewport={{ once: true, amount: 0.15 }}
+                        animate="show"
                         className="relative grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
                       >
                         {group.events.map((e) => (
@@ -987,13 +1113,12 @@ export default function EventosAdmin() {
                             <EventCard
                               event={e}
                               editMode={editMode}
-                              onUpdateField={updateEventField}
+                              onUpdateField={handleUpdateField}
                               onConfirmDate={handleConfirmDate}
                               onUpdateCategory={handleCategoryChange}
                               onImageUpload={handleImageUpload}
                               onImageRemove={handleImageRemove}
                               onDelete={handleDeleteEvent}
-                              onSaveField={saveEvent}
                               highlighted={e.id === highlightedId}
                             />
                           </motion.div>
@@ -1042,10 +1167,19 @@ export default function EventosAdmin() {
         </>
       )}
 
-      <div className="sticky bottom-6 z-50 flex justify-end px-6 pointer-events-none">
+      {allowEditing && <div className="fixed bottom-6 right-4 z-50 flex max-w-[calc(100vw-2rem)] flex-wrap justify-end gap-3 pointer-events-none sm:right-6">
+        {editMode && dirtyEventIds.size > 0 && <button
+          type="button"
+          onClick={() => void savePendingChanges()}
+          disabled={isSavingChanges}
+          className="pointer-events-auto flex items-center gap-2 rounded-full bg-[var(--green)] px-5 py-3 font-mono text-xs font-medium uppercase tracking-wider text-[var(--bg)] shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <FiSave className="h-4 w-4" />
+          {isSavingChanges ? "Guardando..." : `Guardar cambios (${dirtyEventIds.size})`}
+        </button>}
         <button
           type="button"
-          onClick={() => setEditMode((v) => !v)}
+          onClick={() => { if (editMode) void leaveEditMode(); else setEditMode(true); }}
           className={`pointer-events-auto flex items-center gap-2 px-5 py-3 rounded-full font-mono text-xs uppercase tracking-wider font-medium shadow-lg transition-colors ${
             editMode ? "bg-[var(--orange)] text-[var(--bg)]" : "bg-[var(--ink)] text-[var(--bg)] hover:bg-[var(--green)]"
           }`}
@@ -1053,7 +1187,7 @@ export default function EventosAdmin() {
           {editMode ? <FiX className="w-4 h-4" /> : <FiEdit3 className="w-4 h-4" />}
           {editMode ? "Salir de edición" : "Editar página"}
         </button>
-      </div>
+      </div>}
     </div>
   );
 }

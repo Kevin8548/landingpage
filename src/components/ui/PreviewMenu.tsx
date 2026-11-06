@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { FiCalendar, FiChevronDown, FiEye, FiUsers } from "react-icons/fi";
+import { FiCalendar, FiChevronDown, FiCode, FiEye, FiUsers } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 
 interface PreviewMenuProps {
@@ -197,6 +197,15 @@ export default function PreviewMenu({ className }: PreviewMenuProps) {
           >
             <FiUsers size={14} />
             Aspirantes
+          </button>
+
+          <button
+            type="button"
+            onClick={() => goTo("/proyectos")}
+            className="preview-menu-option"
+          >
+            <FiCode size={14} />
+            Proyectos
           </button>
         </div>
       )}

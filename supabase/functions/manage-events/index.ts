@@ -13,6 +13,7 @@ const eventSchema = z.object({
   fecha_fin: z.string().datetime({ offset: true }),
   lugar: z.string().trim().min(1).max(200),
   audiencia: z.string().trim().max(200).nullable().optional(),
+  link_registro: z.string().url().max(500).nullable().optional(),
   tipo: z.enum(eventTypes),
   modalidad: z.string().trim().max(60).nullable().optional(),
   imageDataUrl: z.string().max(4_200_000).optional(),
@@ -97,6 +98,7 @@ serve(async (req) => {
       fecha_fin: event.fecha_fin,
       lugar: event.lugar,
       audiencia: event.audiencia ?? null,
+      link_registro: event.link_registro ?? null,
       tipo: event.tipo,
       modalidad: event.modalidad ?? "Presencial",
     };

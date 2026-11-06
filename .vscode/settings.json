@@ -2,9 +2,7 @@
   "deno.enablePaths": [
     "supabase/functions"
   ],
-
   "deno.lint": true,
-
   "deno.unstable": [
     "bare-node-builtins",
     "byonm",
@@ -20,8 +18,8 @@
     "http",
     "net"
   ],
-
   "[typescript]": {
     "editor.defaultFormatter": "denoland.vscode-deno"
-  }
+  },
+  // "peacock.color": "#215732"
 }

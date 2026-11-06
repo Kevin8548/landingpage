@@ -5,12 +5,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock3,
+  FolderKanban,
   LayoutDashboard,
   LogOut,
   MapPin,
   Menu,
   Plus,
   Sparkles,
+  ShieldCheck,
   Users,
   X,
 } from "lucide-react";
@@ -18,6 +20,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { CATEGORY_META, type EventItem } from "../../data/eventos";
 import { useEventosStore } from "../../data/eventosStore";
 import { setAdminAuthenticated } from "../../lib/adminAuth";
+import { useDashboardSidebar } from "../../lib/useDashboardSidebar";
 import { AnimatedThemeToggler } from "../ui/AnimatedThemeToggler";
 import PreviewMenu from "../ui/PreviewMenu";
 import "./Dashboard.css";
@@ -69,10 +72,10 @@ const getEventDateParts = (iso: string) => {
 export default function AdminDashboard() {
   const navigate = useNavigate();
 
-  const { eventItems } = useEventosStore();
+  const { eventItems, eventsLoadError, reloadEvents } = useEventosStore();
 
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setSidebarCollapsed] = useDashboardSidebar();
 
   const sorted = useMemo(
     () =>
@@ -175,10 +178,22 @@ export default function AdminDashboard() {
             Eventos
             <span>{eventItems.length}</span>
           </Link>
+          <Link to="/dashboard/proyectos">
+            <FolderKanban size={18} />
+            Proyectos
+          </Link>
           
           <Link to="/dashboard/padron">
             <Users size={18} />
             Padrón de Alumnos
+          </Link>
+          <Link to="/dashboard/administradores">
+            <ShieldCheck size={18} />
+            Administradores
+          </Link>
+          <Link to="/dashboard/eventos?crear=1">
+            <Plus size={18} />
+            Crear evento
           </Link>
         </nav>
 
@@ -229,6 +244,7 @@ export default function AdminDashboard() {
         </header>
 
         <div className="dashboard-body" id="resumen">
+          {eventsLoadError && <div className="dashboard-data-error" role="alert"><div><strong>No se pudo actualizar la lista de eventos</strong><p>{eventsLoadError}</p><small>Se conservan los últimos datos disponibles para evitar mostrar un panel vacío por un fallo temporal.</small></div><button type="button" onClick={() => void reloadEvents()}>Reintentar</button></div>}
           <div className="dashboard-welcome">
             <div>
               <p className="dashboard-eyebrow">
