@@ -1546,6 +1546,17 @@ html.dark .dashboard-primary-button:hover { background:#0e4829; }
 html.dark .padron-csv-button { border-color:#37414d; color:#dbe2e9; background:#1a2028; }
 html.dark .padron-csv-button:not(:disabled):hover { border-color:#55715f; color:#f1f5f3; background:#202a2b; }
 .padron-table-wrap { margin-top:16px; overflow:auto; border:1px solid var(--dash-line); border-radius:13px; background:var(--dash-bg); }
+.padron-csv-preview { overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:var(--dash-muted) var(--dash-bg); }
+.padron-csv-preview::-webkit-scrollbar { width:10px; height:10px; }
+.padron-csv-preview::-webkit-scrollbar-track { border-radius:8px; background:var(--dash-bg); }
+.padron-csv-preview::-webkit-scrollbar-thumb { border:2px solid var(--dash-bg); border-radius:8px; background:var(--dash-muted); }
+.padron-csv-preview::-webkit-scrollbar-thumb:hover { background:var(--dash-green); }
+.padron-csv-preview::-webkit-scrollbar-corner { background:var(--dash-bg); }
+html.dark .padron-csv-preview { scrollbar-color:#46505c #171b21; }
+html.dark .padron-csv-preview::-webkit-scrollbar-track,
+html.dark .padron-csv-preview::-webkit-scrollbar-corner { background:#171b21; }
+html.dark .padron-csv-preview::-webkit-scrollbar-thumb { border-color:#171b21; background:#46505c; }
+html.dark .padron-csv-preview::-webkit-scrollbar-thumb:hover { background:#5b6673; }
 .padron-table { width:100%; min-width:760px; border-collapse:collapse; color:var(--dash-ink); font-size:13px; }
 .padron-table th { padding:13px 16px; color:var(--dash-muted); background:color-mix(in srgb,var(--dash-bg) 86%,var(--dash-green)); font-family:"JetBrains Mono",monospace; font-size:10px; font-weight:500; letter-spacing:.06em; text-transform:uppercase; }
 .padron-table td { padding:15px 16px; border-top:1px solid var(--dash-line); vertical-align:middle; }

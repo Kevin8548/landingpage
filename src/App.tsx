@@ -70,7 +70,7 @@ function AppFooter() {
 
 function AppChatbot() {
   const { pathname } = useLocation();
-  if (pathname.startsWith("/dashboard") || pathname === "/acceso") return null;
+  if (pathname.startsWith("/dashboard") || pathname.startsWith("/alumno") || pathname === "/acceso") return null;
   return <ChatbotWidget />;
 }
 

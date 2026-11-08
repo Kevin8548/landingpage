@@ -29,12 +29,123 @@ type Alumno = {
   registrado?: boolean;
 };
 
-// Mantiene una copia en memoria mientras el administrador navega entre
-// secciones. No se guarda en localStorage porque contiene datos personales.
-let padronAlumnosEnMemoria: Alumno[] = [];
+// Caché por administrador para conservar el padrón durante cambios de sección
+// sin mezclar datos personales entre sesiones.
+const padronesEnMemoria = new Map<string, Alumno[]>();
 
 const dateFromValue = (value: string) => value ? new Date(`${value}T12:00:00`) : new Date();
 const dateToValue = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+function parseCsvRecords(text: string, delimiter: string) {
+  const records: string[][] = [];
+  let record: string[] = [];
+  let field = "";
+  let quoted = false;
+  const source = text.replace(/^\uFEFF/, "");
+
+  for (let index = 0; index < source.length; index += 1) {
+    const char = source[index];
+    if (char === '"') {
+      if (quoted && source[index + 1] === '"') { field += '"'; index += 1; }
+      else quoted = !quoted;
+    } else if (!quoted && char === delimiter) {
+      record.push(field.trim()); field = "";
+    } else if (!quoted && (char === "\n" || char === "\r")) {
+      if (char === "\r" && source[index + 1] === "\n") index += 1;
+      record.push(field.trim());
+      if (record.some((value) => value.length > 0)) records.push(record);
+      record = []; field = "";
+    } else field += char;
+  }
+
+  record.push(field.trim());
+  if (record.some((value) => value.length > 0)) records.push(record);
+  return records;
+}
+
+function normalizeCsvDate(value: string) {
+  const date = value.trim();
+  const iso = date.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  const local = date.match(/^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{4})$/);
+  let year: number, month: number, day: number;
+  if (iso) [, year, month, day] = iso.map(Number) as [number, number, number, number];
+  else if (local) [, day, month, year] = local.map(Number) as [number, number, number, number];
+  else if (/^\d+(?:\.\d+)?$/.test(date)) {
+    const serial = Number(date);
+    if (serial < 1 || serial > 100000) return "";
+    const excelDate = new Date(Date.UTC(1899, 11, 30) + Math.floor(serial) * 86400000);
+    year = excelDate.getUTCFullYear(); month = excelDate.getUTCMonth() + 1; day = excelDate.getUTCDate();
+  } else return "";
+
+  const check = new Date(Date.UTC(year, month - 1, day));
+  if (check.getUTCFullYear() !== year || check.getUTCMonth() + 1 !== month || check.getUTCDate() !== day) return "";
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function parseStudentCsv(text: string): Alumno[] {
+  const firstLine = text.replace(/^\uFEFF/, "").split(/\r?\n/, 1)[0] ?? "";
+  let quoted = false;
+  const counts = { ",": 0, ";": 0, "\t": 0 };
+  for (let index = 0; index < firstLine.length; index += 1) {
+    const char = firstLine[index];
+    if (char === '"') {
+      if (quoted && firstLine[index + 1] === '"') index += 1;
+      else quoted = !quoted;
+    } else if (!quoted && char in counts) counts[char as keyof typeof counts] += 1;
+  }
+  const delimiter = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? ",";
+  const records = parseCsvRecords(text, delimiter);
+  if (records.length === 0) throw new Error("El archivo está vacío.");
+
+  const normalizeHeader = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z]/g, "");
+  const headers = records[0].map(normalizeHeader);
+  const headerIndex = (predicate: (value: string) => boolean) => headers.findIndex(predicate);
+  const headerMap = {
+    matricula: headerIndex((value) => value.includes("matricula")),
+    nombre: headerIndex((value) => value === "nombre" || value === "nombres"),
+    paterno: headerIndex((value) => value.includes("paterno")),
+    materno: headerIndex((value) => value.includes("materno")),
+    carrera: headerIndex((value) => value.includes("carrera")),
+    grado: headerIndex((value) => value.includes("grado")),
+    grupo: headerIndex((value) => value.includes("grupo")),
+    fecha: headerIndex((value) => value.includes("fecha") && (value.includes("nac") || value.includes("nacimiento"))),
+  };
+  const hasHeader = headerMap.matricula >= 0 && headerMap.nombre >= 0 && headerMap.fecha >= 0;
+  const columns = hasHeader
+    ? { matricula: headerMap.matricula, nombre: headerMap.nombre, paterno: headerMap.paterno, materno: headerMap.materno, carrera: headerMap.carrera, grado: headerMap.grado, grupo: headerMap.grupo, fecha: headerMap.fecha }
+    : { matricula: 0, nombre: 1, paterno: 2, materno: 3, carrera: 4, grado: 5, grupo: 6, fecha: 7 };
+  const get = (row: string[], index: number) => index >= 0 ? (row[index] ?? "").trim() : "";
+  const rows = records.slice(hasHeader ? 1 : 0);
+  const invalidRows: number[] = [];
+  const students: Alumno[] = [];
+  const seenMatriculas = new Set<string>();
+  const duplicateMatriculas = new Set<string>();
+
+  rows.forEach((row, index) => {
+    const matricula = get(row, columns.matricula).toUpperCase();
+    const nombre = get(row, columns.nombre);
+    const apellidoPaterno = get(row, columns.paterno);
+    const apellidoMaterno = get(row, columns.materno);
+    const carrera = get(row, columns.carrera);
+    const grado = get(row, columns.grado);
+    const grupo = get(row, columns.grupo).toUpperCase();
+    const fechaNacimiento = normalizeCsvDate(get(row, columns.fecha));
+    // Las filas vacías de Excel suelen contener solo delimitadores; no son alumnos.
+    if (![matricula, nombre, apellidoPaterno, apellidoMaterno, carrera, grado, grupo, get(row, columns.fecha)].some(Boolean)) return;
+    if (!matricula || !nombre || !apellidoPaterno || !carrera || !fechaNacimiento) {
+      invalidRows.push(index + (hasHeader ? 2 : 1));
+      return;
+    }
+    if (seenMatriculas.has(matricula)) duplicateMatriculas.add(matricula);
+    seenMatriculas.add(matricula);
+    students.push({ matricula, nombre, apellido_paterno: apellidoPaterno, apellido_materno: apellidoMaterno, carrera, grado, grupo, fecha_nacimiento: fechaNacimiento });
+  });
+
+  if (invalidRows.length) throw new Error(`Revisa las filas ${invalidRows.slice(0, 5).join(", ")}${invalidRows.length > 5 ? " y otras" : ""}. Cada alumno debe incluir matrícula, nombre, apellido paterno, carrera y fecha válida (DD/MM/AAAA).`);
+  if (duplicateMatriculas.size) throw new Error(`El archivo repite la matrícula ${Array.from(duplicateMatriculas).slice(0, 3).join(", ")}. Corrige los duplicados y vuelve a importarlo.`);
+  if (!students.length) throw new Error("No encontramos alumnos completos en el archivo. Verifica que tenga las columnas del padrón y vuelve a intentarlo.");
+  return students;
+}
 
 function BirthDatePicker({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -116,7 +227,7 @@ export default function PadronAdmin() {
   const [isSidebarCollapsed, setSidebarCollapsed] = useDashboardSidebar();
   
   // Estado principal
-  const [alumnos, setAlumnos] = useState<Alumno[]>(() => padronAlumnosEnMemoria);
+  const [alumnos, setAlumnos] = useState<Alumno[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -148,6 +259,9 @@ export default function PadronAdmin() {
     isFetchingAlumnos.current = true;
     if (!silent) setIsLoading(true);
     try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw userError ?? new Error("Inicia sesión para consultar tu padrón.");
+      const cachedRows = padronesEnMemoria.get(user.id) ?? [];
       const { data, error } = await supabase
         .from('padron_alumnos')
         .select('*')
@@ -156,7 +270,7 @@ export default function PadronAdmin() {
       const rows = data ?? [];
       // Una respuesta vacía aislada (por ejemplo, durante una renovación de
       // sesión/RLS) no debe borrar el padrón que ya se había cargado.
-      if (rows.length === 0 && padronAlumnosEnMemoria.length > 0) {
+      if (rows.length === 0 && cachedRows.length > 0) {
         await new Promise((resolve) => window.setTimeout(resolve, 500));
         const retry = await supabase
           .from('padron_alumnos')
@@ -168,10 +282,10 @@ export default function PadronAdmin() {
           setLoadError(detail);
           return;
         }
-        padronAlumnosEnMemoria = retry.data ?? [];
-        setAlumnos(padronAlumnosEnMemoria);
+        padronesEnMemoria.set(user.id, retry.data ?? []);
+        setAlumnos(retry.data ?? []);
       } else {
-        padronAlumnosEnMemoria = rows;
+        padronesEnMemoria.set(user.id, rows);
         setAlumnos(rows);
       }
       setLoadError("");
@@ -279,39 +393,23 @@ export default function PadronAdmin() {
     document.body.removeChild(link);
   };
 
-  const parseCSV = (text: string) => {
-    const lines = text.split('\n');
-    const result: Alumno[] = [];
-    
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
-      
-      const cols = line.split(',');
-      if (cols.length >= 8) {
-        result.push({
-          matricula: cols[0].trim().toUpperCase(),
-          nombre: cols[1].trim(),
-          apellido_paterno: cols[2].trim(),
-          apellido_materno: cols[3].trim(),
-          carrera: cols[4].trim(),
-          grado: cols[5].trim(),
-          grupo: cols[6].trim().toUpperCase(),
-          fecha_nacimiento: cols[7].trim()
-        });
-      }
-    }
-    setCsvData(result);
-  };
-
   const handleFileUpload = (file?: File) => {
     if (!file) return;
-    if (file.type !== "text/csv" && !file.name.endsWith(".csv")) {
+    if (file.type !== "text/csv" && !file.name.toLowerCase().endsWith(".csv")) {
       void showDashboardAlert({ icon: "warning", title: "Archivo inválido", text: "Por favor sube un archivo CSV." });
       return;
     }
     const reader = new FileReader();
-    reader.onload = (e) => parseCSV(e.target?.result as string);
+    reader.onload = (e) => {
+      try {
+        const rows = parseStudentCsv(String(e.target?.result ?? ""));
+        setCsvData(rows);
+      } catch (error) {
+        setCsvData([]);
+        void showDashboardAlert({ icon: "warning", title: "Revisa el archivo CSV", text: error instanceof Error ? error.message : "No pudimos leer el archivo." });
+      }
+    };
+    reader.onerror = () => void showDashboardAlert({ icon: "error", title: "No se pudo leer el archivo", text: "Intenta seleccionar el CSV nuevamente." });
     reader.readAsText(file);
   };
 
@@ -325,8 +423,10 @@ export default function PadronAdmin() {
     if (csvData.length === 0) return;
     setIsUploading(true);
     try {
-      const normalizedRows = csvData.map((alumno) => ({ ...alumno, matricula: alumno.matricula.trim().toUpperCase() }));
-      const { error } = await supabase.from('padron_alumnos').upsert(normalizedRows, { onConflict: 'matricula' });
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw userError ?? new Error("Inicia sesión para importar alumnos.");
+      const normalizedRows = csvData.map((alumno) => ({ ...alumno, admin_id: user.id, matricula: alumno.matricula.trim().toUpperCase() }));
+      const { error } = await supabase.from('padron_alumnos').upsert(normalizedRows, { onConflict: 'admin_id,matricula' });
       if (error) throw error;
       
       void showDashboardAlert({ icon: "success", title: "Padrón actualizado", text: `Se cargaron ${csvData.length} registros exitosamente.` });
@@ -334,7 +434,17 @@ export default function PadronAdmin() {
       setIsCsvModalOpen(false);
       fetchAlumnos(); 
     } catch (err: any) {
-      void showDashboardAlert({ icon: "error", title: "Error al subir padrón", text: err.message });
+      console.error("No se pudo importar el padrón:", err);
+      const message = err?.code === "23505"
+        ? "Una o más matrículas ya están registradas en tu padrón. Revisa que no haya duplicados."
+        : err?.code === "21000"
+          ? "El archivo contiene matrículas repetidas. Corrige los duplicados y vuelve a importarlo."
+        : err?.code === "22007" || err?.code === "22008"
+          ? "Verifica que las fechas de nacimiento sean válidas y estén en formato DD/MM/AAAA."
+          : err?.code === "42501"
+            ? "No tienes permiso para agregar estos alumnos a tu padrón. Vuelve a iniciar sesión."
+            : "No se pudo importar el padrón. Revisa los datos del archivo e inténtalo de nuevo.";
+      void showDashboardAlert({ icon: "error", title: "Error al subir padrón", text: message });
     } finally {
       setIsUploading(false);
     }
@@ -373,12 +483,14 @@ export default function PadronAdmin() {
     }
 
     try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw userError ?? new Error("Inicia sesión para guardar alumnos.");
       let error;
       if (editingAlumno?.id) {
         const res = await supabase.from('padron_alumnos').update(payload).eq('id', editingAlumno.id);
         error = res.error;
       } else {
-        const res = await supabase.from('padron_alumnos').insert(payload);
+        const res = await supabase.from('padron_alumnos').insert({ ...payload, admin_id: user.id });
         error = res.error;
       }
 
@@ -414,7 +526,8 @@ export default function PadronAdmin() {
       if (error) {
         void showDashboardAlert({ icon: "error", title: "Error al eliminar", text: error.message });
       } else {
-        padronAlumnosEnMemoria = padronAlumnosEnMemoria.filter((alumno) => alumno.id !== id);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) padronesEnMemoria.set(user.id, (padronesEnMemoria.get(user.id) ?? []).filter((alumno) => alumno.id !== id));
         fetchAlumnos();
       }
     }
@@ -457,7 +570,7 @@ export default function PadronAdmin() {
             <div>
               <p className="dashboard-eyebrow"><Users size={14}/> GESTIÓN DE USUARIOS</p>
               <h1>Padrón de Alumnos<span>.</span></h1>
-              <p>Administra la base de datos oficial para que los alumnos puedan registrarse.</p>
+              <p>Administra el padrón de tus alumnos tutorados. Solo tú puedes consultar y gestionar estos registros.</p>
             </div>
             <div className="padron-header-actions">
               <button className="dashboard-secondary-button" onClick={() => setIsCsvModalOpen(true)}>
@@ -508,10 +621,11 @@ export default function PadronAdmin() {
               ) : loadError && alumnos.length === 0 ? null : alumnos.length === 0 ? (
                 <div style={{ padding: "3rem", textAlign: "center", border: "1px dashed var(--line)", borderRadius: "1rem", marginTop: "1rem" }}>
                   <Users size={32} style={{ margin: "0 auto 1rem", opacity: 0.5 }} />
-                  <p>No encontramos alumnos en esta consulta. Si ya habías cargado el padrón, vuelve a intentarlo o revisa la conexión y los permisos.</p>
+                  <h3 style={{ margin: "0 0 0.5rem", color: "var(--text)" }}>Aún no tienes alumnos registrados</h3>
+                  <p style={{ margin: 0, color: "var(--text-muted)" }}>Cuando agregues alumnos o importes tu padrón, aparecerán aquí.</p>
                   <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginTop: "1rem" }}>
-                    <button onClick={() => setIsCsvModalOpen(true)} style={{ color: "var(--orange)", textDecoration: "underline", background: "none", border: "none", cursor: "pointer", padding: 0 }}>Sube un CSV</button>
-                    <button onClick={() => void fetchAlumnos()} style={{ color: "var(--dash-green)", textDecoration: "underline", background: "none", border: "none", cursor: "pointer", padding: 0 }}>Reintentar consulta</button>
+                    <button onClick={() => setIsCsvModalOpen(true)} style={{ color: "var(--orange)", textDecoration: "underline", background: "none", border: "none", cursor: "pointer", padding: 0 }}>Importar CSV</button>
+                    <button onClick={openCreator} style={{ color: "var(--dash-green)", textDecoration: "underline", background: "none", border: "none", cursor: "pointer", padding: 0 }}>Agregar alumno</button>
                   </div>
                 </div>
               ) : filteredAlumnos.length === 0 ? (
@@ -675,7 +789,7 @@ export default function PadronAdmin() {
                       <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-muted)" }}>{csvData.length} alumnos detectados listos para importar.</p>
                     </div>
                   </div>
-                  <div style={{ overflowX: "auto", border: "1px solid var(--line)", borderRadius: "0.5rem", maxHeight: "250px" }}>
+                  <div className="padron-csv-preview" style={{ overflowX: "auto", border: "1px solid var(--line)", borderRadius: "0.5rem", maxHeight: "250px" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.85rem" }}>
                       <thead style={{ position: "sticky", top: 0, background: "var(--bg)", borderBottom: "1px solid var(--line)" }}>
                         <tr>
