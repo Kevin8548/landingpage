@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link, Navigate } from "react-router-dom";
-import { CalendarDays, Check, ChevronLeft, ChevronRight, Copy, FolderKanban, KeyRound, LayoutDashboard, LogOut, Menu, Plus, ShieldCheck, Trash2, Users, X } from "lucide-react";
+import { CalendarDays, Check, ChevronLeft, ChevronRight, Copy, FolderKanban, KeyRound, LayoutDashboard, LogOut, Menu, Plus, Search, ShieldCheck, Trash2, Users, X } from "lucide-react";
 import { AnimatedThemeToggler } from "../components/ui/AnimatedThemeToggler";
 import { showDashboardAlert } from "../lib/dashboardAlerts";
 import { setAdminAuthenticated } from "../lib/adminAuth";
@@ -23,6 +23,7 @@ export default function AdminAccounts() {
   const [form, setForm] = useState<AdminAccountInput>({ email: "", ...emptyName });
   const [myName, setMyName] = useState(emptyName);
   const [accounts, setAccounts] = useState<AdminAccount[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [principalId, setPrincipalId] = useState("");
   const [currentAdminId, setCurrentAdminId] = useState("");
   const [loadingAccounts, setLoadingAccounts] = useState(true);
@@ -34,6 +35,9 @@ export default function AdminAccounts() {
   const [created, setCreated] = useState<{ email: string; nombre: string; apellido_paterno: string; apellido_materno: string; temporaryPassword: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const canManage = Boolean(principalId && currentAdminId && principalId === currentAdminId);
+  const normalizedAdminSearch = searchTerm.trim().toLocaleLowerCase("es-MX").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const filteredAccounts = accounts.filter((account) => [account.nombre, account.apellido_paterno, account.apellido_materno, account.email]
+    .some((value) => (value ?? "").toLocaleLowerCase("es-MX").normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(normalizedAdminSearch)));
 
   const refreshAccounts = useCallback(async () => {
     setLoadingAccounts(true);
@@ -148,6 +152,13 @@ export default function AdminAccounts() {
         <div className="dashboard-welcome"><div><p className="dashboard-eyebrow"><ShieldCheck size={14}/> ACCESO Y SEGURIDAD</p><h1>Administradores<span>.</span></h1><p>Administra las cuentas del equipo organizador.</p></div></div>
         {accountsError && <div className="dashboard-data-error" role="alert"><div><strong>No se pudo gestionar la lista de administradores</strong><p>{accountsError}</p></div><button type="button" onClick={() => void refreshAccounts()} disabled={loadingAccounts}>{loadingAccounts ? "Consultando…" : "Reintentar"}</button></div>}
 
+        {loadingAccounts && !accountsError && <div className="dashboard-admin-loading" role="status" aria-label="Cargando sección de administradores" aria-busy="true">
+          <div className="dashboard-admin-grid">
+            {[0, 1].map((card) => <section className="dashboard-events dashboard-admin-create dashboard-admin-skeleton-card" key={card} aria-hidden="true"><i className="dashboard-admin-skeleton__eyebrow placeholder-glow"/><i className="dashboard-admin-skeleton__title placeholder-glow"/><i className="dashboard-admin-skeleton__copy placeholder-glow"/><i className="dashboard-admin-skeleton__field placeholder-glow"/><i className="dashboard-admin-skeleton__field placeholder-glow"/><i className="dashboard-admin-skeleton__button placeholder-glow"/></section>)}
+          </div>
+          <section className="dashboard-events dashboard-admin-list dashboard-admin-skeleton-list" aria-hidden="true"><div className="dashboard-admin-skeleton__title placeholder-glow"/>{[0, 1, 2].map((row) => <i className="dashboard-admin-skeleton__row placeholder-glow" key={row}/>)}</section>
+        </div>}
+
         {canManage && <>
           <div className="dashboard-admin-grid">
           <section className="dashboard-events dashboard-admin-create">
@@ -172,8 +183,8 @@ export default function AdminAccounts() {
           </div>
 
           <section className="dashboard-events dashboard-admin-list">
-            <div className="dashboard-section-heading"><div><p>CUENTAS AUTORIZADAS</p><h2>{loadingAccounts ? "Consultando…" : `${accounts.length} ${accounts.length === 1 ? "administrador" : "administradores"}`}</h2></div><ShieldCheck size={20}/></div>
-            {loadingAccounts ? <p className="dashboard-admin-copy">Cargando cuentas administrativas…</p> : accounts.length === 0 ? <p className="dashboard-admin-copy">No hay cuentas administrativas para mostrar.</p> : <div className="dashboard-admin-list__items">{accounts.map((account) => {
+            <div className="dashboard-section-heading"><div><p>CUENTAS AUTORIZADAS</p><h2>{loadingAccounts ? "Consultando…" : `${filteredAccounts.length} ${filteredAccounts.length === 1 ? "administrador" : "administradores"}`}</h2></div><label className="dashboard-search"><Search size={17}/><input type="search" aria-label="Buscar administradores" placeholder="Buscar por nombre o correo" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)}/></label></div>
+            {loadingAccounts ? <p className="dashboard-admin-copy">Cargando cuentas administrativas…</p> : accounts.length === 0 ? <p className="dashboard-admin-copy">No hay cuentas administrativas para mostrar.</p> : filteredAccounts.length === 0 ? <div className="dashboard-search-empty">No encontramos administradores con esa búsqueda.</div> : <div className="dashboard-admin-list__items">{filteredAccounts.map((account) => {
               const fullName = [account.nombre, account.apellido_paterno, account.apellido_materno].filter(Boolean).join(" ") || "Nombre pendiente";
               const isPrincipal = account.id === principalId;
               return <article className="dashboard-admin-list__item" key={account.id}><span className="dashboard-avatar">{(account.nombre?.trim().charAt(0) || "A").toLocaleUpperCase("es-MX")}</span><div className="dashboard-admin-list__identity"><strong>{fullName}{isPrincipal && <span className="dashboard-admin-list__badge">Principal</span>}</strong><small>{account.email}</small></div>{!isPrincipal && <button type="button" className="dashboard-admin-list__delete" onClick={() => void removeAccount(account)} disabled={Boolean(deletingId)} aria-label={`Eliminar acceso de ${fullName}`} title="Eliminar acceso">{deletingId === account.id ? "Eliminando…" : <><Trash2 size={16}/>Eliminar</>}</button>}</article>;
