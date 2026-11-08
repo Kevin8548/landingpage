@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3, Pencil, Plus, Trash2, Users, X } from "lucide-react";
 import { listEventWorkshops, listWorkshopAttendees, removeWorkshop, saveWorkshop, type Workshop, type WorkshopInput } from "../../services/workshops";
 import { showDashboardAlert } from "../../lib/dashboardAlerts";
+import { userFacingError } from "../../lib/userFacingErrors";
 
 type Attendee = {
   id: string;
@@ -82,7 +83,7 @@ export default function WorkshopManager({ eventId, eventTitle, eventDate, eventT
         const rows = await listEventWorkshops(eventId);
         if (active) setItems(rows);
       } catch (reason) {
-        if (active) setError(reason instanceof Error ? reason.message : "No se pudieron cargar los talleres.");
+        if (active) setError(userFacingError(reason, "No se pudieron cargar los talleres. Revisa tu conexión e inténtalo de nuevo."));
       } finally {
         if (active) setLoading(false);
       }
@@ -134,7 +135,7 @@ export default function WorkshopManager({ eventId, eventTitle, eventDate, eventT
       await refresh();
       setShowForm(false); setEditing(null);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "No se pudo guardar el taller. Revisa tu conexión e inténtalo nuevamente.");
+      setError(userFacingError(reason, "No se pudo guardar el taller. Revisa tu conexión e inténtalo nuevamente."));
     } finally { setSaving(false); }
   };
 
@@ -147,7 +148,7 @@ export default function WorkshopManager({ eventId, eventTitle, eventDate, eventT
       await removeWorkshop(item.id);
       setAttendees((current) => { const next = { ...current }; delete next[item.id]; return next; });
       await refresh();
-    } catch (reason) { setError(reason instanceof Error ? reason.message : "No se pudo eliminar el taller."); }
+    } catch (reason) { setError(userFacingError(reason, "No se pudo eliminar el taller. Inténtalo de nuevo.")); }
     finally { setDeleting(""); }
   };
 
@@ -155,7 +156,7 @@ export default function WorkshopManager({ eventId, eventTitle, eventDate, eventT
     if (attendees[id]) { setAttendees((current) => { const next = { ...current }; delete next[id]; return next; }); return; }
     setAttendeeLoading(id); setError("");
     try { const rows = await listWorkshopAttendees(id) as unknown as Attendee[]; setAttendees((current) => ({ ...current, [id]: rows })); }
-    catch (reason) { setError(reason instanceof Error ? reason.message : "No se pudieron consultar los alumnos inscritos."); }
+    catch (reason) { setError(userFacingError(reason, "No se pudieron consultar los alumnos inscritos. Revisa tu conexión e inténtalo de nuevo.")); }
     finally { setAttendeeLoading(""); }
   };
 

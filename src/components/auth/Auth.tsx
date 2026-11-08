@@ -2,7 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from "re
 import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Eye, EyeOff, GraduationCap, KeyRound, LockKeyhole, UserRound } from "lucide-react";
-import { setAdminAuthenticated } from "../../lib/adminAuth";
+import { setAdminAuthenticated, setAdminFullName, setAdminPrimaryStatus } from "../../lib/adminAuth";
+import { userFacingError } from "../../lib/userFacingErrors";
 import { studentSupabase, supabase } from "../../lib/supabase";
 import "./Auth.css";
 
@@ -13,15 +14,12 @@ async function functionErrorMessage(error: { message?: string; context?: unknown
   if (error.context instanceof Response) {
     try {
       const body = await error.context.clone().json();
-      if (typeof body?.error === "string") return body.error;
+      if (typeof body?.error === "string") return userFacingError(body.error, fallback);
     } catch { /* Se usará el mensaje de red del cliente. */ }
   }
   const contextMessage = error.context instanceof Error ? error.context.message : "";
   const detail = `${error.message ?? ""} ${contextMessage}`;
-  if (/fetch|network|load failed|name_not_resolved|connection|timed out|timeout/i.test(detail)) {
-    return "No se pudo conectar con el servicio de acceso. Revisa tu conexión e inténtalo de nuevo.";
-  }
-  return error.message || fallback;
+  return userFacingError(detail, fallback);
 }
 
 const authDateFromValue = (value: string) => value ? new Date(`${value}T12:00:00`) : new Date();
@@ -155,14 +153,17 @@ export default function Auth() {
         if (error.name === "AuthRetryableFetchError" || /failed to fetch|network|load failed/i.test(detail)) {
           throw new Error("No se pudo conectar con el servicio de acceso. Revisa tu conexión e inténtalo de nuevo.");
         }
-        throw new Error(error.message);
+        throw new Error(userFacingError(error, "No se pudo iniciar sesión. Revisa tus datos e inténtalo de nuevo."));
       }
       if (!data.user) throw new Error("El servicio de acceso no devolvió una sesión válida. Inténtalo de nuevo.");
-      const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
+      const { data: profile, error: profileError } = await supabase.from("profiles").select("role,nombre,apellido_paterno,apellido_materno,is_primary_admin").eq("id", data.user.id).maybeSingle();
       if (profileError || profile?.role !== "admin") {
         await supabase.auth.signOut();
         throw new Error("Esta cuenta no tiene acceso administrativo. Solicita el alta al responsable de la plataforma.");
       }
+      const metadata = data.user.user_metadata ?? {};
+      setAdminFullName([profile.nombre, profile.apellido_paterno, profile.apellido_materno].filter(Boolean).join(" ") || metadata.full_name || metadata.name || metadata.given_name || metadata.first_name);
+      setAdminPrimaryStatus(profile.is_primary_admin === true);
       if (data.user.user_metadata?.must_change_password === true) {
         setPassword(""); setConfirmPassword(""); setMode("change-password");
         setMessage("Por seguridad, reemplaza la contraseña temporal antes de continuar.");
@@ -171,7 +172,14 @@ export default function Auth() {
       setAdminAuthenticated(true);
       navigate("/dashboard", { replace: true });
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Ocurrió un error inesperado.");
+      const detail = error instanceof Error ? error.message : error;
+      if (audience === "student" && /invalid login credentials|invalid_credentials|invalid password/i.test(String(detail))) {
+        setMessage("Matrícula o contraseña incorrectas.");
+      } else {
+        setMessage(userFacingError(detail, audience === "student"
+          ? "No se pudo completar el acceso. Revisa tus datos e inténtalo de nuevo."
+          : "No se pudo completar el acceso administrativo. Revisa tus datos e inténtalo de nuevo."));
+      }
     } finally { setLoading(false); }
   };
 

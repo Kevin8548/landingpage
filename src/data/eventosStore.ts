@@ -6,6 +6,7 @@ import {
   deleteEventInSupabase,
 } from "../services/queries";
 import { events as seedEvents, type Category, type EventItem } from "./eventos";
+import { userFacingError } from "../lib/userFacingErrors";
 
 const STORAGE_KEY = "utt_eventos_v1";
 
@@ -71,11 +72,8 @@ export function useEventosStore() {
       setEventsLoadError("");
       return true;
     } catch (reason) {
-      const message = reason && typeof reason === "object" && "message" in reason && typeof reason.message === "string"
-        ? reason.message
-        : "No se pudieron consultar los eventos.";
       console.error("No se pudo actualizar la lista de eventos:", reason);
-      setEventsLoadError(message);
+      setEventsLoadError(userFacingError(reason, "Revisa tu conexión a internet e inténtalo de nuevo."));
       return false;
     } finally {
       setEventsLoading(false);

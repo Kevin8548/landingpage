@@ -99,6 +99,7 @@ interface ChatMessage {
         // Simula tiempo de respuesta para mayor naturalidad
         // Dentro de handleSendMessage:
             setTimeout(async () => {
+        try {
         // 1. Convertimos los mensajes actuales a formato para la IA (omitiendo el saludo inicial)
         const chatHistory = messages
             .filter((m) => m.id !== "init-1")
@@ -126,7 +127,17 @@ interface ChatMessage {
         };
 
         setMessages((prev) => [...prev, botMsg]);
-        setIsTyping(false);
+        } catch (error) {
+            console.error("No se pudo generar la respuesta del asistente:", error);
+            setMessages((prev) => [...prev, {
+                id: "b-error-" + Date.now(),
+                sender: "bot",
+                text: "No pude responder en este momento. Inténtalo de nuevo en unos minutos.",
+                time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            }]);
+        } finally {
+            setIsTyping(false);
+        }
         }, 450);
     };
 

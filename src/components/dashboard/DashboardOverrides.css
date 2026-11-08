@@ -116,7 +116,7 @@
   flex-direction: column;
 }
 
-.dashboard-event-form {
+.dashboard-modal .dashboard-event-form {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
@@ -125,7 +125,7 @@
   scrollbar-width: none;
 }
 
-.dashboard-event-form::-webkit-scrollbar {
+.dashboard-modal .dashboard-event-form::-webkit-scrollbar {
   display: none;
 }
 
@@ -259,7 +259,7 @@ html.dark .dashboard-event-form textarea {
   min-height: 100dvh;
   max-height: 100dvh;
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #aebbb1 transparent;
   transition:
@@ -1966,6 +1966,10 @@ html.dark .dashboard-modal--workshop .dashboard-modal__footer > button:first-chi
 }
 
 .dashboard-admin-create { max-width: 700px; margin-top: 30px; }
+.dashboard-body--admins { width:min(100%,1600px); max-width:none; }
+.dashboard-admin-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:20px; margin-top:30px; }
+.dashboard-admin-grid .dashboard-admin-create { max-width:none; min-width:0; margin-top:0; }
+.dashboard-admin-grid .dashboard-admin-create > .dashboard-event-form { min-width:0; }
 .dashboard-admin-copy { max-width: 620px; margin: 10px 0; color: var(--dash-muted); font-size: 13px; line-height: 1.65; }
 .dashboard-admin-credential { display: grid; justify-items: start; gap: 12px; margin-top: 22px; padding: 20px; border: 1px solid var(--dash-line); border-radius: 14px; background: color-mix(in srgb, var(--dash-ink) 3%, transparent); }
 .dashboard-admin-credential strong { color: var(--dash-ink); font-size: 15px; }
@@ -1973,6 +1977,21 @@ html.dark .dashboard-modal--workshop .dashboard-modal__footer > button:first-chi
 .dashboard-admin-credential code { display: block; width: 100%; overflow-wrap: anywhere; padding: 13px; border: 1px dashed var(--dash-line); border-radius: 9px; color: var(--dash-ink); background: color-mix(in srgb, var(--dash-ink) 4%, transparent); font-size: 13px; }
 .dashboard-admin-credential .dashboard-primary-button { display: inline-flex; align-items: center; gap: 8px; }
 .dashboard-admin-again { padding: 8px 0; border: 0; color: var(--dash-green); background: transparent; font: inherit; font-size: 12px; cursor: pointer; }
+.dashboard-admin-name-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.dashboard-admin-name-grid label:first-child { grid-column: 1 / -1; }
+.dashboard-admin-list { max-width: none; margin-top: 22px; }
+.dashboard-admin-list__items { display: grid; gap: 10px; margin-top: 18px; }
+.dashboard-admin-list__item { display: flex; align-items: center; gap: 13px; min-width: 0; padding: 13px 15px; border: 1px solid var(--dash-line); border-radius: 12px; background: color-mix(in srgb, var(--dash-ink) 2%, transparent); }
+.dashboard-admin-list__identity { display: grid; flex: 1; gap: 4px; min-width: 0; }
+.dashboard-admin-list__identity strong { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; color: var(--dash-ink); font-size: 13px; }
+.dashboard-admin-list__identity small { overflow: hidden; color: var(--dash-muted); font-size: 12px; text-overflow: ellipsis; }
+.dashboard-admin-list__badge { padding: 3px 8px; border-radius: 999px; color: var(--dash-green); background: color-mix(in srgb, var(--dash-green) 12%, transparent); font-size: 10px; font-weight: 650; }
+.dashboard-admin-list__delete { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 6px; padding: 8px 10px; border: 1px solid color-mix(in srgb, #ef6b57 35%, var(--dash-line)); border-radius: 8px; color: #ef806e; background: transparent; font: inherit; font-size: 11px; cursor: pointer; }
+.dashboard-admin-list__delete:hover:not(:disabled) { background: color-mix(in srgb, #ef6b57 10%, transparent); }
+.dashboard-admin-list__delete:disabled { cursor: wait; opacity: .65; }
+@media (max-width: 640px) { .dashboard-admin-name-grid { grid-template-columns: minmax(0, 1fr); } .dashboard-admin-name-grid label:first-child { grid-column: auto; } .dashboard-admin-list__item { gap: 9px; padding: 11px; } .dashboard-admin-list__delete { padding: 8px; font-size: 0; } .dashboard-admin-list__delete svg { width: 16px; height: 16px; } }
+@media (max-width: 980px) { .dashboard-admin-grid { grid-template-columns:minmax(0,1fr); } }
+@media (max-height: 680px) and (min-width: 861px) { .dashboard-sidebar { overflow-y:auto; } }
 
 .padron-student-form input[name="matricula"] { text-transform:uppercase; }
 
@@ -2110,3 +2129,6 @@ html:not(.dark) .dashboard-birth-date-picker__option-menu::-webkit-scrollbar-thu
 .event-inline-picker__menu--floating.event-inline-time-menu::-webkit-scrollbar-track { margin:5px 0; border-radius:8px; background:#151a17; }
 .event-inline-picker__menu--floating.event-inline-time-menu::-webkit-scrollbar-thumb { border:2px solid #151a17; border-radius:8px; background:#46534a; }
 .event-inline-picker__menu--floating.event-inline-time-menu::-webkit-scrollbar-thumb:hover { background:#5b6c5f; }
+
+.dashboard-user-name { display:inline-flex; align-items:center; max-width:min(24vw,180px); min-height:34px; overflow:hidden; padding:0 6px; color:var(--dash-ink); font:600 12px/1 "Inter",sans-serif; text-overflow:ellipsis; white-space:nowrap; }
+@media (max-width:520px) { .dashboard-user-name { max-width:104px; font-size:11px; } }

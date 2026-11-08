@@ -5,6 +5,7 @@ import { listManagedEvents, type ManagedEvent } from "../services/manageEvents";
 import { cancelWorkshopRegistration, enrollInWorkshop, listEventWorkshops, listMyWorkshopRegistrations, type Workshop } from "../services/workshops";
 import { showDashboardAlert } from "../lib/dashboardAlerts";
 import { studentSupabase } from "../lib/supabase";
+import { userFacingError } from "../lib/userFacingErrors";
 import "./StudentActivities.css";
 
 type Registration = { id: string; workshop_id: string; event_id: string; created_at: string; event_workshops: { titulo: string; lugar: string; inicia_en: string; termina_en: string } | null; events: { titulo: string } | null };
@@ -40,14 +41,14 @@ export default function StudentActivities() {
       if (profile?.role !== "student") { navigate("/acceso?tipo=alumno", { replace: true }); return; }
       await refresh();
       if (active) setAuthorized(true);
-    })().catch((reason) => { if (active) setError(reason instanceof Error ? reason.message : "No se pudieron cargar tus actividades."); }).finally(() => { if (active) setLoading(false); });
+    })().catch((reason) => { if (active) setError(userFacingError(reason, "No se pudieron cargar tus actividades. Revisa tu conexión e inténtalo de nuevo.")); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [navigate, refresh]);
 
   useEffect(() => {
     if (!authorized) return;
     let active = true;
-    const update = () => { void refresh().catch((reason) => { if (active) setError(reason instanceof Error ? reason.message : "No se pudo actualizar la disponibilidad."); }); };
+    const update = () => { void refresh().catch((reason) => { if (active) setError(userFacingError(reason, "No se pudo actualizar la disponibilidad. Revisa tu conexión e inténtalo de nuevo.")); }); };
     const timer = window.setInterval(update, 30_000);
     window.addEventListener("focus", update);
     return () => { active = false; window.clearInterval(timer); window.removeEventListener("focus", update); };
@@ -76,7 +77,7 @@ export default function StudentActivities() {
   const reserve = async (workshop: Workshop) => {
     setBusy(workshop.id); setError("");
     try { await enrollInWorkshop(workshop.id); await refresh(); }
-    catch (reason) { setError(reason instanceof Error ? reason.message : "No se pudo completar la inscripción."); }
+    catch (reason) { setError(userFacingError(reason, "No se pudo completar la inscripción. Revisa tu conexión e inténtalo de nuevo.")); }
     finally { setBusy(""); }
   };
   const cancel = async (id: string) => {
@@ -84,7 +85,7 @@ export default function StudentActivities() {
     if (!result.isConfirmed) return;
     setBusy(id); setError("");
     try { await cancelWorkshopRegistration(id); await refresh(); }
-    catch (reason) { setError(reason instanceof Error ? reason.message : "No se pudo cancelar."); }
+    catch (reason) { setError(userFacingError(reason, "No se pudo cancelar la inscripción. Revisa tu conexión e inténtalo de nuevo.")); }
     finally { setBusy(""); }
   };
   const signOut = async () => { await studentSupabase.auth.signOut(); navigate("/", { replace: true }); };

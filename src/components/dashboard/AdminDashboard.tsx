@@ -21,6 +21,8 @@ import { CATEGORY_META, type EventItem } from "../../data/eventos";
 import { useEventosStore } from "../../data/eventosStore";
 import { setAdminAuthenticated } from "../../lib/adminAuth";
 import { useDashboardSidebar } from "../../lib/useDashboardSidebar";
+import { usePrimaryAdmin } from "../../lib/usePrimaryAdmin";
+import { useAdminName } from "../../lib/useAdminName";
 import { AnimatedThemeToggler } from "../ui/AnimatedThemeToggler";
 import PreviewMenu from "../ui/PreviewMenu";
 import "./Dashboard.css";
@@ -71,6 +73,8 @@ const getEventDateParts = (iso: string) => {
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const { adminName, fullName } = useAdminName();
+  const isPrimaryAdmin = usePrimaryAdmin();
 
   const { eventItems, eventsLoadError, reloadEvents } = useEventosStore();
 
@@ -187,10 +191,10 @@ export default function AdminDashboard() {
             <Users size={18} />
             Padrón de Alumnos
           </Link>
-          <Link to="/dashboard/administradores">
+          {isPrimaryAdmin === true && <Link to="/dashboard/administradores">
             <ShieldCheck size={18} />
             Administradores
-          </Link>
+          </Link>}
           <Link to="/dashboard/eventos?crear=1">
             <Plus size={18} />
             Crear evento
@@ -199,10 +203,10 @@ export default function AdminDashboard() {
 
         <div className="dashboard-sidebar__bottom">
           <div className="dashboard-profile">
-            <span className="dashboard-avatar">AD</span>
+            <span className="dashboard-avatar">{fullName?.charAt(0) ?? " "}</span>
 
             <div>
-              <strong>Administrador</strong>
+              <strong>{fullName ?? " "}</strong>
               <small>Panel de eventos</small>
             </div>
           </div>
@@ -237,14 +241,14 @@ export default function AdminDashboard() {
           <div className="dashboard-topbar__actions">
             <AnimatedThemeToggler className="dashboard-theme-toggle" />
 
-            <span className="dashboard-avatar dashboard-avatar--small">
-              AD
+            <span className="dashboard-avatar dashboard-avatar--small" aria-label={fullName ? `Sesión de ${fullName}` : "Sesión administrativa"} title={fullName ?? undefined}>
+              {fullName?.charAt(0) ?? " "}
             </span>
           </div>
         </header>
 
         <div className="dashboard-body" id="resumen">
-          {eventsLoadError && <div className="dashboard-data-error" role="alert"><div><strong>No se pudo actualizar la lista de eventos</strong><p>{eventsLoadError}</p><small>Se conservan los últimos datos disponibles para evitar mostrar un panel vacío por un fallo temporal.</small></div><button type="button" onClick={() => void reloadEvents()}>Reintentar</button></div>}
+          {eventsLoadError && <div className="dashboard-data-error" role="alert"><div><strong>No se pudo actualizar la lista de eventos</strong><p>{eventsLoadError}</p></div><button type="button" onClick={() => void reloadEvents()}>Reintentar</button></div>}
           <div className="dashboard-welcome">
             <div>
               <p className="dashboard-eyebrow">
@@ -252,8 +256,8 @@ export default function AdminDashboard() {
                 PANEL DE ADMINISTRACIÓN
               </p>
 
-              <h1>
-                Hola, Administrador<span>.</span>
+              <h1 aria-live="polite">
+                {adminName ? <>Hola, {adminName}<span>.</span></> : <span className="dashboard-greeting__loading" aria-label="Cargando saludo" />}
               </h1>
 
               <p>

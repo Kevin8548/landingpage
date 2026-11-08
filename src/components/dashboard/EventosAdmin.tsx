@@ -869,7 +869,6 @@ export default function EventosAdmin({ allowEditing = true }: { allowEditing?: b
           <div>
             <strong>No se pudo actualizar la lista de eventos</strong>
             <p>{eventsLoadError}</p>
-            <small>Se conservan los datos disponibles; un fallo de conexión no se trata como una lista vacía.</small>
           </div>
           <button type="button" onClick={() => void reloadEvents()}>Reintentar</button>
         </div>
@@ -930,7 +929,6 @@ export default function EventosAdmin({ allowEditing = true }: { allowEditing?: b
                   <p className="max-w-sm text-sm leading-relaxed text-[var(--muted)] sm:text-right">
                     Conferencias, torneos, hackathons y actividades estudiantiles, agrupadas por mes.
                   </p>
-                  {!allowEditing && !editMode && <Link to="/acceso?tipo=alumno" className="events-student-access">Acceso para alumnos <FiArrowRight aria-hidden="true" /></Link>}
                 </div>
               </div>
             </div>

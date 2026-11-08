@@ -4,7 +4,10 @@ import { Link } from "react-router-dom";
 import { getEventDateParts, makeDateLabel, type DashboardEvent } from "../data/dashboardEvents";
 import { AnimatedThemeToggler } from "../components/ui/AnimatedThemeToggler";
 import { showDashboardAlert } from "../lib/dashboardAlerts";
+import { userFacingError } from "../lib/userFacingErrors";
 import { useDashboardSidebar } from "../lib/useDashboardSidebar";
+import { usePrimaryAdmin } from "../lib/usePrimaryAdmin";
+import { useAdminName } from "../lib/useAdminName";
 import WorkshopManager from "../components/dashboard/WorkshopManager";
 import "../components/dashboard/Dashboard.css";
 import "../components/dashboard/DashboardOverrides.css";
@@ -138,6 +141,8 @@ function DashboardEventTypePicker({ value, onChange }: { value: EventType | ""; 
 }
 
 export default function Events() {
+  const isPrimaryAdmin = usePrimaryAdmin();
+  const { fullName } = useAdminName();
   const [events, setEvents] = useState<DashboardEvent[]>(() => eventsCache ?? []);
   const [isLoadingEvents, setIsLoadingEvents] = useState(() => eventsCache === null);
   const [eventsLoadError, setEventsLoadError] = useState("");
@@ -163,10 +168,7 @@ export default function Events() {
       setEventsLoadError("");
     } catch (reason) {
       console.error("No fue posible cargar los eventos:", reason);
-      const detail = reason && typeof reason === "object" && "message" in reason && typeof reason.message === "string"
-        ? reason.message
-        : "No se pudo conectar con la base de datos.";
-      setEventsLoadError(detail);
+      setEventsLoadError(userFacingError(reason, "Revisa tu conexión a internet e inténtalo de nuevo."));
     } finally {
       setIsLoadingEvents(false);
     }
@@ -309,17 +311,17 @@ export default function Events() {
         {isSidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
       </button>
       <div className="dashboard-brand"><span className="dashboard-brand__mark">UTT</span><span>Universidad Tecnológica<br />de Tlaxcala</span><button className="dashboard-sidebar__close" onClick={() => setSidebarOpen(false)} aria-label="Cerrar menú"><X size={19}/></button></div>
-      <nav className="dashboard-nav" aria-label="Navegación del panel"><Link to="/dashboard"><LayoutDashboard size={18}/>Resumen</Link><Link className="is-active" to="/dashboard/eventos"><CalendarDays size={18}/>Eventos <span className={isLoadingEvents ? "dashboard-count-placeholder placeholder-glow" : ""}>{isLoadingEvents ? "" : events.length}</span></Link><Link to="/dashboard/proyectos"><FolderKanban size={18}/>Proyectos</Link><Link to="/dashboard/padron"><Users size={18}/>Padrón de Alumnos</Link><Link to="/dashboard/administradores"><ShieldCheck size={18}/>Administradores</Link><button type="button" onClick={openCreator}><Plus size={18}/>Crear evento</button></nav>
-      <div className="dashboard-sidebar__bottom"><div className="dashboard-profile"><span className="dashboard-avatar">AD</span><div><strong>Administrador</strong><small>Panel de eventos</small></div></div><Link to="/" className="dashboard-signout"><LogOut size={17}/>Salir al sitio</Link></div>
+      <nav className="dashboard-nav" aria-label="Navegación del panel"><Link to="/dashboard"><LayoutDashboard size={18}/>Resumen</Link><Link className="is-active" to="/dashboard/eventos"><CalendarDays size={18}/>Eventos <span className={isLoadingEvents ? "dashboard-count-placeholder placeholder-glow" : ""}>{isLoadingEvents ? "" : events.length}</span></Link><Link to="/dashboard/proyectos"><FolderKanban size={18}/>Proyectos</Link><Link to="/dashboard/padron"><Users size={18}/>Padrón de Alumnos</Link>{isPrimaryAdmin === true && <Link to="/dashboard/administradores"><ShieldCheck size={18}/>Administradores</Link>}<button type="button" onClick={openCreator}><Plus size={18}/>Crear evento</button></nav>
+      <div className="dashboard-sidebar__bottom"><div className="dashboard-profile"><span className="dashboard-avatar">{fullName?.charAt(0) ?? " "}</span><div><strong>{fullName ?? " "}</strong><small>Panel de eventos</small></div></div><Link to="/" className="dashboard-signout"><LogOut size={17}/>Salir al sitio</Link></div>
     </aside>
 
     <section className="dashboard-content"><header className="dashboard-topbar">
       <button className="dashboard-menu-button" onClick={() => setSidebarOpen(true)} aria-label="Abrir menú"><Menu size={21}/></button>
       <div className="dashboard-breadcrumb"><Link to="/dashboard">Panel</Link><span>/</span><strong>Eventos</strong></div>
-      <div className="dashboard-topbar__actions"><AnimatedThemeToggler className="dashboard-theme-toggle" /><span className="dashboard-avatar dashboard-avatar--small">AD</span></div>
+      <div className="dashboard-topbar__actions"><AnimatedThemeToggler className="dashboard-theme-toggle" /><span className="dashboard-avatar dashboard-avatar--small" aria-label={fullName ? `Sesión de ${fullName}` : "Sesión administrativa"} title={fullName ?? undefined}>{fullName?.charAt(0) ?? " "}</span></div>
     </header>
       <div className="dashboard-body dashboard-body--events"><div className="dashboard-welcome"><div><p className="dashboard-eyebrow"><CalendarDays size={14}/> ADMINISTRACIÓN</p><h1>Tus eventos<span>.</span></h1><p>Crea los eventos.</p></div><button className="dashboard-primary-button" onClick={openCreator}><Plus size={18}/>Crear evento</button></div>
-        <section className="dashboard-events dashboard-events--standalone"><div className="dashboard-section-heading"><div><p>LISTADO DE EVENTOS</p><h2>{isLoadingEvents ? <span className="dashboard-heading-placeholder placeholder-glow" aria-label="Cargando eventos" /> : `${events.length} ${events.length === 1 ? "evento" : "eventos"}`}</h2></div></div>{eventsLoadError && <div className="dashboard-data-error" role="alert"><div><strong>No se pudo actualizar la lista de eventos</strong><p>{eventsLoadError}</p><small>Se conservaron los eventos de la última consulta si había datos previos.</small></div><button type="button" onClick={() => void fetchEvents()} disabled={isLoadingEvents}>{isLoadingEvents ? "Reintentando…" : "Reintentar"}</button></div>}<div className="dashboard-event-list" aria-busy={isLoadingEvents}>
+        <section className="dashboard-events dashboard-events--standalone"><div className="dashboard-section-heading"><div><p>LISTADO DE EVENTOS</p><h2>{isLoadingEvents ? <span className="dashboard-heading-placeholder placeholder-glow" aria-label="Cargando eventos" /> : `${events.length} ${events.length === 1 ? "evento" : "eventos"}`}</h2></div></div>{eventsLoadError && <div className="dashboard-data-error" role="alert"><div><strong>No se pudo actualizar la lista de eventos</strong><p>{eventsLoadError}</p></div><button type="button" onClick={() => void fetchEvents()} disabled={isLoadingEvents}>{isLoadingEvents ? "Reintentando…" : "Reintentar"}</button></div>}<div className="dashboard-event-list" aria-busy={isLoadingEvents}>
           {isLoadingEvents ? Array.from({ length: 4 }, (_, index) => <article className="dashboard-event-row dashboard-event-row--placeholder placeholder-glow" key={`event-placeholder-${index}`} aria-hidden="true"><div className="dashboard-event-row__stripe" /><div className="dashboard-event-row__date"><i /><small /></div><div className="dashboard-event-row__details"><i /><h3 /><p /></div><div className="dashboard-event-actions"><i /><i /><i /></div></article>) : events.map((event, index) => { const date = getEventDateParts(event.date); const stripeColor = index % 2 === 0 ? "amber" : "green"; return <article className="dashboard-event-row" key={event.id}><div className={`dashboard-event-row__stripe dashboard-event-row__stripe--${stripeColor}`} /><div className="dashboard-event-row__date"><strong>{date.day}</strong><span>{date.month}</span></div><div className="dashboard-event-row__details"><span className={event.status === "Publicado" ? "dashboard-status" : "dashboard-status dashboard-status--draft"}><i />{event.status}</span><h3>{event.title}</h3><p>{event.location} · {event.time}</p></div><div className="dashboard-event-actions"><button onClick={() => setViewingEvent(event)}><Eye size={16} /><span>Ver</span></button><button onClick={() => openEditor(event)}><Pencil size={15} /><span>Editar</span></button><button onClick={() => setManagingWorkshops(event)}><CalendarDays size={15}/><span>Talleres</span></button><button className="is-danger" onClick={() => void deleteEvent(event)}><Trash2 size={15} /><span>Eliminar</span></button></div></article>; })}
         </div></section>
       </div></section>

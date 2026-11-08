@@ -5,7 +5,6 @@ import {
   Routes,
   useLocation,
 } from "react-router-dom";
-
 import { Aspirantes } from "./components/sections/Aspirantes";
 import { Careers } from "./components/sections/Careers";
 import { WhyChooseTI } from "./components/sections/View";
@@ -15,7 +14,6 @@ import Auth from "./components/auth/Auth";
 import Hero from "./components/sections/Hero";
 import FuturoReveal from "./components/sections/Futuro_Reveal";
 import { ConfirmProvider } from "./components/ui/ConfirmDialog";
-
 import Dashboard from "./pages/Dashboard";
 import Events from "./pages/Events";
 import Projects from "./pages/Projects";
@@ -68,6 +66,12 @@ function AppFooter() {
   }
 
   return <Footer />;
+}
+
+function AppChatbot() {
+  const { pathname } = useLocation();
+  if (pathname.startsWith("/dashboard") || pathname === "/acceso") return null;
+  return <ChatbotWidget />;
 }
 
 export default function App() {
@@ -216,7 +220,7 @@ export default function App() {
         </Routes>
 
         <AppFooter />
-        <ChatbotWidget />
+        <AppChatbot />
       </BrowserRouter>
     </ConfirmProvider>
   );

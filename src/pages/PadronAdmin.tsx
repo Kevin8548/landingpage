@@ -8,9 +8,12 @@ import {
 import { AnimatedThemeToggler } from "../components/ui/AnimatedThemeToggler";
 import { supabase } from "../lib/supabase";
 import { useDashboardSidebar } from "../lib/useDashboardSidebar";
+import { usePrimaryAdmin } from "../lib/usePrimaryAdmin";
+import { useAdminName } from "../lib/useAdminName";
 import "../components/dashboard/Dashboard.css";
 import "../components/dashboard/DashboardOverrides.css";
 import { showDashboardAlert } from "../lib/dashboardAlerts";
+import { userFacingError } from "../lib/userFacingErrors";
 import DashboardSelect from "../components/dashboard/DashboardSelect";
 
 type Alumno = {
@@ -107,6 +110,8 @@ function BirthDatePicker({ value, onChange }: { value: string; onChange: (value:
 }
 
 export default function PadronAdmin() {
+  const isPrimaryAdmin = usePrimaryAdmin();
+  const { fullName } = useAdminName();
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setSidebarCollapsed] = useDashboardSidebar();
   
@@ -159,7 +164,7 @@ export default function PadronAdmin() {
           .order('created_at', { ascending: false });
         if (retry.error) throw retry.error;
         if ((retry.data ?? []).length === 0) {
-          const detail = "La consulta devolvió cero alumnos aunque ya había registros cargados. Se conserva la última lista; vuelve a intentar para verificar el acceso a la base de datos.";
+          const detail = "No se pudo verificar el padrón. Revisa tu conexión a internet e inténtalo de nuevo.";
           setLoadError(detail);
           return;
         }
@@ -171,11 +176,8 @@ export default function PadronAdmin() {
       }
       setLoadError("");
     } catch (reason) {
-      const detail = reason && typeof reason === "object" && "message" in reason && typeof reason.message === "string"
-        ? reason.message
-        : "Error desconocido al consultar Supabase.";
       console.error("No se pudo cargar el padrón de alumnos:", reason);
-      setLoadError(detail);
+      setLoadError(userFacingError(reason, "Revisa tu conexión a internet e inténtalo de nuevo."));
     } finally {
       isFetchingAlumnos.current = false;
       setIsLoading(false);
@@ -434,11 +436,11 @@ export default function PadronAdmin() {
           <Link to="/dashboard/eventos"><CalendarDays size={18}/>Eventos</Link>
           <Link to="/dashboard/proyectos"><FolderKanban size={18}/>Proyectos</Link>
           <Link className="is-active" to="/dashboard/padron"><Users size={18}/>Padrón de Alumnos</Link>
-          <Link to="/dashboard/administradores"><ShieldCheck size={18}/>Administradores</Link>
+          {isPrimaryAdmin === true && <Link to="/dashboard/administradores"><ShieldCheck size={18}/>Administradores</Link>}
           <Link to="/dashboard/eventos?crear=1"><Plus size={18}/>Crear evento</Link>
         </nav>
         <div className="dashboard-sidebar__bottom">
-          <div className="dashboard-profile"><span className="dashboard-avatar">AD</span><div><strong>Administrador</strong><small>Panel principal</small></div></div>
+          <div className="dashboard-profile"><span className="dashboard-avatar">{fullName?.charAt(0) ?? " "}</span><div><strong>{fullName ?? " "}</strong><small>Panel principal</small></div></div>
           <Link to="/" className="dashboard-signout"><LogOut size={17}/>Salir al sitio</Link>
         </div>
       </aside>
@@ -447,7 +449,7 @@ export default function PadronAdmin() {
         <header className="dashboard-topbar">
           <button className="dashboard-menu-button" onClick={() => setSidebarOpen(true)}><Menu size={21}/></button>
           <div className="dashboard-breadcrumb"><Link to="/dashboard">Panel</Link><span>/</span><strong>Padrón</strong></div>
-          <div className="dashboard-topbar__actions"><AnimatedThemeToggler className="dashboard-theme-toggle" /><span className="dashboard-avatar dashboard-avatar--small">AD</span></div>
+          <div className="dashboard-topbar__actions"><AnimatedThemeToggler className="dashboard-theme-toggle" /><span className="dashboard-avatar dashboard-avatar--small" aria-label={fullName ? `Sesión de ${fullName}` : "Sesión administrativa"} title={fullName ?? undefined}>{fullName?.charAt(0) ?? " "}</span></div>
         </header>
         
         <div className="dashboard-body">
@@ -468,7 +470,7 @@ export default function PadronAdmin() {
           </div>
 
           <section className="dashboard-events dashboard-events--standalone">
-            {loadError && <div className="dashboard-data-error" role="alert"><div><strong>No se pudo actualizar el padrón</strong><p>{loadError}</p><small>Los datos anteriores se conservan; no se mostrarán como si el padrón estuviera vacío.</small></div><button type="button" onClick={() => void fetchAlumnos()} disabled={isLoading}>{isLoading ? "Reintentando…" : "Reintentar"}</button></div>}
+            {loadError && <div className="dashboard-data-error" role="alert"><div><strong>No se pudo actualizar el padrón</strong><p>{loadError}</p><small>Se conservan los datos que ya estaban cargados.</small></div><button type="button" onClick={() => void fetchAlumnos()} disabled={isLoading}>{isLoading ? "Reintentando…" : "Reintentar"}</button></div>}
             <div className="dashboard-section-heading padron-section-heading">
               <div>
                 <p>LISTADO GENERAL</p>
