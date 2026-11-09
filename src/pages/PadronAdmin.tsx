@@ -37,6 +37,8 @@ const padronesEnMemoria = new Map<string, Alumno[]>();
 
 const dateFromValue = (value: string) => value ? new Date(`${value}T12:00:00`) : new Date();
 const dateToValue = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+const errorCode = (error: unknown) => error && typeof error === "object" && "code" in error && typeof error.code === "string" ? error.code : "";
+const errorMessage = (error: unknown) => error instanceof Error ? error.message : "";
 
 function parseCsvRecords(text: string, delimiter: string) {
   const records: string[][] = [];
@@ -68,7 +70,7 @@ function parseCsvRecords(text: string, delimiter: string) {
 function normalizeCsvDate(value: string) {
   const date = value.trim();
   const iso = date.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-  const local = date.match(/^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{4})$/);
+  const local = date.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/);
   let year: number, month: number, day: number;
   if (iso) [, year, month, day] = iso.map(Number) as [number, number, number, number];
   else if (local) [, day, month, year] = local.map(Number) as [number, number, number, number];
@@ -247,11 +249,6 @@ export default function PadronAdmin() {
   const [folioDraft, setFolioDraft] = useState("");
   const [isSavingFolio, setIsSavingFolio] = useState(false);
 
-  // Efecto para regresar a la página 1 cada que se usa el buscador
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
-  
   // Modales
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -311,6 +308,8 @@ export default function PadronAdmin() {
   };
 
   useEffect(() => {
+    // Loads the signed-in administrator's roster asynchronously.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchAlumnos();
 
     // Actualiza el padrón al volver a esta pestaña y también si la activación
@@ -465,15 +464,16 @@ export default function PadronAdmin() {
       setCsvData([]);
       setIsCsvModalOpen(false);
       fetchAlumnos(); 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("No se pudo importar el padrón:", err);
-      const message = err?.code === "23505"
+      const code = errorCode(err);
+      const message = code === "23505"
         ? "Una matrícula ya está registrada en otro padrón o un folio ya fue asignado. Cada matrícula solo puede aparecer una vez."
-        : err?.code === "21000"
+        : code === "21000"
           ? "El archivo contiene matrículas repetidas. Corrige los duplicados y vuelve a importarlo."
-        : err?.code === "22007" || err?.code === "22008"
+        : code === "22007" || code === "22008"
           ? "Verifica que las fechas de nacimiento sean válidas y estén en formato DD/MM/AAAA."
-          : err?.code === "42501"
+          : code === "42501"
             ? "No tienes permiso para agregar estos alumnos a tu padrón. Vuelve a iniciar sesión."
             : "No se pudo importar el padrón. Revisa los datos del archivo e inténtalo de nuevo.";
       void showDashboardAlert({ icon: "error", title: "Error al subir padrón", text: message });
@@ -521,10 +521,11 @@ export default function PadronAdmin() {
       setAssigningFolioId(null);
       setFolioDraft("");
       void showDashboardAlert({ icon: "success", title: "Folio asignado", showConfirmButton: false, timer: 1300 });
-    } catch (error: any) {
-      const message = error?.code === "23505"
+    } catch (error: unknown) {
+      const code = errorCode(error);
+      const message = code === "23505"
         ? "Ese folio ya está asignado a otro alumno o ya fue utilizado."
-        : error?.code === "42501"
+        : code === "42501"
           ? "No tienes permiso para asignar folios en este padrón. Vuelve a iniciar sesión."
           : "No se pudo asignar el folio. Revisa los datos e inténtalo de nuevo.";
       void showDashboardAlert({ icon: "error", title: "Error al asignar folio", text: message });
@@ -583,13 +584,14 @@ export default function PadronAdmin() {
       });
       setIsFormModalOpen(false);
       fetchAlumnos();
-    } catch (err: any) {
-      const detail = String(err?.message ?? "").toLowerCase();
-      const text = err?.code === "23505" && detail.includes("folio")
+    } catch (err: unknown) {
+      const code = errorCode(err);
+      const detail = errorMessage(err).toLowerCase();
+      const text = code === "23505" && detail.includes("folio")
         ? "Ese folio ya está asignado a otro alumno. Cada folio solo se puede usar una vez."
-        : err?.code === "23505" && detail.includes("matricula")
+        : code === "23505" && detail.includes("matricula")
           ? "Esta matrícula ya está registrada en otro padrón. Cada alumno debe tener una sola ficha."
-          : err?.code === "23505"
+          : code === "23505"
             ? "Ya existe un alumno con esa matrícula en alguno de los padrones. Cada matrícula solo puede aparecer una vez."
             : "No se pudieron guardar los datos. Revisa la información e inténtalo de nuevo.";
       void showDashboardAlert({ icon: "error", title: "Error al guardar", text });
@@ -697,7 +699,7 @@ export default function PadronAdmin() {
                     type="text"
                     placeholder="Buscar alumno, matrícula, carrera..." 
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                     className="padron-search__input"
                   />
                 </div>

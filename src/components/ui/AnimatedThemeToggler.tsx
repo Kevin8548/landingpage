@@ -19,14 +19,13 @@ export function AnimatedThemeToggler({
 }: AnimatedThemeTogglerProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [isDark, setIsDark] = useState(() =>
-    typeof document !== "undefined" && document.documentElement.classList.contains("dark"),
+    typeof document !== "undefined"
+      ? localStorage.getItem("utt-dashboard-theme") === "dark"
+      : false,
   );
 
   useEffect(() => {
-    // Primera visita: claro. Después conserva la última elección del usuario.
-    const dark = localStorage.getItem("utt-dashboard-theme") === "dark";
-    document.documentElement.classList.toggle("dark", dark);
-    setIsDark(dark);
+    document.documentElement.classList.toggle("dark", localStorage.getItem("utt-dashboard-theme") === "dark");
   }, []);
 
   const toggleTheme = () => {

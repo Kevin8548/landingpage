@@ -3,7 +3,9 @@ import { useEffect, useState } from "react";
 import { FiArrowUpRight, FiBookOpen, FiCode, FiExternalLink, FiMusic, FiUsers, FiX } from "react-icons/fi";
 import type { IconType } from "react-icons";
 import { listPublicProjects, type ManagedProject } from "../../services/manageProjects";
-import EventosAdmin from "../dashboard/EventosAdmin";
+import { lazy, Suspense } from "react";
+
+const EventosAdmin = lazy(() => import("../dashboard/EventosAdmin"));
 
 export type Category = "academico" | "cultural" | "comunidad";
 
@@ -129,7 +131,6 @@ export const CATEGORY_ORDER: Category[] = ["academico", "cultural", "comunidad"]
 
 export default function Eventos() {
   const [projects, setProjects] = useState<ManagedProject[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<ManagedProject | null>(null);
 
   useEffect(() => {
@@ -139,13 +140,16 @@ export default function Eventos() {
         return [] as ManagedProject[];
       });
       setProjects(loadedProjects);
-      setIsLoading(false);
     };
     void loadContent();
   }, []);
 
   return <>
-    <section id="eventos"><EventosAdmin allowEditing={false} /></section>
+    <section id="eventos">
+      <Suspense fallback={<div className="min-h-64" aria-busy="true" />}>
+        <EventosAdmin allowEditing={false} />
+      </Suspense>
+    </section>
 
     {projects.length > 0 && <section className="eventos-board relative bg-[var(--bg)] px-6 py-20 sm:px-8" id="proyectos">
       <div className="mx-auto max-w-6xl">

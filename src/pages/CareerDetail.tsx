@@ -5,6 +5,7 @@ import {
   type CareerDetail as CareerDetailData,
 } from "../data/careerDetails";
 import { careers, type Career } from "../data/careers";
+import { omitKeys } from "../lib/omitKeys";
 
 import CareerNavbar from "../components/layout/CareerNavbar";
 import DetailHero from "../components/sections/detailCareer/DetailHero";
@@ -57,11 +58,7 @@ export default function CareerDetail() {
       ): FullCareer | undefined => {
         if (!base || !detailData) return undefined;
 
-        const {
-          imageBack: _ignoredBack,
-          imageFront: _ignoredFront,
-          ...rest
-        } = detailData;
+        const rest = omitKeys(detailData, "imageBack", "imageFront");
 
         return { ...base, ...rest };
       };

@@ -5,7 +5,7 @@ import redesFront from "../assets/careers/redes/redes.png";
 import entornosBack from "../assets/careers/entornos/entornosII.jpg";
 import entornosFront from "../assets/careers/entornos/entornos.png";
 import { ShieldCheck, Code2, Boxes } from "lucide-react";
-import {RectangleGoggles, SearchCodeIcon, Shapes, FileBracesCornerIcon, Pyramid, FileDigit, EarthLock } from "lucide-react";
+import {RectangleGoggles, SearchCodeIcon, Pyramid, EarthLock } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 

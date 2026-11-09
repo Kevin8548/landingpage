@@ -40,6 +40,8 @@ export default function Projects() {
     }
   };
 
+  // Starts an async request; visible state changes after the service responds.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { void loadProjects(); }, []);
   const normalizedProjectSearch = searchTerm.trim().toLocaleLowerCase("es-MX").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const filteredProjects = projects.filter((project) => [project.titulo, project.descripcion, project.autores, project.carrera, project.categoria, ...project.tecnologias]

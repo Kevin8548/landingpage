@@ -34,10 +34,6 @@ export default function DashboardSelect({
   const selected = options.find((option) => option.value === selectedValue);
 
   useEffect(() => {
-    if (value === undefined) setInternalValue(defaultValue);
-  }, [defaultValue, value]);
-
-  useEffect(() => {
     const closeOnOutsideClick = (event: PointerEvent) => {
       if (!rootRef.current?.contains(event.target as Node)) setIsOpen(false);
     };

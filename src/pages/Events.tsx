@@ -179,6 +179,8 @@ export default function Events() {
   const filteredEvents = events.filter((event) => [event.title, event.description, event.location, event.audience, event.time, event.status, event.type]
     .some((value) => (value ?? "").toLocaleLowerCase("es-MX").normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(normalizedEventSearch)));
 
+  // Starts an async request; visible state changes after the service responds.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { void fetchEvents(); }, [fetchEvents]);
 
 

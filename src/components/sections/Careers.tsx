@@ -130,21 +130,3 @@ export function Careers() {
     </section>
   );
 }
-
-function TechnologyFinale() {
-  return (
-    <article className="relative z-10 flex h-screen w-screen flex-shrink-0 items-center px-6 pt-20 sm:px-10 md:px-24 lg:px-32">
-      <div className="max-w-4xl rounded-2xl border border-dark-green-primary/45 bg-[#080d16]/10 p-6 shadow-2xl shadow-black/15 backdrop-blur-md md:rounded-3xl md:p-12">
-        <p className="mb-4 font-mono text-[0.65rem] font-semibold tracking-[0.2em] text-verde uppercase md:mb-5 md:text-xs md:tracking-[0.24em]">
-          Próximo destino
-        </p>
-        <h3 className="max-w-3xl text-3xl font-extrabold italic leading-[1.04] text-naranja sm:text-4xl md:text-6xl">
-          Tecnologías de la Información e Innovación Digital
-        </h3>
-        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-gray-300 sm:text-base md:mt-6 md:text-lg">
-          Sigue explorando las herramientas, experiencias y soluciones que definen el futuro digital.
-        </p>
-      </div>
-    </article>
-  );
-}

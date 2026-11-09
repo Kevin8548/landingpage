@@ -1,6 +1,17 @@
 import { supabase } from "../lib/supabase";
 import type { EventItem, Category } from "../data/eventos";
 
+type EventRecord = {
+  id: string;
+  fecha_inicio: string | null;
+  titulo: string | null;
+  descripcion: string | null;
+  lugar: string;
+  tipo: string;
+  imagen_url: string | null;
+  link_registro: string | null;
+};
+
 export async function getEventsFromSupabase(): Promise<EventItem[]> {
   const { data, error } = await supabase
     .from("events")
@@ -13,7 +24,8 @@ export async function getEventsFromSupabase(): Promise<EventItem[]> {
   }
 
   // Transformamos los datos de Supabase al formato que espera tu Landing Page
-  return data.map((row: any): EventItem => {
+  const rows = data as unknown as EventRecord[];
+  return rows.map((row): EventItem => {
     let dateStr = "2026-01-01";
     let timeStr = "12:00";
 
@@ -27,7 +39,7 @@ export async function getEventsFromSupabase(): Promise<EventItem[]> {
           // guardado terminara con “Invalid time value”.
           timeStr = `${String(fecha.getHours()).padStart(2, "0")}:${String(fecha.getMinutes()).padStart(2, "0")}`;
         }
-      } catch (e) {
+      } catch {
         console.error("Fecha inválida en evento:", row.id);
       }
     }

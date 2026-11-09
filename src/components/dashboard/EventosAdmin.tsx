@@ -18,7 +18,7 @@ import {
 } from "react-icons/fi";
 import { CATEGORY_META, CATEGORY_ORDER, type Category, type EventItem } from "../../data/eventos";
 import { useEventosStore, type EventTextField } from "../../data/eventosStore";
-import { useConfirm } from "../ui/ConfirmDialog";
+import { useConfirm } from "../ui/useConfirm";
 import PreviewMenu from "../ui/PreviewMenu";
 import { showDashboardAlert } from "../../lib/dashboardAlerts";
 import DashboardSelect from "./DashboardSelect";
@@ -292,26 +292,6 @@ const EventCard = ({
   const Icon = meta.icon;
   const days = daysUntil(event.date);
   const isPast = days < 0;
-
-  const dateInputRef = useRef<HTMLInputElement>(null);
-  const timeInputRef = useRef<HTMLInputElement>(null);
-
-  const [localDate, setLocalDate] = useState(event.date);
-  const [isDateFocused, setIsDateFocused] = useState(false);
-
-  useEffect(() => {
-    if (!isDateFocused) setLocalDate(event.date);
-  }, [event.date, isDateFocused]);
-
-  const openPicker = (ref: typeof dateInputRef) => {
-    const input = ref.current;
-    if (!input) return;
-    try {
-      input.showPicker?.();
-    } catch {
-      input.focus();
-    }
-  };
 
   return (
     <article
@@ -608,7 +588,6 @@ export default function EventosAdmin({ allowEditing = true }: { allowEditing?: b
     updateEventCategory,
     updateEventImage,
     deleteEvent: storeDeleteEvent,
-    saveEvent,
     saveEvents,
     saveEventImage,
     reloadEvents,
@@ -657,19 +636,16 @@ export default function EventosAdmin({ allowEditing = true }: { allowEditing?: b
     return Array.from(map.values()).sort((a, b) => a.key.localeCompare(b.key));
   }, [filtered]);
 
-  useEffect(() => {
-    setActiveMonth((prev) => {
-      if (groups.length === 0) return null;
-      return prev && groups.some((g) => g.key === prev) ? prev : groups[0].key;
-    });
-  }, [groups]);
+  const displayActiveMonth = groups.some((group) => group.key === activeMonth)
+    ? activeMonth
+    : groups[0]?.key ?? null;
 
   useEffect(() => {
-    if (!activeMonth) return;
+    if (!displayActiveMonth) return;
     const opts: ScrollIntoViewOptions = { behavior: reduceMotion ? "auto" : "smooth", inline: "center", block: "nearest" };
-    mobileNavRefs.current.get(activeMonth)?.scrollIntoView(opts);
-    desktopNavRefs.current.get(activeMonth)?.scrollIntoView(opts);
-  }, [activeMonth, reduceMotion, mobileNavRefs, desktopNavRefs]);
+    mobileNavRefs.current.get(displayActiveMonth)?.scrollIntoView(opts);
+    desktopNavRefs.current.get(displayActiveMonth)?.scrollIntoView(opts);
+  }, [displayActiveMonth, reduceMotion, mobileNavRefs, desktopNavRefs]);
 
   useEffect(() => {
     const targets = Array.from(sectionRefs.current.values());
@@ -1043,7 +1019,7 @@ export default function EventosAdmin({ allowEditing = true }: { allowEditing?: b
             <div className="mx-auto max-w-6xl px-6 sm:px-8 lg:hidden">
               <div className="-mx-1 mb-6 flex gap-2 overflow-x-auto px-1 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {groups.map((g) => {
-                  const isActive = g.key === activeMonth;
+                  const isActive = g.key === displayActiveMonth;
                   return (
                     <button
                       key={g.key}
@@ -1132,7 +1108,7 @@ export default function EventosAdmin({ allowEditing = true }: { allowEditing?: b
                   <nav className="sticky top-24 flex flex-col gap-1 border-l border-[var(--line)] pl-4">
                     <span className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--muted)]">Ir al mes</span>
                     {groups.map((g) => {
-                      const isActive = g.key === activeMonth;
+                      const isActive = g.key === displayActiveMonth;
                       return (
                         <button
                           key={g.key}

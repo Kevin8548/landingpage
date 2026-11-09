@@ -202,26 +202,25 @@ function SequentialProfileAccordion({ panels }: { panels: Panel[] }) {
     (total, panel) => total + getPanelScrollWeight(panel),
     0,
   );
-  let cursor = 0;
+  const ranges = panels.reduce<{ start: number; end: number }[]>((result, panel) => {
+    const start = result.at(-1)?.end ?? 0;
+    const end = start + getPanelScrollWeight(panel) / totalWeight;
+    return [...result, { start, end }];
+  }, []);
 
   return (
     <div ref={ref} className="relative" style={{ height: `${panels.length * 100}vh` }}>
       <div className="sticky top-0 flex h-screen items-stretch gap-3 overflow-hidden px-6 py-24 md:px-16">
-        {panels.map((panel, index) => {
-          const start = cursor;
-          cursor += getPanelScrollWeight(panel) / totalWeight;
-
-          return (
+        {panels.map((panel, index) => (
             <SequentialPanel
               key={panel.id}
               panel={panel}
-              start={start}
-              end={cursor}
+              start={ranges[index].start}
+              end={ranges[index].end}
               isLast={index === panels.length - 1}
               scrollYProgress={scrollYProgress}
             />
-          );
-        })}
+          ))}
       </div>
     </div>
   );

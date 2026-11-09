@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3, Download, Pencil, Plus, RefreshCw, Trash2, Users, X } from "lucide-react";
-import * as XLSX from "xlsx-js-style";
 import { listAdminEventWorkshops, listWorkshopAttendees, removeWorkshop, saveWorkshop, type Workshop, type WorkshopAttendee, type WorkshopInput } from "../../services/workshops";
 import { showDashboardAlert } from "../../lib/dashboardAlerts";
 import { userFacingError } from "../../lib/userFacingErrors";
@@ -167,7 +166,8 @@ export default function WorkshopManager({ eventId, eventTitle, eventDate, eventT
     finally { setAttendeeLoading(""); }
   };
 
-  const exportAttendees = (item: Workshop, rows: WorkshopAttendee[]) => {
+  const exportAttendees = async (item: Workshop, rows: WorkshopAttendee[]) => {
+    const XLSX = await import("xlsx-js-style");
     const headers = ["Matrícula", "Nombre completo", "Carrera", "Grado", "Grupo", "Folio", "Fecha de inscripción"];
     const data = rows.map((row) => [
       row.matricula ?? "",
@@ -213,7 +213,7 @@ export default function WorkshopManager({ eventId, eventTitle, eventDate, eventT
 
       {attendeeWorkshop && createPortal(<div className="dashboard-modal-backdrop dashboard-modal-backdrop--nested dashboard-workshop-attendees-backdrop" role="presentation" onMouseDown={() => setAttendeeWorkshop(null)}><section className="dashboard-modal dashboard-modal--workshop-attendees" role="dialog" aria-modal="true" aria-labelledby="workshop-attendees-title" onMouseDown={(event) => event.stopPropagation()}>
         <div className="dashboard-modal__header"><div><p className="dashboard-eyebrow">LISTA DE INSCRITOS</p><h2 id="workshop-attendees-title">{attendeeWorkshop.titulo}</h2><p className="dashboard-workshop-subtitle">{eventTitle} · {attendees[attendeeWorkshop.id]?.length ?? 0} {(attendees[attendeeWorkshop.id]?.length ?? 0) === 1 ? "alumno inscrito" : "alumnos inscritos"}</p></div><button type="button" onClick={() => setAttendeeWorkshop(null)} aria-label="Cerrar lista"><X size={20}/></button></div>
-        <div className="dashboard-workshop-attendees__toolbar"><button type="button" disabled={attendeeLoading === attendeeWorkshop.id} onClick={() => void refreshAttendees(attendeeWorkshop.id)}><RefreshCw size={15}/>{attendeeLoading === attendeeWorkshop.id ? "Actualizando…" : "Actualizar lista"}</button><button type="button" disabled={!attendees[attendeeWorkshop.id]?.length} onClick={() => exportAttendees(attendeeWorkshop, attendees[attendeeWorkshop.id] ?? [])}><Download size={15}/>Descargar Excel</button></div>
+        <div className="dashboard-workshop-attendees__toolbar"><button type="button" disabled={attendeeLoading === attendeeWorkshop.id} onClick={() => void refreshAttendees(attendeeWorkshop.id)}><RefreshCw size={15}/>{attendeeLoading === attendeeWorkshop.id ? "Actualizando…" : "Actualizar lista"}</button><button type="button" disabled={!attendees[attendeeWorkshop.id]?.length} onClick={() => void exportAttendees(attendeeWorkshop, attendees[attendeeWorkshop.id] ?? []).catch((reason) => { void showDashboardAlert({ icon: "error", title: "No se pudo descargar la lista", text: userFacingError(reason, "Inténtalo nuevamente en unos momentos.") }); })}><Download size={15}/>Descargar lista</button></div>
         <div className="dashboard-workshop-attendees__list" aria-live="polite">{attendeeLoading === attendeeWorkshop.id && !attendees[attendeeWorkshop.id] ? <p className="dashboard-workshop-attendees__empty">Cargando alumnos inscritos…</p> : !attendees[attendeeWorkshop.id]?.length ? <p className="dashboard-workshop-attendees__empty">Aún no hay alumnos inscritos en este taller.</p> : attendees[attendeeWorkshop.id].map((row) => <article key={row.id}><div><strong>{[row.nombre, row.apellido_paterno, row.apellido_materno].filter(Boolean).join(" ") || "Alumno"}</strong><span>{row.matricula || "Matrícula no disponible"}{row.carrera ? ` · ${row.carrera}` : ""}</span><span>{row.grado ? `${row.grado}°` : "Grado no disponible"}{row.grupo ? ` · Grupo ${row.grupo}` : " · Grupo no disponible"}{row.folio ? ` · Folio ${row.folio}` : " · Sin folio asignado"}</span></div><time dateTime={row.created_at}>{new Intl.DateTimeFormat("es-MX", { dateStyle: "medium" }).format(new Date(row.created_at))}</time></article>)}</div>
         <div className="dashboard-modal__footer"><button type="button" onClick={() => setAttendeeWorkshop(null)}>Cerrar</button></div>
       </section></div>, document.body)}

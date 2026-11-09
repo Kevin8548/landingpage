@@ -19,6 +19,7 @@ import {
   updateInstitutionInSupabase,
   deleteInstitutionInSupabase,
 } from "../services/aspirantesQueries";
+import { omitKeys } from "../lib/omitKeys";
 
 const STORAGE_KEY = "utt_aspirantes_v1";
 
@@ -145,7 +146,7 @@ export function useAspirantesStore() {
     const current = dataRef.current.dateItems.find((d) => d.id === id);
     if (!current) return;
     try {
-      const { id: _omit, ...rest } = current;
+      const rest = omitKeys(current, "id");
       await updateDateInSupabase(id, rest);
     } catch (err) {
       console.error("No se pudo guardar la fecha:", err);
@@ -196,7 +197,7 @@ export function useAspirantesStore() {
     const current = dataRef.current.institutionItems.find((it) => it.id === id);
     if (!current) return;
     try {
-      const { id: _omit, ...rest } = current;
+      const rest = omitKeys(current, "id");
       await updateInstitutionInSupabase(id, rest);
     } catch (err) {
       console.error("No se pudo guardar la institución:", err);
@@ -220,7 +221,7 @@ export function useAspirantesStore() {
       const current = dataRef.current.institutionItems.find((it) => it.id === id);
       if (!current) return;
       try {
-        const { id: _omit, ...rest } = current;
+        const rest = omitKeys(current, "id");
         const { logo_url } = await updateInstitutionInSupabase(id, rest, { logoDataUrl, removeLogo });
         commit((prev) => ({
           ...prev,

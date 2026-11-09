@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from "react";
 import { getEventsFromSupabase } from "../../services/queries";
 import { events as seedEvents, type EventItem } from "../../data/eventos";
-import { MessageSquare, X, Send, Bot, Sparkles, RefreshCw, ChevronRight } from "lucide-react";
+import { X, Send, Bot, Sparkles, RefreshCw, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { handleUserMessage, type QuizState, type BotAction } from "./chatbotEngine";
 
@@ -86,7 +86,7 @@ interface ChatMessage {
         if (!text) return;
 
         const userMsg: ChatMessage = {
-        id: "u-" + Date.now(),
+        id: `u-${crypto.randomUUID()}`,
         sender: "user",
         text,
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -178,7 +178,7 @@ interface ChatMessage {
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-teal-200"></span>
                 </span>
             </div>
-            <span className="text-sm font-bold tracking-wide hidden sm:inline">
+            <span className="text-sm font-bold tracking-wide hidden lg:inline">
                 Asistente Virtual
             </span>
             </button>

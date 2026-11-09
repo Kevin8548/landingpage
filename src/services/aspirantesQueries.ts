@@ -41,7 +41,7 @@ export async function getDatesFromSupabase(): Promise<KeyDate[]> {
     return [];
   }
 
-  return data.map((row: any): KeyDate => ({
+  return data.map((row: { id: string; titulo: string; descripcion: string; fecha: string }): KeyDate => ({
     id: row.id,
     title: row.titulo,
     description: row.descripcion,
@@ -60,7 +60,7 @@ export async function getInstitutionsFromSupabase(): Promise<Institution[]> {
     return [];
   }
 
-  return data.map((row: any): Institution => ({
+  return data.map((row: { id: string; nombre: string; descripcion: string; logo_url: string | null }): Institution => ({
     id: row.id,
     name: row.nombre,
     description: row.descripcion,

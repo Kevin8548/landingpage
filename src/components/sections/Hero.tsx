@@ -3,6 +3,7 @@
 import type React from "react";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import "./Hero.css";
+import ParticleMorph from "./ParticleMorph";
 
 function SocialIcon({ children }: { children: ReactNode }) {
   return <svg viewBox="0 0 24 24" aria-hidden="true">{children}</svg>;
@@ -58,58 +59,6 @@ const TERMINAL_SLIDES: TerminalSlide[] = [
   { key: "entornos", label: "Entornos Virtuales" },
 ];
 
-function SlideVisual({ kind }: { kind: TerminalSlide["key"] }) {
-  if (kind === "software") {
-    return (
-      <div className="term-carousel__window">
-        <div className="term-carousel__bar"><span className="term-carousel__dot term-carousel__dot--r" /><span className="term-carousel__dot term-carousel__dot--y" /><span className="term-carousel__dot term-carousel__dot--g" /><span className="term-carousel__title">tiid@utt — software</span></div>
-        <div className="term-carousel__body">
-          <div><span className="term-carousel__prompt">$</span> npm run build <span className="term-carousel__path">--software</span></div>
-          <div><span className="term-carousel__muted">→</span> compilando módulos ... <span className="term-carousel__ok">OK</span></div>
-          <div><span className="term-carousel__muted">→</span> optimizando bundle ... <span className="term-carousel__ok">OK</span></div>
-          <div className="term-carousel__success">✓ SOFTWARE LISTO</div>
-          <div><span className="term-carousel__prompt">$</span> <span className="term-carousel__cursor" /></div>
-        </div>
-      </div>
-    );
-  }
-
-  if (kind === "entornos") {
-    return (
-      <div className="specialty-visual specialty-visual--virtual">
-        <span className="specialty-visual__eyebrow">LABORATORIO VIRTUAL</span>
-        <svg viewBox="0 0 360 290" role="img" aria-label="Cubos tridimensionales de un entorno virtual">
-          <defs>
-            <linearGradient id="cubeTop" x1="0" x2="1"><stop stopColor="#d9ffdf" stopOpacity=".9" /><stop offset="1" stopColor="#2ecc71" stopOpacity=".42" /></linearGradient>
-            <linearGradient id="cubeLeft" x1="0" x2="1"><stop stopColor="#1a823f" /><stop offset="1" stopColor="#0c3d20" /></linearGradient>
-            <linearGradient id="cubeRight" x1="0" x2="1"><stop stopColor="#2ecc71" /><stop offset="1" stopColor="#145c31" /></linearGradient>
-            <filter id="cubeGlow"><feGaussianBlur stdDeviation="5" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-          </defs>
-          <g className="virtual-grid"><path d="M35 224 180 146l145 78-145 50Z" /><path d="M65 232 180 169l115 63M105 246l75-42 75 42M180 146v128M115 181v86M245 181v86" /></g>
-          <g className="virtual-cube virtual-cube--back"><path d="m179 55 53 29-53 29-53-29Z" fill="url(#cubeTop)" /><path d="m126 84 53 29v61l-53-29Z" fill="url(#cubeLeft)" /><path d="m232 84-53 29v61l53-29Z" fill="url(#cubeRight)" /></g>
-          <g className="virtual-cube virtual-cube--front" filter="url(#cubeGlow)"><path d="m179 115 69 38-69 38-69-38Z" fill="url(#cubeTop)" /><path d="m110 153 69 38v76l-69-38Z" fill="url(#cubeLeft)" /><path d="m248 153-69 38v76l69-38Z" fill="url(#cubeRight)" /><path d="M179 209v35M145 172l34 19 34-19" fill="none" stroke="rgba(255,255,255,.48)" /></g>
-          <circle className="virtual-orbit" cx="179" cy="154" r="113" /><circle className="virtual-pulse" cx="285" cy="113" r="5" /><circle className="virtual-pulse virtual-pulse--two" cx="72" cy="196" r="4" />
-        </svg>
-        <div className="specialty-visual__caption"><span>VM</span><span>CONTENEDORES</span><span>CLOUD</span></div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="specialty-visual specialty-visual--network">
-      <span className="specialty-visual__eyebrow">RED SEGURA</span>
-      <svg viewBox="0 0 360 290" role="img" aria-label="Escudo de ciberseguridad conectado a una red">
-        <defs><linearGradient id="shieldFill" x1="0" x2="1"><stop stopColor="#2ecc71" stopOpacity=".52" /><stop offset="1" stopColor="#ffb703" stopOpacity=".3" /></linearGradient><filter id="networkGlow"><feGaussianBlur stdDeviation="4" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs>
-        <g className="network-lines"><path d="M45 74 124 119M42 210l86-38M311 74l-80 45M315 210l-85-38M70 143h61M230 143h61" /><path d="M45 74v136M315 74v136" /></g>
-        <g className="network-node"><circle cx="45" cy="74" r="9" /><circle cx="42" cy="210" r="9" /><circle cx="315" cy="74" r="9" /><circle cx="315" cy="210" r="9" /><circle cx="70" cy="143" r="7" /><circle cx="291" cy="143" r="7" /></g>
-        <g filter="url(#networkGlow)"><path className="shield" d="M180 52c28 24 60 27 60 27v60c0 48-30 76-60 93-30-17-60-45-60-93V79s32-3 60-27Z" fill="url(#shieldFill)" /><path className="shield-outline" d="M180 52c28 24 60 27 60 27v60c0 48-30 76-60 93-30-17-60-45-60-93V79s32-3 60-27Z" /><rect x="153" y="126" width="54" height="43" rx="8" className="lock" /><path className="lock" d="M164 126v-13c0-21 32-21 32 0v13M180 140v14" /></g>
-        <circle className="network-ring" cx="180" cy="143" r="116" />
-      </svg>
-      <div className="specialty-visual__caption"><span>ENLACES</span><span>DEFENSA</span><span>MONITOREO</span></div>
-    </div>
-  );
-}
-
 /**
  * Etiquetas que flotan alrededor del dibujo, una por especialidad.
  * Quedan siempre estáticas: iluminadas y flotando todo el tiempo, sin
@@ -131,22 +80,15 @@ function FloatingLabels() {
   );
 }
 
+/* Los dibujos ahora son una nube de puntos que se transforma sola
+   (nudo → red → cubo). Ver ParticleMorph.tsx. */
 function TerminalCarousel() {
-  const [slideIndex, setSlideIndex] = useState(0);
-  const [fading, setFading] = useState(false);
-
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const hold = window.setTimeout(() => setFading(true), 3600);
-    const change = window.setTimeout(() => { setSlideIndex((index) => (index + 1) % TERMINAL_SLIDES.length); setFading(false); }, 3920);
-    return () => { window.clearTimeout(hold); window.clearTimeout(change); };
-  }, [slideIndex]);
-
-  const active = TERMINAL_SLIDES[slideIndex];
-  return <div className="term-carousel" aria-hidden="true">
-    <FloatingLabels />
-    <div className={`term-carousel__visual${fading ? " term-carousel__visual--fading" : ""}`}><SlideVisual kind={active.key} /></div>
-  </div>;
+  return (
+    <div className="term-carousel" aria-hidden="true">
+      <FloatingLabels />
+      <ParticleMorph />
+    </div>
+  );
 }
 
 
@@ -527,12 +469,14 @@ export default function Hero() {
               <span className="fill size color">de la</span>
               <span className="fill size">Información</span>
               </span>
-            <span className="hero__title-row row-2">
+            <span className="hero__title-row row-2 hero__title-row--final">
               <span className="thin dif-e diference">e</span>
-              <span className="fill accent underline diference hero__title-plus">
-                Innovación
+              <span className="hero__title-pair">
+                <span className="fill accent underline diference hero__title-plus">
+                  Innovación
+                </span>
+                <span className="fill underline thin-2">Digital</span>
               </span>
-              <span className="fill underline thin-2">Digital</span>
             </span>
           </h1>
 
@@ -572,7 +516,6 @@ export default function Hero() {
     <span className="blob blob1"></span>
     <span className="blob blob2"></span>
     <span className="blob blob3"></span>
-
     <span className="hero__scroll-arrow">
       ↓
     </span>

@@ -62,6 +62,8 @@ export default function AdminAccounts() {
     }
   }, []);
 
+  // Starts an async request; visible state changes after the service responds.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { void refreshAccounts(); }, [refreshAccounts]);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {

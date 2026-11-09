@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import { CircleUserRound } from "lucide-react";
 import {
   FaFacebookF,
   FaInstagram,
