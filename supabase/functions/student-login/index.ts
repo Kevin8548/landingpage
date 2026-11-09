@@ -8,7 +8,7 @@ Deno.serve(async (request) => {
   if (request.method !== "POST") return Response.json({ error: "Método no permitido." }, { status: 405, headers: corsHeaders });
   try {
     const body = await request.json();
-    const matricula = String(body?.matricula ?? "").trim();
+    const matricula = String(body?.matricula ?? "").trim().toUpperCase();
     const password = body?.password;
     if (!/^[A-Za-z0-9-]{4,24}$/.test(matricula) || typeof password !== "string" || password.length === 0 || password.length > 128) return invalidCredentials();
 
@@ -22,6 +22,16 @@ Deno.serve(async (request) => {
       return Response.json({ error: "No se pudo consultar el padrón. Inténtalo de nuevo en unos minutos." }, { status: 500, headers: corsHeaders });
     }
     if (profile?.role !== "student") return invalidCredentials();
+    const { data: rosterEntry, error: rosterError } = await admin.from("padron_alumnos")
+      .select("id")
+      .ilike("matricula", matricula)
+      .eq("registrado", true)
+      .maybeSingle();
+    if (rosterError) {
+      console.error("Error verificando que la matrícula siga en el padrón:", rosterError);
+      return Response.json({ error: "No se pudo verificar el padrón. Inténtalo de nuevo en unos minutos." }, { status: 500, headers: corsHeaders });
+    }
+    if (!rosterEntry) return invalidCredentials();
     const { data: userResult, error: userError } = await admin.auth.admin.getUserById(profile.id);
     const email = userResult.user?.email;
     if (userError || !email) {

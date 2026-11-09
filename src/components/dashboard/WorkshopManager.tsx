@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3, Pencil, Plus, Trash2, Users, X } from "lucide-react";
-import { listEventWorkshops, listWorkshopAttendees, removeWorkshop, saveWorkshop, type Workshop, type WorkshopInput } from "../../services/workshops";
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3, Download, Pencil, Plus, RefreshCw, Trash2, Users, X } from "lucide-react";
+import { listAdminEventWorkshops, listWorkshopAttendees, removeWorkshop, saveWorkshop, type Workshop, type WorkshopInput } from "../../services/workshops";
 import { showDashboardAlert } from "../../lib/dashboardAlerts";
 import { userFacingError } from "../../lib/userFacingErrors";
 
@@ -22,6 +22,7 @@ const dateTimeValue = (eventDate: string, eventTime: string) => {
   return Number.isNaN(start.getTime()) ? asLocalDateTime(new Date()) : asLocalDateTime(start);
 };
 const displayTime = (value: string) => new Intl.DateTimeFormat("es-MX", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(value));
+const csvCell = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
 
 function WorkshopDateTimeField({ name, defaultValue }: { name: string; defaultValue: string }) {
   const [date, setDate] = useState(defaultValue.slice(0, 10));
@@ -52,11 +53,13 @@ function WorkshopDateTimeField({ name, defaultValue }: { name: string; defaultVa
 export default function WorkshopManager({ eventId, eventTitle, eventDate, eventTime, onClose }: WorkshopManagerProps) {
   const [items, setItems] = useState<Workshop[]>([]);
   const [attendees, setAttendees] = useState<Record<string, Attendee[]>>({});
+  const [attendeeWorkshop, setAttendeeWorkshop] = useState<Workshop | null>(null);
   const [attendeeLoading, setAttendeeLoading] = useState("");
   const [deleting, setDeleting] = useState("");
   const [editing, setEditing] = useState<Workshop | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const startDefault = useMemo(() => dateTimeValue(eventDate, eventTime), [eventDate, eventTime]);
@@ -67,7 +70,9 @@ export default function WorkshopManager({ eventId, eventTitle, eventDate, eventT
   }, [startDefault]);
 
   const refresh = useCallback(async () => {
-    setItems(await listEventWorkshops(eventId));
+    setItems(await listAdminEventWorkshops(eventId));
+    setLoadFailed(false);
+    setError("");
   }, [eventId]);
 
   useEffect(() => {
@@ -80,10 +85,10 @@ export default function WorkshopManager({ eventId, eventTitle, eventDate, eventT
     let active = true;
     const load = async () => {
       try {
-        const rows = await listEventWorkshops(eventId);
-        if (active) setItems(rows);
+        const rows = await listAdminEventWorkshops(eventId);
+        if (active) { setItems(rows); setLoadFailed(false); }
       } catch (reason) {
-        if (active) setError(userFacingError(reason, "No se pudieron cargar los talleres. Revisa tu conexión e inténtalo de nuevo."));
+        if (active) { setLoadFailed(true); setError(userFacingError(reason, "No se pudieron cargar los talleres. Revisa tu conexión e inténtalo de nuevo.")); }
       } finally {
         if (active) setLoading(false);
       }
@@ -98,12 +103,13 @@ export default function WorkshopManager({ eventId, eventTitle, eventDate, eventT
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         if (showForm) setShowForm(false);
+        else if (attendeeWorkshop) setAttendeeWorkshop(null);
         else onClose();
       }
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [onClose, showForm]);
+  }, [attendeeWorkshop, onClose, showForm]);
 
   const openNew = () => { setEditing(null); setError(""); setShowForm(true); };
   const openEdit = (item: Workshop) => { setEditing(item); setError(""); setShowForm(true); };
@@ -152,28 +158,56 @@ export default function WorkshopManager({ eventId, eventTitle, eventDate, eventT
     finally { setDeleting(""); }
   };
 
-  const toggleAttendees = async (id: string) => {
-    if (attendees[id]) { setAttendees((current) => { const next = { ...current }; delete next[id]; return next; }); return; }
-    setAttendeeLoading(id); setError("");
-    try { const rows = await listWorkshopAttendees(id) as unknown as Attendee[]; setAttendees((current) => ({ ...current, [id]: rows })); }
+  const openAttendees = async (item: Workshop) => {
+    setAttendeeLoading(item.id); setError("");
+    try { const rows = await listWorkshopAttendees(item.id) as unknown as Attendee[]; setAttendees((current) => ({ ...current, [item.id]: rows })); setAttendeeWorkshop(item); }
     catch (reason) { setError(userFacingError(reason, "No se pudieron consultar los alumnos inscritos. Revisa tu conexión e inténtalo de nuevo.")); }
     finally { setAttendeeLoading(""); }
+  };
+
+  const refreshAttendees = async (id: string) => {
+    setAttendeeLoading(id); setError("");
+    try { const rows = await listWorkshopAttendees(id) as unknown as Attendee[]; setAttendees((current) => ({ ...current, [id]: rows })); }
+    catch (reason) { setError(userFacingError(reason, "No se pudo actualizar la lista de inscritos. Inténtalo de nuevo.")); }
+    finally { setAttendeeLoading(""); }
+  };
+
+  const exportAttendees = (item: Workshop, rows: Attendee[]) => {
+    const header = ["Matrícula", "Nombre completo", "Carrera", "Fecha de inscripción"];
+    const values = rows.map((row) => [
+      row.profiles?.matricula,
+      row.profiles ? [row.profiles.nombre, row.profiles.apellido_paterno, row.profiles.apellido_materno].filter(Boolean).join(" ") : "Alumno",
+      row.profiles?.carrera,
+      new Intl.DateTimeFormat("es-MX", { dateStyle: "short", timeStyle: "short" }).format(new Date(row.created_at)),
+    ]);
+    const csv = [header, ...values].map((line) => line.map(csvCell).join(",")).join("\r\n");
+    const url = URL.createObjectURL(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `inscritos-${item.titulo.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase() || "taller"}.csv`;
+    document.body.append(link); link.click(); link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
   };
 
   return <div className="dashboard-modal-backdrop dashboard-workshop-backdrop" role="presentation" onMouseDown={onClose}>
     <section className="dashboard-modal dashboard-modal--workshop-manager" role="dialog" aria-modal="true" aria-labelledby="workshop-manager-title" onMouseDown={(event) => event.stopPropagation()}>
       <div className="dashboard-modal__header"><div><p className="dashboard-eyebrow">TALLERES DEL EVENTO</p><h2 id="workshop-manager-title">{eventTitle}</h2><p className="dashboard-workshop-subtitle">Administra horarios, cupos y asistentes desde el mismo evento.</p></div><button type="button" onClick={onClose} aria-label="Cerrar"><X size={20}/></button></div>
-      {error && !showForm && <p role="alert" className="dashboard-workshop-error">{error}</p>}
+      {error && !showForm && !loadFailed && <p role="alert" className="dashboard-workshop-error">{error}</p>}
       <div className="dashboard-workshop-list" aria-busy={loading}>
-        {loading ? <div className="dashboard-workshop-loading" aria-live="polite">Cargando talleres…</div> : items.length === 0 ? <div className="dashboard-workshop-empty"><CalendarDays size={25}/><strong>Este evento aún no tiene talleres</strong><span>Agrega actividades aquí. Solo los alumnos con sesión autorizada podrán verlas e inscribirse.</span><button type="button" className="dashboard-primary-button" onClick={openNew}><Plus size={16}/>Agregar primer taller</button></div> : items.map((item) => (
+        {loading ? <div className="dashboard-workshop-loading" aria-live="polite">Cargando talleres…</div> : loadFailed ? <div className="dashboard-workshop-empty"><CalendarDays size={25}/><strong>No pudimos cargar los talleres</strong><span>{error || "Revisa tu conexión e inténtalo de nuevo."}</span><button type="button" className="dashboard-primary-button" onClick={() => { setLoading(true); setError(""); void refresh().catch((reason) => { setLoadFailed(true); setError(userFacingError(reason, "No se pudieron cargar los talleres. Inténtalo de nuevo.")); }).finally(() => setLoading(false)); }}><RefreshCw size={15}/>Reintentar</button></div> : items.length === 0 ? <div className="dashboard-workshop-empty"><CalendarDays size={25}/><strong>Este evento aún no tiene talleres</strong><span>Agrega actividades aquí. Solo los alumnos con sesión autorizada podrán verlas e inscribirse.</span><button type="button" className="dashboard-primary-button" onClick={openNew}><Plus size={16}/>Agregar primer taller</button></div> : items.map((item) => (
           <article className="dashboard-workshop-row" key={item.id}>
-            <div className="dashboard-workshop-row__main"><div><h3>{item.titulo}</h3><p>{item.ponente || "Ponente por confirmar"} · {item.lugar}</p><small>{displayTime(item.inicia_en)} – {new Intl.DateTimeFormat("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(item.termina_en))}</small></div><span className="dashboard-workshop-seats">{item.ocupados} / {item.capacidad} inscritos</span></div>
-            <div className="dashboard-workshop-row__actions"><button type="button" disabled={Boolean(attendeeLoading || deleting)} onClick={() => void toggleAttendees(item.id)}><Users size={15}/>{attendeeLoading === item.id ? "Cargando…" : attendees[item.id] ? "Ocultar alumnos" : "Ver inscritos"}</button><button type="button" disabled={Boolean(deleting)} onClick={() => openEdit(item)}><Pencil size={15}/>Editar</button><button type="button" className="is-danger" disabled={Boolean(deleting)} onClick={() => void deleteItem(item)}><Trash2 size={15}/>{deleting === item.id ? "Eliminando…" : "Eliminar"}</button></div>
-            {attendees[item.id] && <div className="dashboard-workshop-attendees">{attendees[item.id].length === 0 ? <p>Aún no hay alumnos inscritos.</p> : attendees[item.id].map((row) => <p key={row.id}><strong>{row.profiles ? `${row.profiles.nombre} ${row.profiles.apellido_paterno} ${row.profiles.apellido_materno ?? ""}` : "Alumno"}</strong><span>{row.profiles?.matricula} · {row.profiles?.carrera}</span></p>)}</div>}
+            <div className="dashboard-workshop-row__main"><div><h3>{item.titulo}</h3><p>{item.ponente || "Ponente por confirmar"} · {item.lugar}</p><small>{displayTime(item.inicia_en)} – {new Intl.DateTimeFormat("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(item.termina_en))}</small></div>{Number(item.ocupados) >= Number(item.capacidad) ? <span className="dashboard-workshop-seats is-full">Lleno · {item.ocupados} / {item.capacidad}</span> : <span className="dashboard-workshop-seats">{Math.max(0, item.capacidad - Number(item.ocupados))} lugares disponibles · {item.ocupados} / {item.capacidad}</span>}</div>
+            <div className="dashboard-workshop-row__actions"><button type="button" disabled={Boolean(attendeeLoading || deleting)} onClick={() => void openAttendees(item)}><Users size={15}/>{attendeeLoading === item.id ? "Cargando…" : "Ver inscritos"}</button><button type="button" disabled={Boolean(deleting)} onClick={() => openEdit(item)}><Pencil size={15}/>Editar</button><button type="button" className="is-danger" disabled={Boolean(deleting)} onClick={() => void deleteItem(item)}><Trash2 size={15}/>{deleting === item.id ? "Eliminando…" : "Eliminar"}</button></div>
           </article>
         ))}
       </div>
       {items.length > 0 && <div className="dashboard-modal__footer"><button type="button" onClick={onClose}>Cerrar</button><button type="button" className="dashboard-primary-button" onClick={openNew}><Plus size={17}/>Agregar taller</button></div>}
+
+      {attendeeWorkshop && createPortal(<div className="dashboard-modal-backdrop dashboard-modal-backdrop--nested dashboard-workshop-attendees-backdrop" role="presentation" onMouseDown={() => setAttendeeWorkshop(null)}><section className="dashboard-modal dashboard-modal--workshop-attendees" role="dialog" aria-modal="true" aria-labelledby="workshop-attendees-title" onMouseDown={(event) => event.stopPropagation()}>
+        <div className="dashboard-modal__header"><div><p className="dashboard-eyebrow">LISTA DE INSCRITOS</p><h2 id="workshop-attendees-title">{attendeeWorkshop.titulo}</h2><p className="dashboard-workshop-subtitle">{eventTitle} · {attendees[attendeeWorkshop.id]?.length ?? 0} {(attendees[attendeeWorkshop.id]?.length ?? 0) === 1 ? "alumno inscrito" : "alumnos inscritos"}</p></div><button type="button" onClick={() => setAttendeeWorkshop(null)} aria-label="Cerrar lista"><X size={20}/></button></div>
+        <div className="dashboard-workshop-attendees__toolbar"><button type="button" disabled={attendeeLoading === attendeeWorkshop.id} onClick={() => void refreshAttendees(attendeeWorkshop.id)}><RefreshCw size={15}/>{attendeeLoading === attendeeWorkshop.id ? "Actualizando…" : "Actualizar lista"}</button><button type="button" disabled={!attendees[attendeeWorkshop.id]?.length} onClick={() => exportAttendees(attendeeWorkshop, attendees[attendeeWorkshop.id] ?? [])}><Download size={15}/>Exportar CSV</button></div>
+        <div className="dashboard-workshop-attendees__list" aria-live="polite">{attendeeLoading === attendeeWorkshop.id && !attendees[attendeeWorkshop.id] ? <p className="dashboard-workshop-attendees__empty">Cargando alumnos inscritos…</p> : !attendees[attendeeWorkshop.id]?.length ? <p className="dashboard-workshop-attendees__empty">Aún no hay alumnos inscritos en este taller.</p> : attendees[attendeeWorkshop.id].map((row) => <article key={row.id}><div><strong>{row.profiles ? [row.profiles.nombre, row.profiles.apellido_paterno, row.profiles.apellido_materno].filter(Boolean).join(" ") : "Alumno"}</strong><span>{row.profiles?.matricula || "Matrícula no disponible"}{row.profiles?.carrera ? ` · ${row.profiles.carrera}` : ""}</span></div><time dateTime={row.created_at}>{new Intl.DateTimeFormat("es-MX", { dateStyle: "medium" }).format(new Date(row.created_at))}</time></article>)}</div>
+        <div className="dashboard-modal__footer"><button type="button" onClick={() => setAttendeeWorkshop(null)}>Cerrar</button></div>
+      </section></div>, document.body)}
 
       {showForm && createPortal(<div className="dashboard-modal-backdrop dashboard-modal-backdrop--nested" role="presentation" onMouseDown={() => !saving && setShowForm(false)}><section className="dashboard-modal dashboard-modal--workshop" role="dialog" aria-modal="true" aria-labelledby="workshop-form-title" onMouseDown={(event) => event.stopPropagation()}>
         <div className="dashboard-modal__header"><div><p className="dashboard-eyebrow">{editing ? "EDITAR TALLER" : "NUEVA ACTIVIDAD"}</p><h2 id="workshop-form-title">{editing ? "Actualiza el taller" : "Añade un taller"}</h2></div><button type="button" onClick={() => !saving && setShowForm(false)} aria-label="Cerrar" disabled={saving}><X size={20}/></button></div>

@@ -43,6 +43,12 @@ export async function listEventWorkshops(eventId: string): Promise<Workshop[]> {
   return (data ?? []) as Workshop[];
 }
 
+export async function listAdminEventWorkshops(eventId: string): Promise<Workshop[]> {
+  const { data, error } = await supabase.rpc("list_event_workshops", { p_event_id: eventId });
+  if (error) throw new Error(explainWorkshopError(error.message));
+  return (data ?? []) as Workshop[];
+}
+
 export async function saveWorkshop(workshop: WorkshopInput) {
   const { id, ...values } = workshop;
   await manageWorkshop(id

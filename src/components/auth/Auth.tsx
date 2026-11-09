@@ -88,6 +88,7 @@ export default function Auth() {
   const [audience, setAudience] = useState<Audience | null>(initialAudience === "alumno" ? "student" : initialAudience === "admin" ? "admin" : null);
   const [mode, setMode] = useState<Mode>(params.get("activar") === "1" ? "activate" : "login");
   const [matricula, setMatricula] = useState("");
+  const [folio, setFolio] = useState("");
   const [email, setEmail] = useState("");
   const [fechaNacimiento, setFechaNacimiento] = useState("");
   const [password, setPassword] = useState("");
@@ -97,12 +98,13 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const chooseAudience = (next: Audience) => { setAudience(next); setMode("login"); setMatricula(""); setEmail(""); setPassword(""); setConfirmPassword(""); setMessage(null); };
+  const chooseAudience = (next: Audience) => { setAudience(next); setMode("login"); setMatricula(""); setFolio(""); setEmail(""); setPassword(""); setConfirmPassword(""); setMessage(null); };
   const returnTo = (() => { const next = params.get("returnTo"); return next?.startsWith("/") && !next.startsWith("//") ? next : "/"; })();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault(); setMessage(null); setLoading(true);
     const cleanMatricula = matricula.trim().toUpperCase();
+    const cleanFolio = folio.replace(/\s+/g, "").trim().toUpperCase();
     try {
       if (audience === "admin" && mode === "change-password") {
         if (password.length < 12) throw new Error("La nueva contraseña debe tener al menos 12 caracteres.");
@@ -114,19 +116,21 @@ export default function Auth() {
         return;
       }
       if (audience === "student" && mode === "activate") {
+        if (!/^[A-Z0-9-]{1,64}$/.test(cleanFolio)) throw new Error("Ingresa el folio que te entregó tu tutor.");
         if (!fechaNacimiento) throw new Error("Selecciona tu fecha de nacimiento.");
         if (password.length < 8) throw new Error("La contraseña debe tener al menos 8 caracteres.");
         if (password !== confirmPassword) throw new Error("Las contraseñas no coinciden.");
-        const { data: token, error: claimError } = await studentSupabase.rpc("prepare_student_activation", { p_matricula: cleanMatricula, p_fecha_nacimiento: fechaNacimiento });
+        const { data: token, error: claimError } = await studentSupabase.rpc("prepare_student_activation", { p_matricula: cleanMatricula, p_folio: cleanFolio, p_fecha_nacimiento: fechaNacimiento });
         if (claimError) {
           console.error("Error validando matrícula para activación:", claimError);
+          if (/ACTIVATION_RATE_LIMITED/i.test(claimError.message)) throw new Error("Se alcanzó el límite de intentos para esta matrícula. Espera una hora antes de volver a validarla.");
           throw new Error("No pudimos consultar el padrón ahora. Inténtalo más tarde o pide a tu tutor que revise el registro.");
         }
-        if (!token) throw new Error("No encontramos esa matrícula pendiente con la fecha indicada. Revisa los datos o consulta a tu tutor.");
-        const { data, error } = await studentSupabase.functions.invoke("activate-student", { body: { matricula: cleanMatricula, token, password } });
-        if (error) throw new Error(await functionErrorMessage(error, "No se pudo activar tu cuenta. Inténtalo de nuevo."));
+        if (!token) throw new Error("La matrícula, el folio o la fecha no coinciden con un registro pendiente. Revisa los datos o consulta a tu tutor.");
+        const { data, error } = await studentSupabase.functions.invoke("activate-student", { body: { matricula: cleanMatricula, folio: cleanFolio, token, password } });
+        if (error) throw new Error(await functionErrorMessage(error, "No se pudo validar tu cuenta. Inténtalo de nuevo."));
         if (data?.error) throw new Error(data.error);
-        if (!data?.session) throw new Error("No se recibió una sesión después de activar tu cuenta. Intenta iniciar sesión con tu matrícula y contraseña.");
+        if (!data?.session) throw new Error("No se recibió una sesión después de validar tu cuenta. Intenta iniciar sesión con tu matrícula y contraseña.");
         const { error: sessionError } = await studentSupabase.auth.setSession(data.session);
         if (sessionError) throw sessionError;
         navigate(returnTo === "/" ? "/alumno/actividades" : returnTo, { replace: true });
@@ -198,16 +202,17 @@ export default function Auth() {
           </div>
         </> : <>
           <button type="button" className="auth-change-role" onClick={() => { setAudience(null); setMessage(null); }}><ArrowLeft size={15}/> Cambiar tipo de acceso</button>
-          <div className="auth-form-heading"><span className="auth-form-heading__eyebrow">{isActivation ? "ACTIVA TU CUENTA UTT" : isPasswordChange ? "PRIMER ACCESO ADMINISTRATIVO" : audience === "student" ? "ACCESO DE ALUMNOS" : "ACCESO ADMINISTRATIVO"}</span><h2>{isActivation ? "Activa tu cuenta" : isPasswordChange ? "Cambia tu contraseña" : audience === "student" ? "Hola, alumno" : "Bienvenido"}</h2><p>{isActivation ? "Valida los datos del padrón y crea tu contraseña." : isPasswordChange ? "La contraseña temporal solo sirve para este primer ingreso." : audience === "student" ? "Ingresa con tu matrícula y contraseña." : "Ingresa con el correo de tu cuenta autorizada."}</p></div>
+          <div className="auth-form-heading"><span className="auth-form-heading__eyebrow">{isActivation ? "VALIDA TU CUENTA UTT" : isPasswordChange ? "PRIMER ACCESO ADMINISTRATIVO" : audience === "student" ? "ACCESO DE ALUMNOS" : "ACCESO ADMINISTRATIVO"}</span><h2>{isActivation ? "Valida tu cuenta" : isPasswordChange ? "Cambia tu contraseña" : audience === "student" ? "Hola, alumno" : "Bienvenido"}</h2><p>{isActivation ? "Confirma los datos del padrón y crea tu contraseña." : isPasswordChange ? "La contraseña temporal solo sirve para este primer ingreso." : audience === "student" ? "Ingresa con tu matrícula y contraseña." : "Ingresa con el correo de tu cuenta autorizada."}</p></div>
           <form className="auth-form" onSubmit={handleSubmit} autoComplete="off">
             {!isPasswordChange && (audience === "student" ? <label className="auth-field auth-field--full"><span>Matrícula</span><div className="auth-input-icon"><UserRound size={18}/><input className="auth-matricula-input" value={matricula} onChange={(e) => setMatricula(e.target.value.toUpperCase())} placeholder="Escribe tu matrícula" autoComplete="off" autoCapitalize="characters" spellCheck={false} required/></div></label> : <label className="auth-field auth-field--full"><span>Correo electrónico</span><div className="auth-input-icon"><GraduationCap size={18}/><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="correo@institución.edu.mx" autoComplete="username" required/></div></label>)}
+            {isActivation && <label className="auth-field auth-field--full"><span>Folio</span><input className="auth-activation-folio" value={folio} onChange={(e) => setFolio(e.target.value.replace(/\s+/g, "").toUpperCase())} placeholder="Ingresa tu folio" autoComplete="off" autoCapitalize="characters" spellCheck={false} maxLength={64} required/><small className="auth-help">Usa el folio que te entregó tu tutor.</small></label>}
             {isActivation && <label className="auth-field auth-field--full"><span>Fecha de nacimiento</span><ActivationBirthDatePicker value={fechaNacimiento} onChange={setFechaNacimiento}/><small className="auth-help">Debe coincidir con la fecha que registró tu tutor en el padrón.</small></label>}
             <label className="auth-field auth-field--full"><span>{isPasswordChange ? "Nueva contraseña" : "Contraseña"}</span><div className="auth-input-icon"><LockKeyhole size={17}/><input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder={isActivation ? "Crea una contraseña segura" : isPasswordChange ? "Al menos 12 caracteres" : "Escribe tu contraseña"} autoComplete={isActivation || isPasswordChange || audience === "student" ? "new-password" : "current-password"} minLength={isActivation ? 8 : isPasswordChange ? 12 : undefined} required/><button type="button" className="auth-password-toggle" aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"} title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"} aria-pressed={showPassword} onClick={() => setShowPassword((visible) => !visible)}>{showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}</button></div></label>
             {(isActivation || isPasswordChange) && <label className="auth-field auth-field--full"><span>Confirma la contraseña</span><div className="auth-input-icon"><LockKeyhole size={17}/><input type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirma tu contraseña" autoComplete="new-password" minLength={isPasswordChange ? 12 : 8} required/><button type="button" className="auth-password-toggle" aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"} title={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"} aria-pressed={showConfirmPassword} onClick={() => setShowConfirmPassword((visible) => !visible)}>{showConfirmPassword ? <EyeOff size={18}/> : <Eye size={18}/>}</button></div></label>}
             {message && <p className="auth-message" role="alert">{message}</p>}
-            <button className="auth-submit" type="submit" disabled={loading}>{loading ? "Procesando…" : isActivation ? "Activar mi cuenta" : isPasswordChange ? "Guardar nueva contraseña" : "Iniciar sesión"}<span/></button>
+            <button className="auth-submit" type="submit" disabled={loading}>{loading ? "Procesando…" : isActivation ? "Validar cuenta" : isPasswordChange ? "Guardar nueva contraseña" : "Iniciar sesión"}<span/></button>
           </form>
-          {audience === "student" ? <p className="auth-toggle-text">{isActivation ? "¿Ya activaste tu cuenta?" : "¿Es tu primer acceso?"}<button type="button" onClick={() => { setMode(isActivation ? "login" : "activate"); setMessage(null); }}>{isActivation ? "Inicia sesión" : "Activa tu cuenta"}</button></p> : isPasswordChange ? <p className="auth-admin-note auth-admin-note--form">Después del cambio llegarás al panel administrativo.</p> : <p className="auth-admin-note auth-admin-note--form">¿Necesitas acceso? Solicítalo al responsable de la plataforma. No compartas tu contraseña.</p>}
+          {audience === "student" ? <p className="auth-toggle-text">{isActivation ? "¿Ya validaste tu cuenta?" : "¿Es tu primer acceso?"}<button type="button" onClick={() => { setMode(isActivation ? "login" : "activate"); setMessage(null); }}>{isActivation ? "Inicia sesión" : "Validar cuenta"}</button></p> : isPasswordChange ? <p className="auth-admin-note auth-admin-note--form">Después del cambio llegarás al panel administrativo.</p> : <p className="auth-admin-note auth-admin-note--form">¿Necesitas acceso? Solicítalo al responsable de la plataforma. No compartas tu contraseña.</p>}
         </>}
       </section>
     </section>

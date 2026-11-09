@@ -12,6 +12,7 @@ type Registration = { id: string; workshop_id: string; event_id: string; created
 type ActivityEvent = ManagedEvent & { workshops: Workshop[] };
 const date = (value: string) => new Intl.DateTimeFormat("es-MX", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date(value));
 const time = (value: string) => new Intl.DateTimeFormat("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(value));
+const studentAccessRoute = "/acceso?tipo=alumno";
 
 export default function StudentActivities() {
   const [events, setEvents] = useState<ActivityEvent[]>([]);
@@ -38,7 +39,13 @@ export default function StudentActivities() {
       const { data: { session } } = await studentSupabase.auth.getSession();
       if (!session) { navigate("/acceso?tipo=alumno&returnTo=%2Falumno%2Factividades", { replace: true }); return; }
       const { data: profile } = await studentSupabase.from("profiles").select("role").eq("id", session.user.id).maybeSingle();
-      if (profile?.role !== "student") { navigate("/acceso?tipo=alumno", { replace: true }); return; }
+      const { data: rosterValid, error: rosterError } = await studentSupabase.rpc("student_roster_access_valid");
+      if (rosterError) throw rosterError;
+      if (profile?.role !== "student" || rosterValid !== true) {
+        await studentSupabase.auth.signOut();
+        navigate(studentAccessRoute, { replace: true });
+        return;
+      }
       await refresh();
       if (active) setAuthorized(true);
     })().catch((reason) => { if (active) setError(userFacingError(reason, "No se pudieron cargar tus actividades. Revisa tu conexión e inténtalo de nuevo.")); }).finally(() => { if (active) setLoading(false); });
@@ -48,11 +55,20 @@ export default function StudentActivities() {
   useEffect(() => {
     if (!authorized) return;
     let active = true;
-    const update = () => { void refresh().catch((reason) => { if (active) setError(userFacingError(reason, "No se pudo actualizar la disponibilidad. Revisa tu conexión e inténtalo de nuevo.")); }); };
+    const update = () => { void (async () => {
+      const { data: rosterValid, error: rosterError } = await studentSupabase.rpc("student_roster_access_valid");
+      if (rosterError) throw rosterError;
+      if (rosterValid !== true) {
+        await studentSupabase.auth.signOut();
+        navigate(studentAccessRoute, { replace: true });
+        return;
+      }
+      await refresh();
+    })().catch((reason) => { if (active) setError(userFacingError(reason, "No se pudo actualizar la disponibilidad. Revisa tu conexión e inténtalo de nuevo.")); }); };
     const timer = window.setInterval(update, 30_000);
     window.addEventListener("focus", update);
     return () => { active = false; window.clearInterval(timer); window.removeEventListener("focus", update); };
-  }, [authorized, refresh]);
+  }, [authorized, navigate, refresh]);
 
   const chosenByEvent = useMemo(() => new Map(items.map((item) => [item.event_id, item])), [items]);
   const selectedWorkshop = useMemo(() => {
