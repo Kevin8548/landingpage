@@ -1,15 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3, Download, Pencil, Plus, RefreshCw, Trash2, Users, X } from "lucide-react";
-import { listAdminEventWorkshops, listWorkshopAttendees, removeWorkshop, saveWorkshop, type Workshop, type WorkshopInput } from "../../services/workshops";
+import * as XLSX from "xlsx-js-style";
+import { listAdminEventWorkshops, listWorkshopAttendees, removeWorkshop, saveWorkshop, type Workshop, type WorkshopAttendee, type WorkshopInput } from "../../services/workshops";
 import { showDashboardAlert } from "../../lib/dashboardAlerts";
 import { userFacingError } from "../../lib/userFacingErrors";
 
-type Attendee = {
-  id: string;
-  created_at: string;
-  profiles: { matricula: string; nombre: string; apellido_paterno: string; apellido_materno: string | null; carrera: string | null } | null;
-};
 type WorkshopManagerProps = { eventId: string; eventTitle: string; eventDate: string; eventTime: string; onClose: () => void };
 
 const asLocalDateTime = (value: Date) => {
@@ -22,7 +18,6 @@ const dateTimeValue = (eventDate: string, eventTime: string) => {
   return Number.isNaN(start.getTime()) ? asLocalDateTime(new Date()) : asLocalDateTime(start);
 };
 const displayTime = (value: string) => new Intl.DateTimeFormat("es-MX", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(value));
-const csvCell = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
 
 function WorkshopDateTimeField({ name, defaultValue }: { name: string; defaultValue: string }) {
   const [date, setDate] = useState(defaultValue.slice(0, 10));
@@ -52,7 +47,7 @@ function WorkshopDateTimeField({ name, defaultValue }: { name: string; defaultVa
 
 export default function WorkshopManager({ eventId, eventTitle, eventDate, eventTime, onClose }: WorkshopManagerProps) {
   const [items, setItems] = useState<Workshop[]>([]);
-  const [attendees, setAttendees] = useState<Record<string, Attendee[]>>({});
+  const [attendees, setAttendees] = useState<Record<string, WorkshopAttendee[]>>({});
   const [attendeeWorkshop, setAttendeeWorkshop] = useState<Workshop | null>(null);
   const [attendeeLoading, setAttendeeLoading] = useState("");
   const [deleting, setDeleting] = useState("");
@@ -160,32 +155,46 @@ export default function WorkshopManager({ eventId, eventTitle, eventDate, eventT
 
   const openAttendees = async (item: Workshop) => {
     setAttendeeLoading(item.id); setError("");
-    try { const rows = await listWorkshopAttendees(item.id) as unknown as Attendee[]; setAttendees((current) => ({ ...current, [item.id]: rows })); setAttendeeWorkshop(item); }
+    try { const rows = await listWorkshopAttendees(item.id); setAttendees((current) => ({ ...current, [item.id]: rows })); setAttendeeWorkshop(item); }
     catch (reason) { setError(userFacingError(reason, "No se pudieron consultar los alumnos inscritos. Revisa tu conexión e inténtalo de nuevo.")); }
     finally { setAttendeeLoading(""); }
   };
 
   const refreshAttendees = async (id: string) => {
     setAttendeeLoading(id); setError("");
-    try { const rows = await listWorkshopAttendees(id) as unknown as Attendee[]; setAttendees((current) => ({ ...current, [id]: rows })); }
+    try { const rows = await listWorkshopAttendees(id); setAttendees((current) => ({ ...current, [id]: rows })); }
     catch (reason) { setError(userFacingError(reason, "No se pudo actualizar la lista de inscritos. Inténtalo de nuevo.")); }
     finally { setAttendeeLoading(""); }
   };
 
-  const exportAttendees = (item: Workshop, rows: Attendee[]) => {
-    const header = ["Matrícula", "Nombre completo", "Carrera", "Fecha de inscripción"];
-    const values = rows.map((row) => [
-      row.profiles?.matricula,
-      row.profiles ? [row.profiles.nombre, row.profiles.apellido_paterno, row.profiles.apellido_materno].filter(Boolean).join(" ") : "Alumno",
-      row.profiles?.carrera,
-      new Intl.DateTimeFormat("es-MX", { dateStyle: "short", timeStyle: "short" }).format(new Date(row.created_at)),
+  const exportAttendees = (item: Workshop, rows: WorkshopAttendee[]) => {
+    const headers = ["Matrícula", "Nombre completo", "Carrera", "Grado", "Grupo", "Folio", "Fecha de inscripción"];
+    const data = rows.map((row) => [
+      row.matricula ?? "",
+      [row.nombre, row.apellido_paterno, row.apellido_materno].filter(Boolean).join(" ") || "Alumno",
+      row.carrera ?? "",
+      row.grado ?? "",
+      row.grupo ?? "",
+      row.folio ?? "Sin asignar",
+      new Intl.DateTimeFormat("es-MX", { dateStyle: "medium", timeStyle: "short" }).format(new Date(row.created_at)),
     ]);
-    const csv = [header, ...values].map((line) => line.map(csvCell).join(",")).join("\r\n");
-    const url = URL.createObjectURL(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" }));
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `inscritos-${item.titulo.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase() || "taller"}.csv`;
-    document.body.append(link); link.click(); link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
+    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...data]);
+    worksheet["!cols"] = [{ wch: 17 }, { wch: 32 }, { wch: 36 }, { wch: 12 }, { wch: 10 }, { wch: 18 }, { wch: 24 }];
+    worksheet["!autofilter"] = { ref: `A1:G${Math.max(1, data.length + 1)}` };
+    Object.keys(worksheet).filter((address) => !address.startsWith("!")).forEach((address) => {
+      const cell = worksheet[address];
+      const rowIndex = Number(address.match(/\d+$/)?.[0] ?? "1");
+      if (rowIndex === 1) {
+        cell.s = { font: { bold: true, color: { rgb: "FFFFFF" } }, fill: { fgColor: { rgb: "174C34" } }, alignment: { vertical: "center" }, border: { bottom: { style: "medium", color: { rgb: "E9A820" } } } };
+      } else {
+        cell.s = { font: { color: { rgb: "20252B" } }, fill: rowIndex % 2 === 0 ? { fgColor: { rgb: "F1F6F2" } } : { fgColor: { rgb: "FFFFFF" } }, alignment: { vertical: "center" }, border: { bottom: { style: "hair", color: { rgb: "DDE5DF" } } } };
+      }
+    });
+    worksheet["!rows"] = [{ hpt: 26 }, ...data.map(() => ({ hpt: 21 }))];
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Inscritos");
+    const safeTitle = item.titulo.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase() || "taller";
+    XLSX.writeFile(workbook, `inscritos-${safeTitle}.xlsx`, { compression: true });
   };
 
   return <div className="dashboard-modal-backdrop dashboard-workshop-backdrop" role="presentation" onMouseDown={onClose}>
@@ -204,8 +213,8 @@ export default function WorkshopManager({ eventId, eventTitle, eventDate, eventT
 
       {attendeeWorkshop && createPortal(<div className="dashboard-modal-backdrop dashboard-modal-backdrop--nested dashboard-workshop-attendees-backdrop" role="presentation" onMouseDown={() => setAttendeeWorkshop(null)}><section className="dashboard-modal dashboard-modal--workshop-attendees" role="dialog" aria-modal="true" aria-labelledby="workshop-attendees-title" onMouseDown={(event) => event.stopPropagation()}>
         <div className="dashboard-modal__header"><div><p className="dashboard-eyebrow">LISTA DE INSCRITOS</p><h2 id="workshop-attendees-title">{attendeeWorkshop.titulo}</h2><p className="dashboard-workshop-subtitle">{eventTitle} · {attendees[attendeeWorkshop.id]?.length ?? 0} {(attendees[attendeeWorkshop.id]?.length ?? 0) === 1 ? "alumno inscrito" : "alumnos inscritos"}</p></div><button type="button" onClick={() => setAttendeeWorkshop(null)} aria-label="Cerrar lista"><X size={20}/></button></div>
-        <div className="dashboard-workshop-attendees__toolbar"><button type="button" disabled={attendeeLoading === attendeeWorkshop.id} onClick={() => void refreshAttendees(attendeeWorkshop.id)}><RefreshCw size={15}/>{attendeeLoading === attendeeWorkshop.id ? "Actualizando…" : "Actualizar lista"}</button><button type="button" disabled={!attendees[attendeeWorkshop.id]?.length} onClick={() => exportAttendees(attendeeWorkshop, attendees[attendeeWorkshop.id] ?? [])}><Download size={15}/>Exportar CSV</button></div>
-        <div className="dashboard-workshop-attendees__list" aria-live="polite">{attendeeLoading === attendeeWorkshop.id && !attendees[attendeeWorkshop.id] ? <p className="dashboard-workshop-attendees__empty">Cargando alumnos inscritos…</p> : !attendees[attendeeWorkshop.id]?.length ? <p className="dashboard-workshop-attendees__empty">Aún no hay alumnos inscritos en este taller.</p> : attendees[attendeeWorkshop.id].map((row) => <article key={row.id}><div><strong>{row.profiles ? [row.profiles.nombre, row.profiles.apellido_paterno, row.profiles.apellido_materno].filter(Boolean).join(" ") : "Alumno"}</strong><span>{row.profiles?.matricula || "Matrícula no disponible"}{row.profiles?.carrera ? ` · ${row.profiles.carrera}` : ""}</span></div><time dateTime={row.created_at}>{new Intl.DateTimeFormat("es-MX", { dateStyle: "medium" }).format(new Date(row.created_at))}</time></article>)}</div>
+        <div className="dashboard-workshop-attendees__toolbar"><button type="button" disabled={attendeeLoading === attendeeWorkshop.id} onClick={() => void refreshAttendees(attendeeWorkshop.id)}><RefreshCw size={15}/>{attendeeLoading === attendeeWorkshop.id ? "Actualizando…" : "Actualizar lista"}</button><button type="button" disabled={!attendees[attendeeWorkshop.id]?.length} onClick={() => exportAttendees(attendeeWorkshop, attendees[attendeeWorkshop.id] ?? [])}><Download size={15}/>Descargar Excel</button></div>
+        <div className="dashboard-workshop-attendees__list" aria-live="polite">{attendeeLoading === attendeeWorkshop.id && !attendees[attendeeWorkshop.id] ? <p className="dashboard-workshop-attendees__empty">Cargando alumnos inscritos…</p> : !attendees[attendeeWorkshop.id]?.length ? <p className="dashboard-workshop-attendees__empty">Aún no hay alumnos inscritos en este taller.</p> : attendees[attendeeWorkshop.id].map((row) => <article key={row.id}><div><strong>{[row.nombre, row.apellido_paterno, row.apellido_materno].filter(Boolean).join(" ") || "Alumno"}</strong><span>{row.matricula || "Matrícula no disponible"}{row.carrera ? ` · ${row.carrera}` : ""}</span><span>{row.grado ? `${row.grado}°` : "Grado no disponible"}{row.grupo ? ` · Grupo ${row.grupo}` : " · Grupo no disponible"}{row.folio ? ` · Folio ${row.folio}` : " · Sin folio asignado"}</span></div><time dateTime={row.created_at}>{new Intl.DateTimeFormat("es-MX", { dateStyle: "medium" }).format(new Date(row.created_at))}</time></article>)}</div>
         <div className="dashboard-modal__footer"><button type="button" onClick={() => setAttendeeWorkshop(null)}>Cerrar</button></div>
       </section></div>, document.body)}
 

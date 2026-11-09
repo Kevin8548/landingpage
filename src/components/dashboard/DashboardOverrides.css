@@ -1948,20 +1948,20 @@ html.dark .dashboard-view-modal .dashboard-modal__footer {
 .dashboard-workshop-attendees__header button:disabled { cursor: not-allowed; opacity: .55; }
 .dashboard-workshop-attendees__list { display: grid; gap: 8px; max-height: 220px; overflow: auto; padding-right: 4px; scrollbar-color: #454c54 #171a1e; scrollbar-width: thin; }
 .dashboard-workshop-attendees__empty { color: var(--dash-muted) !important; }
-.dashboard-modal--workshop-attendees { display: flex; width: min(660px, 100%); max-height: min(82vh, 720px); flex-direction: column; overflow: hidden; padding: 0; }
+.dashboard-modal--workshop-attendees { display: flex; width: min(700px, 100%); height: auto; min-height: 0; max-height: min(82vh, 720px); flex: 0 1 auto; flex-direction: column; overflow: hidden; padding: 0; }
 .dashboard-modal--workshop-attendees > .dashboard-modal__header { flex: none; padding: 24px 26px 0; }
-.dashboard-workshop-attendees__toolbar { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; flex: none; padding: 16px 24px 12px; }
+.dashboard-workshop-attendees__toolbar { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; flex: none; padding: 14px 26px 12px; }
 .dashboard-workshop-attendees__toolbar button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 7px 11px; border: 1px solid var(--dash-line); border-radius: 9px; color: var(--dash-muted); background: transparent; font: inherit; font-size: 12px; cursor: pointer; }
 .dashboard-workshop-attendees__toolbar button:hover:not(:disabled) { color: var(--dash-ink); border-color: var(--dash-green); }
+.dashboard-workshop-attendees__toolbar button:last-child:not(:disabled) { color: var(--dash-green); background: color-mix(in srgb, var(--dash-green) 8%, transparent); }
 .dashboard-workshop-attendees__toolbar button:disabled { cursor: not-allowed; opacity: .55; }
-.dashboard-workshop-attendees__list { display: grid; align-content: start; gap: 0; flex: 1 1 auto; min-height: 100px; max-height: none; margin: 0 24px; overflow: auto; border: 1px solid var(--dash-line); border-radius: 12px; padding: 0 14px; scrollbar-color: #454c54 #171a1e; scrollbar-width: thin; }
-.dashboard-workshop-attendees__list article { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 2px; border-bottom: 1px solid var(--dash-line); }
-.dashboard-workshop-attendees__list article:last-child { border-bottom: 0; }
+.dashboard-workshop-attendees__list { display: grid; align-content: start; gap: 9px; flex: 0 1 auto; min-height: 0; max-height: min(46vh, 390px); margin: 0 26px; overflow: auto; border: 0; border-radius: 0; padding: 0 4px 2px 0; scrollbar-color: #454c54 #171a1e; scrollbar-width: thin; }
+.dashboard-workshop-attendees__list article { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 15px 16px; border: 1px solid var(--dash-line); border-radius: 12px; background: color-mix(in srgb, var(--dash-ink) 3%, transparent); }
 .dashboard-workshop-attendees__list article > div { display: grid; gap: 4px; min-width: 0; }
-.dashboard-workshop-attendees__list article strong { color: var(--dash-ink); font-size: 13px; font-weight: 600; }
+.dashboard-workshop-attendees__list article strong { color: var(--dash-ink); font-size: 13px; font-weight: 650; line-height: 1.45; }
 .dashboard-workshop-attendees__list article span,.dashboard-workshop-attendees__list article time { color: var(--dash-muted); font-size: 11px; line-height: 1.45; }
-.dashboard-workshop-attendees__list article time { flex: none; }
-.dashboard-modal--workshop-attendees > .dashboard-modal__footer { flex: none; margin: 0; padding: 14px 24px 20px; }
+.dashboard-workshop-attendees__list article time { flex: none; padding: 5px 8px; border: 1px solid var(--dash-line); border-radius: 8px; white-space: nowrap; }
+.dashboard-modal--workshop-attendees > .dashboard-modal__footer { flex: none; margin: 12px 0 0; padding: 12px 26px 18px; border-top: 1px solid var(--dash-line); }
 .dashboard-workshop-attendees-backdrop { z-index: 1250; }
 @media (max-width: 560px) {
   .dashboard-workshop-attendees__header { align-items: flex-start; flex-direction: column; }
@@ -1970,9 +1970,9 @@ html.dark .dashboard-view-modal .dashboard-modal__footer {
   .dashboard-modal--workshop-attendees { max-height: calc(100svh - 24px); }
   .dashboard-modal--workshop-attendees > .dashboard-modal__header { padding: 19px 18px 0; }
   .dashboard-workshop-attendees__toolbar { padding: 14px 18px 10px; }
-  .dashboard-workshop-attendees__list { margin-inline: 18px; padding-inline: 10px; }
-  .dashboard-workshop-attendees__list article { align-items: flex-start; flex-direction: column; gap: 5px; }
-  .dashboard-modal--workshop-attendees > .dashboard-modal__footer { padding: 12px 18px 16px; }
+  .dashboard-workshop-attendees__list { max-height: min(42vh, 340px); margin-inline: 18px; }
+  .dashboard-workshop-attendees__list article { align-items: flex-start; flex-direction: column; gap: 9px; padding: 13px; }
+  .dashboard-modal--workshop-attendees > .dashboard-modal__footer { padding: 10px 18px 14px; }
 }
 .dashboard-modal-backdrop--nested { z-index: 1200; padding: 20px; }
 .dashboard-modal--workshop { width: min(620px, 100%); max-height: min(90vh, 900px); overflow: auto; }
