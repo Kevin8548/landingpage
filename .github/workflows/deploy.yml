@@ -70,7 +70,7 @@ jobs:
       - name: Avisar a Slack
         uses: slackapi/slack-github-action@v2
         with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook: ${{ secrets.SLACK_WEBHOOK_BUILDS }}
           webhook-type: incoming-webhook
           payload: |
             text: "${{ needs.build.result == 'success' && needs.deploy.result == 'success' && '✅' || '❌' }} *${{ github.repository }}* (${{ github.ref_name }})\nBuild: ${{ needs.build.result }} | Deploy: ${{ needs.deploy.result }}\nPor: ${{ github.actor }}\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Ver ejecución>"
