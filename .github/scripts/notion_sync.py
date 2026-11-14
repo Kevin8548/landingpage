@@ -3,7 +3,8 @@ Sincroniza ramas y pull requests de GitHub con las historias de usuario de Notio
 
 Regla de estados:
   - Se crea una rama con HU-XX en el nombre ....... En progreso
-  - PR hacia develop (abierto o fusionado) ........ En revisión
+  - PR hacia develop (abierto) .................... En revisión
+  - PR fusionado hacia develop .................... En pruebas
   - PR fusionado hacia main ....................... Hecho
   - PR en borrador o cerrado sin fusionar ......... En progreso
 
@@ -22,12 +23,15 @@ import sys
 import requests
 
 # --- Ajustes: cámbialos aquí si el equipo decide otra cosa ---
-ESTADO_EN_REVISION = "En revisión"
-ESTADO_HECHO = "Hecho"
 ESTADO_EN_PROGRESO = "En progreso"
-RAMA_FINAL = "main"  # un PR fusionado hacia esta rama marca las historias como Hecho
+ESTADO_EN_REVISION = "En revisión"
+ESTADO_EN_PRUEBAS = "En pruebas"
+ESTADO_HECHO = "Hecho"
+RAMA_FINAL = "main"        # un PR fusionado hacia esta rama marca las historias como Hecho
+RAMA_DEVELOP = "develop"    # un PR fusionado hacia esta rama marca las historias como En pruebas
+
 # Al crear una rama NO se regresa una tarjeta que ya esté en alguno de estos estados
-ESTADOS_QUE_NO_REGRESAN_AL_CREAR_RAMA = {ESTADO_EN_REVISION, ESTADO_HECHO}
+ESTADOS_QUE_NO_REGRESAN_AL_CREAR_RAMA = {ESTADO_EN_REVISION, ESTADO_EN_PRUEBAS, ESTADO_HECHO}
 # --------------------------------------------------------------
 
 TOKEN = os.environ["NOTION_TOKEN"]
@@ -137,8 +141,10 @@ def evento_pull_request():
             estado, icono, que = ESTADO_EN_PROGRESO, ":x:", "Pull request cerrado sin fusionar"
         elif base == RAMA_FINAL:
             estado, icono, que = ESTADO_HECHO, ":white_check_mark:", "Pull request fusionado"
+        elif base == RAMA_DEVELOP:
+            estado, icono, que = ESTADO_EN_PRUEBAS, ":test_tube:", "Pull request fusionado (pasa a pruebas)"
         else:
-            estado, icono, que = ESTADO_EN_REVISION, ":twisted_rightwards_arrows:", "Pull request fusionado"
+            estado, icono, que = ESTADO_EN_PRUEBAS, ":twisted_rightwards_arrows:", "Pull request fusionado"
     elif accion == "converted_to_draft":
         estado, icono, que = ESTADO_EN_PROGRESO, ":memo:", "Pull request pasó a borrador"
     elif borrador:
@@ -181,6 +187,8 @@ def evento_pull_request():
         "url": url_pr,
         "url_texto": "Ver pull request",
         "es_creacion_rama": False,
+        "base": base,
+        "accion": accion,
     }
 
 
@@ -242,15 +250,20 @@ def main():
             estado_actual = st["name"] if st else None
 
         # Crear una rama nueva no debe regresar una tarjeta que ya avanzó
-        if evento["es_creacion_rama"] and estado_actual in ESTADOS_QUE_NO_REGRESAN_AL_CREAR_RAMA:
+        if evento.get("es_creacion_rama") and estado_actual in ESTADOS_QUE_NO_REGRESAN_AL_CREAR_RAMA:
             print(f"{hu}: ya está en '{estado_actual}', no se regresa a '{estado}'.")
+            continue
+
+        # Si ya está en 'En pruebas' y se abre un PR hacia main (aún no fusionado), no regresarla a 'En revisión'
+        if evento.get("base") == RAMA_FINAL and evento.get("accion") != "closed" and estado_actual == ESTADO_EN_PRUEBAS:
+            print(f"{hu}: ya está en '{estado_actual}', se mantiene hasta que se fusione a '{RAMA_FINAL}'.")
             continue
 
         cambios = {}
         if prop_estado:
             cambios[prop_estado] = {"status": {"name": estado}}
         # La URL solo se guarda cuando es de un pull request
-        if prop_url and evento["url"] and not evento["es_creacion_rama"]:
+        if prop_url and evento["url"] and not evento.get("es_creacion_rama"):
             cambios[prop_url] = {"url": evento["url"]}
         if not cambios:
             continue

@@ -1,0 +1,53 @@
+name: Pruebas de archivos modificados
+
+on:
+  pull_request:
+    branches: [develop]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  revisar-cambios:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # necesario para comparar contra develop
+
+      - name: Detectar archivos modificados
+        id: cambios
+        run: |
+          ARCHIVOS=$(git diff --name-only --diff-filter=ACMR \
+            origin/${{ github.base_ref }}...HEAD -- 'src/**/*.ts' 'src/**/*.tsx' 'src/*.ts' 'src/*.tsx' | tr '\n' ' ')
+          echo "archivos=$ARCHIVOS" >> "$GITHUB_OUTPUT"
+
+          echo "## Archivos revisados" >> "$GITHUB_STEP_SUMMARY"
+          if [ -z "$ARCHIVOS" ]; then
+            echo "No se modificaron archivos .ts/.tsx en src/" >> "$GITHUB_STEP_SUMMARY"
+          else
+            for f in $ARCHIVOS; do echo "- \`$f\`" >> "$GITHUB_STEP_SUMMARY"; done
+          fi
+
+      - name: Setup pnpm
+        if: steps.cambios.outputs.archivos != ''
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        if: steps.cambios.outputs.archivos != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Instalar dependencias
+        if: steps.cambios.outputs.archivos != ''
+        run: pnpm install --no-frozen-lockfile
+
+      - name: ESLint en archivos modificados
+        if: steps.cambios.outputs.archivos != ''
+        run: pnpm exec eslint ${{ steps.cambios.outputs.archivos }}
