@@ -7,7 +7,7 @@ import { DirectPassSection } from "../sections/aspirantes/DirectPassSection";
 import { FinalCTA } from "../sections/aspirantes/FinalCTA";
 import { SectionDivider } from "../ui/SectionDivider";
 import { useAspirantesStore } from "../../data/aspirantesStore";
-import { useConfirm } from "../ui/ConfirmDialog";
+import { useConfirm } from "../ui/useConfirm";
 
 // Vista de administración de Aspirantes. Solo se llega aquí a través de la
 // ruta protegida /dashboard/aspirantes (ver App.tsx, envuelta en

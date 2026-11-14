@@ -1,51 +1,62 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useLayoutEffect } from "react";
 import {
   BrowserRouter,
   Route,
   Routes,
   useLocation,
 } from "react-router-dom";
-
 import { Aspirantes } from "./components/sections/Aspirantes";
 import { Careers } from "./components/sections/Careers";
 import { WhyChooseTI } from "./components/sections/View";
 import Footer from "./components/layout/Footer";
 import Navbar from "./components/layout/Navbar";
-import Auth from "./components/auth/Auth";
 import Hero from "./components/sections/Hero";
+import LandingIntro from "./components/sections/LandingIntro";
 import FuturoReveal from "./components/sections/Futuro_Reveal";
 import { ConfirmProvider } from "./components/ui/ConfirmDialog";
-
-import Dashboard from "./pages/Dashboard";
-import Events from "./pages/Events";
-import Projects from "./pages/Projects";
 import Eventos from "./components/sections/eventos";
-import EventosAdmin from "./components/dashboard/EventosAdmin";
-import ProjectsPreview from "./components/dashboard/ProjectsPreview";
-import AspirantesAdmin from "./components/dashboard/AspirantesAdmin";
-import PadronAdmin from "./pages/PadronAdmin";
 import RequireAdmin from "./components/auth/RequireAdmin";
 import RequirePreviewAccess from "./components/auth/RequirePreviewAccess";
 import NotFound from "./pages/NotFound";
-import StudentActivities from "./pages/StudentActivities";
-import AdminAccounts from "./pages/AdminAccounts";
 import ChatbotWidget from "./components/chatbot/ChatbotWidget";
+const Auth = lazy(() => import("./components/auth/Auth"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Events = lazy(() => import("./pages/Events"));
+const Projects = lazy(() => import("./pages/Projects"));
+const EventosAdmin = lazy(() => import("./components/dashboard/EventosAdmin"));
+const ProjectsPreview = lazy(() => import("./components/dashboard/ProjectsPreview"));
+const AspirantesAdmin = lazy(() => import("./components/dashboard/AspirantesAdmin"));
+const PadronAdmin = lazy(() => import("./pages/PadronAdmin"));
+const StudentActivities = lazy(() => import("./pages/StudentActivities"));
+const AdminAccounts = lazy(() => import("./pages/AdminAccounts"));
 const CareerDetail = lazy(() => import("./pages/CareerDetail"));
 const AspirantesPage = lazy(() => import("./pages/Aspirantes"));
 
 function ScrollManager() {
   const { pathname } = useLocation();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    // Prevent the browser from restoring a previous anchor/scroll position
+    // (for example the Events section) when the public landing page opens.
+    window.history.scrollRestoration = "manual";
+
     // La página principal siempre inicia desde arriba.
     if (pathname === "/") {
       sessionStorage.removeItem("landing-scroll-target");
 
+      // Evita que una URL como /#eventos vuelva a desplazar la página al
+      // ancla después del primer render.
+      if (window.location.hash) {
+        window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}`);
+      }
+
       window.scrollTo({
         top: 0,
         left: 0,
-        behavior: "instant",
+        behavior: "auto",
       });
+
+      requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: "auto" }));
 
       return;
     }
@@ -53,7 +64,7 @@ function ScrollManager() {
     window.scrollTo({
       top: 0,
       left: 0,
-      behavior: "instant",
+      behavior: "auto",
     });
   }, [pathname]);
 
@@ -70,18 +81,26 @@ function AppFooter() {
   return <Footer />;
 }
 
+function AppChatbot() {
+  const { pathname } = useLocation();
+  if (pathname.startsWith("/dashboard") || pathname.startsWith("/alumno") || pathname === "/acceso") return null;
+  return <ChatbotWidget />;
+}
+
 export default function App() {
   return (
     <ConfirmProvider>
       <BrowserRouter basename="/landingpage">
         <ScrollManager />
 
+        <Suspense fallback={<main className="min-h-dvh bg-dark-bg" aria-busy="true" />}>
         <Routes>
           {/* Landing principal */}
           <Route
             path="/"
             element={
               <>
+                <LandingIntro />
                 <Navbar />
 
                 <section id="hero">
@@ -214,9 +233,10 @@ export default function App() {
 
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </Suspense>
 
         <AppFooter />
-        <ChatbotWidget />
+        <AppChatbot />
       </BrowserRouter>
     </ConfirmProvider>
   );

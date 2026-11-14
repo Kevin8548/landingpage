@@ -3,14 +3,17 @@ import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { 
   ChevronLeft, ChevronRight, ChevronDown, LayoutDashboard, CalendarDays, FolderKanban, ShieldCheck, Users,
-  LogOut, Menu, X, Upload, FileText, Plus, Pencil, Trash2, Search, Download 
+  LogOut, Menu, X, Upload, FileText, Plus, Pencil, Trash2, Search, Download, Check
 } from "lucide-react";
 import { AnimatedThemeToggler } from "../components/ui/AnimatedThemeToggler";
 import { supabase } from "../lib/supabase";
 import { useDashboardSidebar } from "../lib/useDashboardSidebar";
+import { usePrimaryAdmin } from "../lib/usePrimaryAdmin";
+import { useAdminName } from "../lib/useAdminName";
 import "../components/dashboard/Dashboard.css";
 import "../components/dashboard/DashboardOverrides.css";
 import { showDashboardAlert } from "../lib/dashboardAlerts";
+import { userFacingError } from "../lib/userFacingErrors";
 import DashboardSelect from "../components/dashboard/DashboardSelect";
 
 type Alumno = {
@@ -23,15 +26,137 @@ type Alumno = {
   grado: string;
   grupo: string;
   fecha_nacimiento: string;
+  folio?: string | null;
+  folio_usado?: boolean;
   registrado?: boolean;
 };
 
-// Mantiene una copia en memoria mientras el administrador navega entre
-// secciones. No se guarda en localStorage porque contiene datos personales.
-let padronAlumnosEnMemoria: Alumno[] = [];
+// Caché por administrador para conservar el padrón durante cambios de sección
+// sin mezclar datos personales entre sesiones.
+const padronesEnMemoria = new Map<string, Alumno[]>();
 
 const dateFromValue = (value: string) => value ? new Date(`${value}T12:00:00`) : new Date();
 const dateToValue = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+const errorCode = (error: unknown) => error && typeof error === "object" && "code" in error && typeof error.code === "string" ? error.code : "";
+const errorMessage = (error: unknown) => error instanceof Error ? error.message : "";
+
+function parseCsvRecords(text: string, delimiter: string) {
+  const records: string[][] = [];
+  let record: string[] = [];
+  let field = "";
+  let quoted = false;
+  const source = text.replace(/^\uFEFF/, "");
+
+  for (let index = 0; index < source.length; index += 1) {
+    const char = source[index];
+    if (char === '"') {
+      if (quoted && source[index + 1] === '"') { field += '"'; index += 1; }
+      else quoted = !quoted;
+    } else if (!quoted && char === delimiter) {
+      record.push(field.trim()); field = "";
+    } else if (!quoted && (char === "\n" || char === "\r")) {
+      if (char === "\r" && source[index + 1] === "\n") index += 1;
+      record.push(field.trim());
+      if (record.some((value) => value.length > 0)) records.push(record);
+      record = []; field = "";
+    } else field += char;
+  }
+
+  record.push(field.trim());
+  if (record.some((value) => value.length > 0)) records.push(record);
+  return records;
+}
+
+function normalizeCsvDate(value: string) {
+  const date = value.trim();
+  const iso = date.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  const local = date.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/);
+  let year: number, month: number, day: number;
+  if (iso) [, year, month, day] = iso.map(Number) as [number, number, number, number];
+  else if (local) [, day, month, year] = local.map(Number) as [number, number, number, number];
+  else if (/^\d+(?:\.\d+)?$/.test(date)) {
+    const serial = Number(date);
+    if (serial < 1 || serial > 100000) return "";
+    const excelDate = new Date(Date.UTC(1899, 11, 30) + Math.floor(serial) * 86400000);
+    year = excelDate.getUTCFullYear(); month = excelDate.getUTCMonth() + 1; day = excelDate.getUTCDate();
+  } else return "";
+
+  const check = new Date(Date.UTC(year, month - 1, day));
+  if (check.getUTCFullYear() !== year || check.getUTCMonth() + 1 !== month || check.getUTCDate() !== day) return "";
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function parseStudentCsv(text: string): Alumno[] {
+  const firstLine = text.replace(/^\uFEFF/, "").split(/\r?\n/, 1)[0] ?? "";
+  let quoted = false;
+  const counts = { ",": 0, ";": 0, "\t": 0 };
+  for (let index = 0; index < firstLine.length; index += 1) {
+    const char = firstLine[index];
+    if (char === '"') {
+      if (quoted && firstLine[index + 1] === '"') index += 1;
+      else quoted = !quoted;
+    } else if (!quoted && char in counts) counts[char as keyof typeof counts] += 1;
+  }
+  const delimiter = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? ",";
+  const records = parseCsvRecords(text, delimiter);
+  if (records.length === 0) throw new Error("El archivo está vacío.");
+
+  const normalizeHeader = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z]/g, "");
+  const headers = records[0].map(normalizeHeader);
+  const headerIndex = (predicate: (value: string) => boolean) => headers.findIndex(predicate);
+  const headerMap = {
+    matricula: headerIndex((value) => value.includes("matricula")),
+    nombre: headerIndex((value) => value === "nombre" || value === "nombres"),
+    paterno: headerIndex((value) => value.includes("paterno")),
+    materno: headerIndex((value) => value.includes("materno")),
+    carrera: headerIndex((value) => value.includes("carrera")),
+    grado: headerIndex((value) => value.includes("grado")),
+    grupo: headerIndex((value) => value.includes("grupo")),
+    fecha: headerIndex((value) => value.includes("fecha") && (value.includes("nac") || value.includes("nacimiento"))),
+    folio: headerIndex((value) => value.includes("folio")),
+  };
+  const hasHeader = headerMap.matricula >= 0 && headerMap.nombre >= 0 && headerMap.fecha >= 0;
+  const columns = hasHeader
+    ? { matricula: headerMap.matricula, nombre: headerMap.nombre, paterno: headerMap.paterno, materno: headerMap.materno, carrera: headerMap.carrera, grado: headerMap.grado, grupo: headerMap.grupo, fecha: headerMap.fecha, folio: headerMap.folio }
+    : { matricula: 0, nombre: 1, paterno: 2, materno: 3, carrera: 4, grado: 5, grupo: 6, fecha: 7, folio: -1 };
+  const get = (row: string[], index: number) => index >= 0 ? (row[index] ?? "").trim() : "";
+  const rows = records.slice(hasHeader ? 1 : 0);
+  const invalidRows: number[] = [];
+  const students: Alumno[] = [];
+  const seenMatriculas = new Set<string>();
+  const duplicateMatriculas = new Set<string>();
+  const seenFolios = new Set<string>();
+  const duplicateFolios = new Set<string>();
+
+  rows.forEach((row, index) => {
+    const matricula = get(row, columns.matricula).toUpperCase();
+    const nombre = get(row, columns.nombre);
+    const apellidoPaterno = get(row, columns.paterno);
+    const apellidoMaterno = get(row, columns.materno);
+    const carrera = get(row, columns.carrera);
+    const grado = get(row, columns.grado);
+    const grupo = get(row, columns.grupo).toUpperCase();
+    const fechaNacimiento = normalizeCsvDate(get(row, columns.fecha));
+    const folio = get(row, columns.folio).replace(/\s+/g, "").toUpperCase();
+    // Las filas vacías de Excel suelen contener solo delimitadores; no son alumnos.
+    if (![matricula, nombre, apellidoPaterno, apellidoMaterno, carrera, grado, grupo, get(row, columns.fecha), folio].some(Boolean)) return;
+    if (!matricula || !nombre || !apellidoPaterno || !carrera || !fechaNacimiento || (folio && !/^[A-Z0-9-]{1,64}$/.test(folio))) {
+      invalidRows.push(index + (hasHeader ? 2 : 1));
+      return;
+    }
+    if (seenMatriculas.has(matricula)) duplicateMatriculas.add(matricula);
+    seenMatriculas.add(matricula);
+    if (folio && seenFolios.has(folio)) duplicateFolios.add(folio);
+    if (folio) seenFolios.add(folio);
+    students.push({ matricula, nombre, apellido_paterno: apellidoPaterno, apellido_materno: apellidoMaterno, carrera, grado, grupo, fecha_nacimiento: fechaNacimiento, ...(folio ? { folio } : {}) });
+  });
+
+  if (invalidRows.length) throw new Error(`Revisa las filas ${invalidRows.slice(0, 5).join(", ")}${invalidRows.length > 5 ? " y otras" : ""}. Cada alumno debe incluir matrícula, nombre, apellido paterno, carrera y fecha válida (DD/MM/AAAA).`);
+  if (duplicateMatriculas.size) throw new Error(`El archivo repite la matrícula ${Array.from(duplicateMatriculas).slice(0, 3).join(", ")}. Corrige los duplicados y vuelve a importarlo.`);
+  if (duplicateFolios.size) throw new Error(`El archivo repite el folio ${Array.from(duplicateFolios).slice(0, 3).join(", ")}. Cada alumno debe tener un folio distinto.`);
+  if (!students.length) throw new Error("No encontramos alumnos completos en el archivo. Verifica que tenga las columnas del padrón y vuelve a intentarlo.");
+  return students;
+}
 
 function BirthDatePicker({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -107,23 +232,23 @@ function BirthDatePicker({ value, onChange }: { value: string; onChange: (value:
 }
 
 export default function PadronAdmin() {
+  const isPrimaryAdmin = usePrimaryAdmin();
+  const { fullName } = useAdminName();
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setSidebarCollapsed] = useDashboardSidebar();
   
   // Estado principal
-  const [alumnos, setAlumnos] = useState<Alumno[]>(() => padronAlumnosEnMemoria);
+  const [alumnos, setAlumnos] = useState<Alumno[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const isFetchingAlumnos = useRef(false);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
+  const [assigningFolioId, setAssigningFolioId] = useState<string | null>(null);
+  const [folioDraft, setFolioDraft] = useState("");
+  const [isSavingFolio, setIsSavingFolio] = useState(false);
 
-  // Efecto para regresar a la página 1 cada que se usa el buscador
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
-  
   // Modales
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -143,6 +268,9 @@ export default function PadronAdmin() {
     isFetchingAlumnos.current = true;
     if (!silent) setIsLoading(true);
     try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw userError ?? new Error("Inicia sesión para consultar tu padrón.");
+      const cachedRows = padronesEnMemoria.get(user.id) ?? [];
       const { data, error } = await supabase
         .from('padron_alumnos')
         .select('*')
@@ -151,7 +279,7 @@ export default function PadronAdmin() {
       const rows = data ?? [];
       // Una respuesta vacía aislada (por ejemplo, durante una renovación de
       // sesión/RLS) no debe borrar el padrón que ya se había cargado.
-      if (rows.length === 0 && padronAlumnosEnMemoria.length > 0) {
+      if (rows.length === 0 && cachedRows.length > 0) {
         await new Promise((resolve) => window.setTimeout(resolve, 500));
         const retry = await supabase
           .from('padron_alumnos')
@@ -159,23 +287,20 @@ export default function PadronAdmin() {
           .order('created_at', { ascending: false });
         if (retry.error) throw retry.error;
         if ((retry.data ?? []).length === 0) {
-          const detail = "La consulta devolvió cero alumnos aunque ya había registros cargados. Se conserva la última lista; vuelve a intentar para verificar el acceso a la base de datos.";
+          const detail = "No se pudo verificar el padrón. Revisa tu conexión a internet e inténtalo de nuevo.";
           setLoadError(detail);
           return;
         }
-        padronAlumnosEnMemoria = retry.data ?? [];
-        setAlumnos(padronAlumnosEnMemoria);
+        padronesEnMemoria.set(user.id, retry.data ?? []);
+        setAlumnos(retry.data ?? []);
       } else {
-        padronAlumnosEnMemoria = rows;
+        padronesEnMemoria.set(user.id, rows);
         setAlumnos(rows);
       }
       setLoadError("");
     } catch (reason) {
-      const detail = reason && typeof reason === "object" && "message" in reason && typeof reason.message === "string"
-        ? reason.message
-        : "Error desconocido al consultar Supabase.";
       console.error("No se pudo cargar el padrón de alumnos:", reason);
-      setLoadError(detail);
+      setLoadError(userFacingError(reason, "Revisa tu conexión a internet e inténtalo de nuevo."));
     } finally {
       isFetchingAlumnos.current = false;
       setIsLoading(false);
@@ -183,6 +308,8 @@ export default function PadronAdmin() {
   };
 
   useEffect(() => {
+    // Loads the signed-in administrator's roster asynchronously.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchAlumnos();
 
     // Actualiza el padrón al volver a esta pestaña y también si la activación
@@ -248,12 +375,12 @@ export default function PadronAdmin() {
     const exportToCSV = () => {
     if (filteredAlumnos.length === 0) return;
 
-    const headers = ["Matricula", "Nombre", "Apellido Paterno", "Apellido Materno", "Carrera", "Grado", "Grupo", "Fecha Nacimiento", "Estado"];
+    const headers = ["Matricula", "Nombre", "Apellido Paterno", "Apellido Materno", "Carrera", "Grado", "Grupo", "Fecha Nacimiento", "Folio", "Estado"];
     
     const rows = filteredAlumnos.map(a => [
       a.matricula, a.nombre, a.apellido_paterno, a.apellido_materno, 
-      a.carrera, a.grado, a.grupo, a.fecha_nacimiento, 
-      a.registrado ? "Activa" : "Pendiente"
+      a.carrera, a.grado, a.grupo, a.fecha_nacimiento, a.folio ?? "",
+      a.registrado ? "Validado" : "Pendiente"
     ]);
 
     // Unir todo y escapar comillas por si un nombre lleva símbolos
@@ -277,39 +404,23 @@ export default function PadronAdmin() {
     document.body.removeChild(link);
   };
 
-  const parseCSV = (text: string) => {
-    const lines = text.split('\n');
-    const result: Alumno[] = [];
-    
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
-      
-      const cols = line.split(',');
-      if (cols.length >= 8) {
-        result.push({
-          matricula: cols[0].trim().toUpperCase(),
-          nombre: cols[1].trim(),
-          apellido_paterno: cols[2].trim(),
-          apellido_materno: cols[3].trim(),
-          carrera: cols[4].trim(),
-          grado: cols[5].trim(),
-          grupo: cols[6].trim().toUpperCase(),
-          fecha_nacimiento: cols[7].trim()
-        });
-      }
-    }
-    setCsvData(result);
-  };
-
   const handleFileUpload = (file?: File) => {
     if (!file) return;
-    if (file.type !== "text/csv" && !file.name.endsWith(".csv")) {
+    if (file.type !== "text/csv" && !file.name.toLowerCase().endsWith(".csv")) {
       void showDashboardAlert({ icon: "warning", title: "Archivo inválido", text: "Por favor sube un archivo CSV." });
       return;
     }
     const reader = new FileReader();
-    reader.onload = (e) => parseCSV(e.target?.result as string);
+    reader.onload = (e) => {
+      try {
+        const rows = parseStudentCsv(String(e.target?.result ?? ""));
+        setCsvData(rows);
+      } catch (error) {
+        setCsvData([]);
+        void showDashboardAlert({ icon: "warning", title: "Revisa el archivo CSV", text: error instanceof Error ? error.message : "No pudimos leer el archivo." });
+      }
+    };
+    reader.onerror = () => void showDashboardAlert({ icon: "error", title: "No se pudo leer el archivo", text: "Intenta seleccionar el CSV nuevamente." });
     reader.readAsText(file);
   };
 
@@ -323,16 +434,49 @@ export default function PadronAdmin() {
     if (csvData.length === 0) return;
     setIsUploading(true);
     try {
-      const normalizedRows = csvData.map((alumno) => ({ ...alumno, matricula: alumno.matricula.trim().toUpperCase() }));
-      const { error } = await supabase.from('padron_alumnos').upsert(normalizedRows, { onConflict: 'matricula' });
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw userError ?? new Error("Inicia sesión para importar alumnos.");
+      // Al importar CSV antiguos o sin columna Folio, conservar el folio que ya
+      // tuviera el alumno en vez de borrarlo con un upsert parcial.
+      const matriculas = csvData.map((alumno) => alumno.matricula.trim().toUpperCase());
+      const { data: existingRows, error: existingError } = await supabase
+        .from("padron_alumnos")
+        .select("matricula,folio,folio_usado")
+        .eq("admin_id", user.id)
+        .in("matricula", matriculas);
+      if (existingError) throw existingError;
+      const existingByMatricula = new Map((existingRows ?? []).map((row) => [String(row.matricula).toUpperCase(), row]));
+      const normalizedRows = csvData.map((alumno) => {
+        const matricula = alumno.matricula.trim().toUpperCase();
+        const existing = existingByMatricula.get(matricula);
+        return {
+          ...alumno,
+          folio: alumno.folio ? alumno.folio.replace(/\s+/g, "").toUpperCase() : existing?.folio ?? null,
+          folio_usado: existing?.folio_usado ?? false,
+          admin_id: user.id,
+          matricula,
+        };
+      });
+      const { error } = await supabase.from('padron_alumnos').upsert(normalizedRows, { onConflict: 'admin_id,matricula' });
       if (error) throw error;
       
       void showDashboardAlert({ icon: "success", title: "Padrón actualizado", text: `Se cargaron ${csvData.length} registros exitosamente.` });
       setCsvData([]);
       setIsCsvModalOpen(false);
       fetchAlumnos(); 
-    } catch (err: any) {
-      void showDashboardAlert({ icon: "error", title: "Error al subir padrón", text: err.message });
+    } catch (err: unknown) {
+      console.error("No se pudo importar el padrón:", err);
+      const code = errorCode(err);
+      const message = code === "23505"
+        ? "Una matrícula ya está registrada en otro padrón o un folio ya fue asignado. Cada matrícula solo puede aparecer una vez."
+        : code === "21000"
+          ? "El archivo contiene matrículas repetidas. Corrige los duplicados y vuelve a importarlo."
+        : code === "22007" || code === "22008"
+          ? "Verifica que las fechas de nacimiento sean válidas y estén en formato DD/MM/AAAA."
+          : code === "42501"
+            ? "No tienes permiso para agregar estos alumnos a tu padrón. Vuelve a iniciar sesión."
+            : "No se pudo importar el padrón. Revisa los datos del archivo e inténtalo de nuevo.";
+      void showDashboardAlert({ icon: "error", title: "Error al subir padrón", text: message });
     } finally {
       setIsUploading(false);
     }
@@ -350,6 +494,46 @@ export default function PadronAdmin() {
     setIsFormModalOpen(true);
   };
 
+  const saveFolio = async (alumno: Alumno) => {
+    const folio = folioDraft.replace(/\s+/g, "").trim().toUpperCase();
+    if (!alumno.id || !folio) {
+      void showDashboardAlert({ icon: "warning", title: "Ingresa el folio", text: "Escribe el folio físico que se entregó al alumno." });
+      return;
+    }
+    if (!/^[A-Z0-9-]{1,64}$/.test(folio)) {
+      void showDashboardAlert({ icon: "warning", title: "Folio inválido", text: "Usa solo letras, números o guiones (máximo 64 caracteres)." });
+      return;
+    }
+
+    setIsSavingFolio(true);
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw userError ?? new Error("Inicia sesión para asignar folios.");
+      const { error } = await supabase.from("padron_alumnos")
+        .update({ folio })
+        .eq("id", alumno.id)
+        .eq("admin_id", user.id);
+      if (error) throw error;
+
+      const nextAlumnos = alumnos.map((row) => row.id === alumno.id ? { ...row, folio, folio_usado: false } : row);
+      setAlumnos(nextAlumnos);
+      padronesEnMemoria.set(user.id, nextAlumnos);
+      setAssigningFolioId(null);
+      setFolioDraft("");
+      void showDashboardAlert({ icon: "success", title: "Folio asignado", showConfirmButton: false, timer: 1300 });
+    } catch (error: unknown) {
+      const code = errorCode(error);
+      const message = code === "23505"
+        ? "Ese folio ya está asignado a otro alumno o ya fue utilizado."
+        : code === "42501"
+          ? "No tienes permiso para asignar folios en este padrón. Vuelve a iniciar sesión."
+          : "No se pudo asignar el folio. Revisa los datos e inténtalo de nuevo.";
+      void showDashboardAlert({ icon: "error", title: "Error al asignar folio", text: message });
+    } finally {
+      setIsSavingFolio(false);
+    }
+  };
+
   const saveAlumno = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -363,7 +547,15 @@ export default function PadronAdmin() {
       grado: formData.get("grado") as string,
       grupo: formData.get("grupo") as string,
       fecha_nacimiento: formData.get("fecha_nacimiento") as string,
+      folio: editingAlumno?.folio_usado
+        ? editingAlumno.folio
+        : String(formData.get("folio") ?? "").replace(/\s+/g, "").trim().toUpperCase() || null,
     };
+
+    if (payload.folio && !/^[A-Z0-9-]{1,64}$/.test(payload.folio)) {
+      void showDashboardAlert({ icon: "warning", title: "Folio inválido", text: "Usa solo letras, números o guiones (máximo 64 caracteres)." });
+      return;
+    }
 
     if (!payload.carrera || !payload.grado || !payload.grupo || !payload.fecha_nacimiento) {
       void showDashboardAlert({ icon: "warning", title: "Completa los campos pendientes" });
@@ -371,12 +563,14 @@ export default function PadronAdmin() {
     }
 
     try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw userError ?? new Error("Inicia sesión para guardar alumnos.");
       let error;
       if (editingAlumno?.id) {
         const res = await supabase.from('padron_alumnos').update(payload).eq('id', editingAlumno.id);
         error = res.error;
       } else {
-        const res = await supabase.from('padron_alumnos').insert(payload);
+        const res = await supabase.from('padron_alumnos').insert({ ...payload, admin_id: user.id });
         error = res.error;
       }
 
@@ -390,8 +584,17 @@ export default function PadronAdmin() {
       });
       setIsFormModalOpen(false);
       fetchAlumnos();
-    } catch (err: any) {
-      void showDashboardAlert({ icon: "error", title: "Error al guardar", text: err.message });
+    } catch (err: unknown) {
+      const code = errorCode(err);
+      const detail = errorMessage(err).toLowerCase();
+      const text = code === "23505" && detail.includes("folio")
+        ? "Ese folio ya está asignado a otro alumno. Cada folio solo se puede usar una vez."
+        : code === "23505" && detail.includes("matricula")
+          ? "Esta matrícula ya está registrada en otro padrón. Cada alumno debe tener una sola ficha."
+          : code === "23505"
+            ? "Ya existe un alumno con esa matrícula en alguno de los padrones. Cada matrícula solo puede aparecer una vez."
+            : "No se pudieron guardar los datos. Revisa la información e inténtalo de nuevo.";
+      void showDashboardAlert({ icon: "error", title: "Error al guardar", text });
     }
   };
 
@@ -408,11 +611,24 @@ export default function PadronAdmin() {
     });
 
     if (result.isConfirmed && result.value === "ELIMINAR") {
-      const { error } = await supabase.from('padron_alumnos').delete().eq('id', id);
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        void showDashboardAlert({ icon: "error", title: "No se pudo eliminar", text: "Inicia sesión de nuevo para continuar." });
+        return;
+      }
+      const { data: deletedRow, error } = await supabase.from('padron_alumnos')
+        .delete()
+        .eq('id', id)
+        .eq('admin_id', user.id)
+        .select('id')
+        .maybeSingle();
       if (error) {
-        void showDashboardAlert({ icon: "error", title: "Error al eliminar", text: error.message });
+        void showDashboardAlert({ icon: "error", title: "Error al eliminar", text: "No se pudo retirar al alumno ni su acceso. Inténtalo de nuevo." });
+      } else if (!deletedRow) {
+        void showDashboardAlert({ icon: "warning", title: "No se encontró el registro", text: "No se eliminó ningún alumno. Actualiza el padrón e inténtalo de nuevo." });
       } else {
-        padronAlumnosEnMemoria = padronAlumnosEnMemoria.filter((alumno) => alumno.id !== id);
+        padronesEnMemoria.set(user.id, (padronesEnMemoria.get(user.id) ?? []).filter((alumno) => alumno.id !== id));
+        void showDashboardAlert({ icon: "success", title: "Alumno eliminado", text: "Se retiró su acceso a la cuenta y sus inscripciones liberaron los lugares.", showConfirmButton: false, timer: 1800 });
         fetchAlumnos();
       }
     }
@@ -434,11 +650,11 @@ export default function PadronAdmin() {
           <Link to="/dashboard/eventos"><CalendarDays size={18}/>Eventos</Link>
           <Link to="/dashboard/proyectos"><FolderKanban size={18}/>Proyectos</Link>
           <Link className="is-active" to="/dashboard/padron"><Users size={18}/>Padrón de Alumnos</Link>
-          <Link to="/dashboard/administradores"><ShieldCheck size={18}/>Administradores</Link>
+          {isPrimaryAdmin === true && <Link to="/dashboard/administradores"><ShieldCheck size={18}/>Administradores</Link>}
           <Link to="/dashboard/eventos?crear=1"><Plus size={18}/>Crear evento</Link>
         </nav>
         <div className="dashboard-sidebar__bottom">
-          <div className="dashboard-profile"><span className="dashboard-avatar">AD</span><div><strong>Administrador</strong><small>Panel principal</small></div></div>
+          <div className="dashboard-profile"><span className="dashboard-avatar">{fullName?.charAt(0) ?? " "}</span><div><strong>{fullName ?? " "}</strong><small>Panel principal</small></div></div>
           <Link to="/" className="dashboard-signout"><LogOut size={17}/>Salir al sitio</Link>
         </div>
       </aside>
@@ -447,7 +663,7 @@ export default function PadronAdmin() {
         <header className="dashboard-topbar">
           <button className="dashboard-menu-button" onClick={() => setSidebarOpen(true)}><Menu size={21}/></button>
           <div className="dashboard-breadcrumb"><Link to="/dashboard">Panel</Link><span>/</span><strong>Padrón</strong></div>
-          <div className="dashboard-topbar__actions"><AnimatedThemeToggler className="dashboard-theme-toggle" /><span className="dashboard-avatar dashboard-avatar--small">AD</span></div>
+          <div className="dashboard-topbar__actions"><AnimatedThemeToggler className="dashboard-theme-toggle" /><span className="dashboard-avatar dashboard-avatar--small" aria-label={fullName ? `Sesión de ${fullName}` : "Sesión administrativa"} title={fullName ?? undefined}>{fullName?.charAt(0) ?? " "}</span></div>
         </header>
         
         <div className="dashboard-body">
@@ -455,7 +671,7 @@ export default function PadronAdmin() {
             <div>
               <p className="dashboard-eyebrow"><Users size={14}/> GESTIÓN DE USUARIOS</p>
               <h1>Padrón de Alumnos<span>.</span></h1>
-              <p>Administra la base de datos oficial para que los alumnos puedan registrarse.</p>
+              <p>Administra el padrón de tus alumnos tutorados. Solo tú puedes consultar y gestionar estos registros.</p>
             </div>
             <div className="padron-header-actions">
               <button className="dashboard-secondary-button" onClick={() => setIsCsvModalOpen(true)}>
@@ -468,7 +684,7 @@ export default function PadronAdmin() {
           </div>
 
           <section className="dashboard-events dashboard-events--standalone">
-            {loadError && <div className="dashboard-data-error" role="alert"><div><strong>No se pudo actualizar el padrón</strong><p>{loadError}</p><small>Los datos anteriores se conservan; no se mostrarán como si el padrón estuviera vacío.</small></div><button type="button" onClick={() => void fetchAlumnos()} disabled={isLoading}>{isLoading ? "Reintentando…" : "Reintentar"}</button></div>}
+            {loadError && <div className="dashboard-data-error" role="alert"><div><strong>No se pudo actualizar el padrón</strong><p>{loadError}</p><small>Se conservan los datos que ya estaban cargados.</small></div><button type="button" onClick={() => void fetchAlumnos()} disabled={isLoading}>{isLoading ? "Reintentando…" : "Reintentar"}</button></div>}
             <div className="dashboard-section-heading padron-section-heading">
               <div>
                 <p>LISTADO GENERAL</p>
@@ -483,7 +699,7 @@ export default function PadronAdmin() {
                     type="text"
                     placeholder="Buscar alumno, matrícula, carrera..." 
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                     className="padron-search__input"
                   />
                 </div>
@@ -506,10 +722,11 @@ export default function PadronAdmin() {
               ) : loadError && alumnos.length === 0 ? null : alumnos.length === 0 ? (
                 <div style={{ padding: "3rem", textAlign: "center", border: "1px dashed var(--line)", borderRadius: "1rem", marginTop: "1rem" }}>
                   <Users size={32} style={{ margin: "0 auto 1rem", opacity: 0.5 }} />
-                  <p>No encontramos alumnos en esta consulta. Si ya habías cargado el padrón, vuelve a intentarlo o revisa la conexión y los permisos.</p>
+                  <h3 style={{ margin: "0 0 0.5rem", color: "var(--text)" }}>Aún no tienes alumnos registrados</h3>
+                  <p style={{ margin: 0, color: "var(--text-muted)" }}>Cuando agregues alumnos o importes tu padrón, aparecerán aquí.</p>
                   <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginTop: "1rem" }}>
-                    <button onClick={() => setIsCsvModalOpen(true)} style={{ color: "var(--orange)", textDecoration: "underline", background: "none", border: "none", cursor: "pointer", padding: 0 }}>Sube un CSV</button>
-                    <button onClick={() => void fetchAlumnos()} style={{ color: "var(--dash-green)", textDecoration: "underline", background: "none", border: "none", cursor: "pointer", padding: 0 }}>Reintentar consulta</button>
+                    <button onClick={() => setIsCsvModalOpen(true)} style={{ color: "var(--orange)", textDecoration: "underline", background: "none", border: "none", cursor: "pointer", padding: 0 }}>Importar CSV</button>
+                    <button onClick={openCreator} style={{ color: "var(--dash-green)", textDecoration: "underline", background: "none", border: "none", cursor: "pointer", padding: 0 }}>Agregar alumno</button>
                   </div>
                 </div>
               ) : filteredAlumnos.length === 0 ? (
@@ -519,17 +736,17 @@ export default function PadronAdmin() {
                   <table className="padron-table">
                     <thead>
                       <tr>
-                        <th>Matrícula</th><th>Nombre completo</th><th>Carrera</th><th>Grado y grupo</th><th>Estado</th><th className="padron-table__actions">Acciones</th>
+                        <th>Matrícula</th><th>Nombre completo</th><th>Carrera</th><th>Grado y grupo</th><th>Folio</th><th>Estado</th><th className="padron-table__actions">Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
                       {currentAlumnos.map((alumno) => (
                         <tr key={alumno.id}>
-                          <td><strong>{alumno.matricula}</strong></td><td>{alumno.nombre} {alumno.apellido_paterno} {alumno.apellido_materno}</td><td className="padron-table__muted">{alumno.carrera}</td><td>{alumno.grado}° "{alumno.grupo}"</td><td>
+                          <td><strong>{alumno.matricula}</strong></td><td>{alumno.nombre} {alumno.apellido_paterno} {alumno.apellido_materno}</td><td className="padron-table__muted">{alumno.carrera}</td><td>{alumno.grado}° "{alumno.grupo}"</td><td className="padron-folio-cell">{assigningFolioId === alumno.id ? <div className="padron-folio-editor"><input aria-label={`Folio para ${alumno.nombre} ${alumno.apellido_paterno}`} value={folioDraft} onChange={(event) => setFolioDraft(event.target.value.replace(/\s+/g, "").toUpperCase())} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); void saveFolio(alumno); } if (event.key === "Escape") { setAssigningFolioId(null); setFolioDraft(""); } }} maxLength={64} autoFocus disabled={isSavingFolio}/><button type="button" className="padron-folio-save" onClick={() => void saveFolio(alumno)} aria-label="Guardar folio" title="Guardar folio" disabled={isSavingFolio}><Check size={15}/></button><button type="button" className="padron-folio-cancel" onClick={() => { setAssigningFolioId(null); setFolioDraft(""); }} aria-label="Cancelar" title="Cancelar" disabled={isSavingFolio}><X size={15}/></button></div> : alumno.folio ? <span title={alumno.folio}>{alumno.folio}{alumno.folio_usado && <small style={{ display: "block", color: "var(--text-muted)" }}>Utilizado</small>}{!alumno.folio_usado && !alumno.registrado && <button type="button" className="padron-folio-change" onClick={() => { setAssigningFolioId(alumno.id ?? null); setFolioDraft(alumno.folio ?? ""); }}>Cambiar</button>}</span> : alumno.registrado ? <span className="padron-table__muted">Cuenta validada</span> : <button type="button" className="padron-folio-assign" onClick={() => { setAssigningFolioId(alumno.id ?? null); setFolioDraft(""); }}><Plus size={13}/>Asignar</button>}</td><td>
                             {alumno.registrado ? (
-                              <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", fontSize: "0.75rem", background: "color-mix(in srgb, var(--green) 15%, transparent)", color: "var(--green)", padding: "0.2rem 0.6rem", borderRadius: "1rem", fontWeight: 600 }}>Activa</span>
+                              <span className="padron-status-badge is-validated">Validado</span>
                             ) : (
-                              <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", fontSize: "0.75rem", background: "color-mix(in srgb, var(--ink) 10%, transparent)", color: "var(--text-muted)", padding: "0.2rem 0.6rem", borderRadius: "1rem", fontWeight: 600 }}>Pendiente</span>
+                              <span className="padron-status-badge is-pending">Pendiente</span>
                             )}
                           </td>
                           <td style={{ padding: "1rem", textAlign: "right", display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
@@ -591,6 +808,11 @@ export default function PadronAdmin() {
             <form onSubmit={saveAlumno} className="dashboard-event-form padron-student-form">
               <label>Matrícula
                 <input name="matricula" defaultValue={editingAlumno?.matricula} autoCapitalize="characters" onInput={(event) => { event.currentTarget.value = event.currentTarget.value.toUpperCase(); }} required />
+              </label>
+
+              <label>Folio entregado al alumno
+                <input name="folio" defaultValue={editingAlumno?.folio ?? ""} autoCapitalize="characters" autoComplete="off" maxLength={64} pattern={"[A-Za-z0-9\\x2D]+"} title="Usa solo letras, números o guiones." onInput={(event) => { event.currentTarget.value = event.currentTarget.value.replace(/\s+/g, "").toUpperCase(); }} required={!editingAlumno} disabled={editingAlumno?.folio_usado === true || (editingAlumno?.registrado === true && !editingAlumno.folio)} />
+                <small>{editingAlumno?.folio_usado ? "Este folio ya se utilizó para validar la cuenta y no se puede reasignar." : editingAlumno?.registrado ? "La cuenta ya está validada; no necesita un folio." : "Cada folio es único y permite validar una sola cuenta."}</small>
               </label>
               
               <div className="dashboard-form-grid">
@@ -661,7 +883,7 @@ export default function PadronAdmin() {
                     <Upload size={32} />
                     <strong>Sube el archivo CSV del padrón</strong>
                     <span>Haz clic o arrastra el archivo aquí</span>
-                    <small>Formato: Matricula, Nombre, Paterno, Materno, Carrera, Grado, Grupo, FechaNacimiento</small>
+                    <small>Formato: Matricula, Nombre, Paterno, Materno, Carrera, Grado, Grupo, FechaNacimiento; Folio es opcional.</small>
                   </div>
                 </div>
               ) : (
@@ -673,13 +895,14 @@ export default function PadronAdmin() {
                       <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-muted)" }}>{csvData.length} alumnos detectados listos para importar.</p>
                     </div>
                   </div>
-                  <div style={{ overflowX: "auto", border: "1px solid var(--line)", borderRadius: "0.5rem", maxHeight: "250px" }}>
+                  <div className="padron-csv-preview" style={{ overflowX: "auto", border: "1px solid var(--line)", borderRadius: "0.5rem", maxHeight: "250px" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.85rem" }}>
                       <thead style={{ position: "sticky", top: 0, background: "var(--bg)", borderBottom: "1px solid var(--line)" }}>
                         <tr>
                           <th style={{ padding: "0.5rem 1rem" }}>Matrícula</th>
                           <th style={{ padding: "0.5rem 1rem" }}>Nombre</th>
                           <th style={{ padding: "0.5rem 1rem" }}>Grado y Grupo</th>
+                          <th style={{ padding: "0.5rem 1rem" }}>Folio</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -688,6 +911,7 @@ export default function PadronAdmin() {
                             <td style={{ padding: "0.5rem 1rem" }}><strong>{row.matricula}</strong></td>
                             <td style={{ padding: "0.5rem 1rem" }}>{row.nombre} {row.apellido_paterno}</td>
                             <td style={{ padding: "0.5rem 1rem" }}>{row.grado}° "{row.grupo}"</td>
+                            <td style={{ padding: "0.5rem 1rem" }}>{row.folio || "—"}</td>
                           </tr>
                         ))}
                       </tbody>

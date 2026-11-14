@@ -15,6 +15,18 @@ export type Workshop = {
 };
 
 export type WorkshopInput = Omit<Workshop, "id" | "ocupados" | "mi_inscripcion"> & { id?: string };
+export type WorkshopAttendee = {
+  id: string;
+  created_at: string;
+  matricula: string | null;
+  nombre: string | null;
+  apellido_paterno: string | null;
+  apellido_materno: string | null;
+  carrera: string | null;
+  grado: string | null;
+  grupo: string | null;
+  folio: string | null;
+};
 
 async function manageWorkshop(body: Record<string, unknown>) {
   const { data: { session } } = await supabase.auth.getSession();
@@ -39,6 +51,12 @@ async function manageWorkshop(body: Record<string, unknown>) {
 
 export async function listEventWorkshops(eventId: string): Promise<Workshop[]> {
   const { data, error } = await studentSupabase.rpc("list_event_workshops", { p_event_id: eventId });
+  if (error) throw new Error(explainWorkshopError(error.message));
+  return (data ?? []) as Workshop[];
+}
+
+export async function listAdminEventWorkshops(eventId: string): Promise<Workshop[]> {
+  const { data, error } = await supabase.rpc("list_event_workshops", { p_event_id: eventId });
   if (error) throw new Error(explainWorkshopError(error.message));
   return (data ?? []) as Workshop[];
 }
@@ -84,13 +102,20 @@ export async function listMyWorkshopRegistrations() {
 }
 
 export async function listWorkshopAttendees(workshopId: string) {
-  const { data, error } = await supabase
-    .from("workshop_registrations")
-    .select("id, created_at, profiles(matricula,nombre,apellido_paterno,apellido_materno,carrera)")
-    .eq("workshop_id", workshopId)
-    .order("created_at");
+  const { data, error } = await supabase.rpc("list_workshop_attendees", { p_workshop_id: workshopId });
   if (error) throw new Error(explainWorkshopError(error.message));
-  return (data ?? []).map((row) => ({ ...row, profiles: Array.isArray(row.profiles) ? row.profiles[0] ?? null : row.profiles }));
+  return ((data ?? []) as Array<Record<string, string | null>>).map((row) => ({
+    id: row.registration_id,
+    created_at: row.registered_at,
+    matricula: row.matricula,
+    nombre: row.nombre,
+    apellido_paterno: row.apellido_paterno,
+    apellido_materno: row.apellido_materno,
+    carrera: row.carrera,
+    grado: row.grado,
+    grupo: row.grupo,
+    folio: row.folio,
+  })) as WorkshopAttendee[];
 }
 
 function explainWorkshopError(message: string) {

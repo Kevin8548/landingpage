@@ -512,7 +512,7 @@ export async function handleUserMessage(
 
 // Presentación formal e institucional del plan de estudios
 function getStudyPlanResponse(careerKey: string, info: CareerQuickInfo): BotResponse {
-  let highlights = "";
+  let highlights: string;
 
   if (careerKey === "desarrollo-software") {
     highlights = `

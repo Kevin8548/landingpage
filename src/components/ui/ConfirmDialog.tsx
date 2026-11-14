@@ -1,29 +1,15 @@
 import {
-  createContext,
   useCallback,
-  useContext,
   useState,
   type ReactNode,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiAlertTriangle } from "react-icons/fi";
-
-interface ConfirmOptions {
-  title?: string;
-  description?: string;
-  confirmLabel?: string;
-  cancelLabel?: string;
-  /** Usa el acento naranja (acción destructiva) en vez del verde. */
-  destructive?: boolean;
-}
+import { ConfirmContext, type ConfirmFn, type ConfirmOptions } from "./confirmContext";
 
 interface ConfirmState extends ConfirmOptions {
   resolve: (value: boolean) => void;
 }
-
-type ConfirmFn = (options?: ConfirmOptions) => Promise<boolean>;
-
-const ConfirmContext = createContext<ConfirmFn | null>(null);
 
 /**
  * Envuelve tu app (idealmente en main.tsx / App.tsx) UNA sola vez:
@@ -123,12 +109,4 @@ export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
       </AnimatePresence>
     </ConfirmContext.Provider>
   );
-};
-
-export const useConfirm = (): ConfirmFn => {
-  const ctx = useContext(ConfirmContext);
-  if (!ctx) {
-    throw new Error("useConfirm debe usarse dentro de <ConfirmProvider>");
-  }
-  return ctx;
 };

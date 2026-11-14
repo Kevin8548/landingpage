@@ -82,7 +82,7 @@ async function callGroq(
     const errorJson = await response.json().catch(() => null);
     const err = new Error(errorJson?.error?.message || `HTTP ${response.status}`);
     // Guardamos el status para saber si fue error 429 de Rate Limit
-    (err as any).status = response.status;
+    Object.assign(err, { status: response.status });
     throw err;
   }
 
@@ -148,16 +148,18 @@ export async function askSmartAI(
   try {
     // Intentar con Groq primero (super veloz)
     return await callGroq(userPrompt, systemPrompt, history);
-  } catch (groqError: any) {
-    console.warn("Groq no pudo responder:", groqError.message);
+  } catch (groqError: unknown) {
+    const message = groqError instanceof Error ? groqError.message : "Error desconocido";
+    const status = groqError && typeof groqError === "object" && "status" in groqError ? groqError.status : undefined;
+    console.warn("Groq no pudo responder:", message);
 
     // Si fue por límite de tokens (HTTP 429) o cualquier caída de Groq:
-    if (groqError.status === 429 || import.meta.env.VITE_GEMINI_API_KEY) {
+    if (status === 429 || import.meta.env.VITE_GEMINI_API_KEY) {
       console.log("Activando respaldo con Google Gemini (250k tokens)...");
       try {
         return await callGemini(userPrompt, systemPrompt, history);
-      } catch (geminiError: any) {
-        console.error("Gemini también falló:", geminiError.message);
+      } catch (geminiError: unknown) {
+        console.error("Gemini también falló:", geminiError instanceof Error ? geminiError.message : "Error desconocido");
       }
     }
 

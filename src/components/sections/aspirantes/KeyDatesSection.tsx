@@ -39,12 +39,6 @@ export const KeyDatesSection = ({
     setActiveDate(i);
   };
 
-  useEffect(() => {
-    if (dateItems.length > 0 && activeDate > dateItems.length - 1) {
-      setActiveDate(dateItems.length - 1);
-    }
-  }, [dateItems.length, activeDate]);
-
   // Autoplay del carrusel (pausado mientras se edita).
   useEffect(() => {
     if (editMode || dateItems.length <= 1) return;

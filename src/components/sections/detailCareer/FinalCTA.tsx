@@ -135,7 +135,6 @@ const FinalCTA = memo(function FinalCTA({ whatsappNumber = "5217712345678" }: Fi
   });
 
   const phase1 = { start: 0.05, end: 0.36 };
-  const phase2 = { start: 0.44, end: 0.72 };
 
   const overlayOpacity = useTransform(scrollYProgress, [0.68, 0.82, 1], [0, 1, 1]);
 

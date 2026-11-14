@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { FiArrowRight, FiDownload } from "react-icons/fi";
+import { FiDownload } from "react-icons/fi";
 
 export const FinalCTA = () => {
   return (

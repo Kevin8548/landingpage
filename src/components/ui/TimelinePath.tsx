@@ -34,7 +34,6 @@ const MINI_BRANCH_OFFSETS = [
 
 export function TimelinePath({
   sections,
-  sectionLabels,
   branchLabels,
   sectionWidth,
   progress,

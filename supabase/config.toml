@@ -452,3 +452,8 @@ entrypoint = "./functions/create-admin/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/manage-workshops/index.ts"
+
+[functions.manage-admins]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/manage-admins/index.ts"

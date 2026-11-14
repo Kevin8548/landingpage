@@ -6,6 +6,8 @@ import {
   deleteEventInSupabase,
 } from "../services/queries";
 import { events as seedEvents, type Category, type EventItem } from "./eventos";
+import { userFacingError } from "../lib/userFacingErrors";
+import { omitKeys } from "../lib/omitKeys";
 
 const STORAGE_KEY = "utt_eventos_v1";
 
@@ -71,11 +73,8 @@ export function useEventosStore() {
       setEventsLoadError("");
       return true;
     } catch (reason) {
-      const message = reason && typeof reason === "object" && "message" in reason && typeof reason.message === "string"
-        ? reason.message
-        : "No se pudieron consultar los eventos.";
       console.error("No se pudo actualizar la lista de eventos:", reason);
-      setEventsLoadError(message);
+      setEventsLoadError(userFacingError(reason, "Revisa tu conexión a internet e inténtalo de nuevo."));
       return false;
     } finally {
       setEventsLoading(false);
@@ -84,6 +83,8 @@ export function useEventosStore() {
 
   // Supabase es la fuente de verdad, aun cuando la lista esté vacía.
   useEffect(() => {
+    // Loads the server-backed event list asynchronously on mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void reloadEvents();
   }, [reloadEvents]);
 
@@ -117,7 +118,7 @@ export function useEventosStore() {
     const current = eventItemsRef.current.find((e) => e.id === id);
     if (!current) return;
     try {
-      const { id: _omit, ...rest } = current;
+      const rest = omitKeys(current, "id");
       await updateEventInSupabase(id, rest);
     } catch (err) {
       console.error("No se pudo guardar el evento:", err);
@@ -137,7 +138,7 @@ export function useEventosStore() {
       const current = eventItemsRef.current.find((e) => e.id === id);
       if (!current) return;
       try {
-        const { id: _omit, ...rest } = current;
+        const rest = omitKeys(current, "id");
         const { imagen_url } = await updateEventInSupabase(id, rest, { imageDataUrl, removeImage });
         commit((prev) => prev.map((e) => (e.id === id ? { ...e, image: imagen_url ?? undefined } : e)));
       } catch (err) {
