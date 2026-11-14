@@ -132,7 +132,7 @@ export async function deleteInstitutionInSupabase(id: string): Promise<void> {
   await callManageAspirantes({ resource: "institution", operation: "delete", id });
 }
 
-// Prueba temporal HU-10 (Versión con error de ESLint)
-export function testValidacionAdmision() {
-  const variableSinUsar = "esto debe fallar en eslint";
+// Prueba temporal HU-10 (Versión corregida y limpia)
+export function testValidacionAdmision(idConvenio: string): boolean {
+  return Boolean(idConvenio);
 }
