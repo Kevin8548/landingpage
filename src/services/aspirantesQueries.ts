@@ -131,3 +131,8 @@ export async function updateInstitutionInSupabase(
 export async function deleteInstitutionInSupabase(id: string): Promise<void> {
   await callManageAspirantes({ resource: "institution", operation: "delete", id });
 }
+
+// Prueba temporal HU-10 (Versión corregida y limpia)
+export function testValidacionAdmision(idConvenio: string): boolean {
+  return Boolean(idConvenio);
+}
