@@ -123,7 +123,7 @@ export const events: EventItem[] = [
 
 export const CATEGORY_META: Record<Category, CategoryMeta> = {
   academico: { label: "Académico", icon: FiBookOpen, color: "var(--green)" },
-  cultural: { label: "Cultural", icon: FiMusic, color: "var(--orange)" },
+  cultural: { label: "Cultural", icon: FiMusic, color: "var(--color-amber)" },
   comunidad: { label: "Comunidad", icon: FiUsers, color: "var(--teal)" },
 };
 
